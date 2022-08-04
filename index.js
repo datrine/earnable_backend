@@ -4,7 +4,9 @@ const express = require("express");
 const conn = require("./utils/conn/mongoConn");
 
 const app = express();
-
+var cors = require('cors')
+ 
+app.use(cors({origin:"*"}))
 const session = require('express-session');
 const sess = { 
   secret: 'keyboard cat',
