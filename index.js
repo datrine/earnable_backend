@@ -42,10 +42,11 @@ app.use(fileUpload());
 })()
 
 app.get("/", (req, res, next) => {
-
+res.end('<p>What</p>')
 });
 
 let server = http.createServer(app);
-server.listen(7000, () => {
+let port=process.env.MY_PORT||7000
+server.listen(port, () => {
     console.log("Server running on " + server.address().port)
 })
