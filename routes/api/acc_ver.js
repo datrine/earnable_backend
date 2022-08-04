@@ -21,6 +21,17 @@ router.use("/:verSessID", async (req, res, next) => {
     }
 });
 
+router.get("/:verSessID/next_factor", async (req, res, next) => {
+    try {
+        let { verInfo } = req.session
+        let next_factor = verInfo.status?.filter(obj => obj.isVerified)[0]?.factor
+        res.json({ next_factor })
+    } catch (error) {
+        console.log(error);
+        next("Server error")
+    }
+});
+
 router.get("/:verSessID/email", async (req, res, next) => {
     try {
         let { verInfo } = req.session
@@ -36,7 +47,7 @@ router.get("/:verSessID/", async (req, res, next) => {
     try {
         let { verInfo } = req.session
         let emailStatus = verInfo.status.find(item => item.factor === "email")
-        res.json({ verInfo})
+        res.json({ verInfo })
     } catch (error) {
         console.log(error);
         next("Server error")
