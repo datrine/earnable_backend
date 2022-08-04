@@ -8,7 +8,8 @@ const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const usersCol = waleprjDB.collection("users")
 const { cleanAndValidateUser, cleanUserDataUpdate } = require("../../../utils/validators/user");
-const { checkIfAccountPropExists } = require("../../../db/account");
+const { checkIfAccountPropExists, accountLogOut } = require("../../../db/account");
+const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 
 //user id, email or username
 router.get("/:id", (req, res, next) => {
@@ -30,7 +31,7 @@ router.get("/", (req, res, next) => {
 router.get("/checkifexists/:prop/:value", async (req, res, next) => {
     let { prop, value } = req.params;
     let { exists } = await checkIfAccountPropExists({ prop, value });
-    console.log({exists})
+    console.log({ exists })
     return res.json({ exists })
 });
 

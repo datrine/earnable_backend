@@ -26,6 +26,7 @@ async function accountLogOut({ sessID }) {
         let accountCheckd = await accountsCol.findOne({
             "loginInfo.current_session.sessID": sessID
         });
+        console.log({accountCheckd,sessID})
         if (!accountCheckd?.loginInfo?.current_session) {
             return { err: { msg: "No account matches sessID...", type: "no_acc" }, state: "failed" }
         }
