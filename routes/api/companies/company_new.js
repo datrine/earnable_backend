@@ -3,57 +3,56 @@ const { mongoClient } = require("../../../utils/conn/mongoConn");
 const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const companiesCol = waleprjDB.collection("companies");
-const companyRolesCol = waleprjDB.collection("companyRoles");
 const { cleanAndValidateNewCompany } = require("../../../utils/validators/companies");
-const { setDefaultRoles } = require("../../../utils/misc/shop_roles");
-const { getAccountMW } = require("../../../utils/mymiddleware/accounts");
+const { setDefaultRoles } = require("../../../utils/misc/company_roles");
 const { canCreateCompanyMW } = require("../../../utils/mymiddleware/accounts/canCreateShopMW");
 const { ObjectId } = require("bson");
 const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
 const { getBiodataFunc } = require("../../../db/account");
+const { createCompany } = require("../../../db/company");
+const { createRoles } = require("../../../db/role");
+const { createResource } = require("../../../db/resource");
 
 router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     try {
         res.status(400)
         let account = req.session.account
         let preCompanyData = req.body;
-        let companyRoles = preCompanyData.companyRoles || [];
 
-        preCompanyData.creatorMeta = { _id: ObjectId(account._id), accountID: account.accountID, email: account.email };
-        let companyData = cleanAndValidateNewCompany(preCompanyData);
+        preCompanyData.creatorMeta = { _id: ObjectId(account._id), accountID: account.accountID, };
         let roles = setDefaultRoles({ account });
-        let metaInfo = await getBiodataFunc({ accountID: account.accountID });
-        let result1 = await companiesCol.insertOne({
-            ...companyData,
-            roles,
-            lastModified: new Date(),
-            createdOn: new Date(),
-        });
-        if (!result1.insertedId) {
-            return res.json({ err: { msg: "Unable to create" } })
-        }
-        let creatorRoles = []
-        if (metaInfo?.user) {
-            creatorRoles = metaInfo.user.meta.companyRoles||[]
-            companyRoles.push(...creatorRoles);
-        }
-        let result2 = await companyRolesCol.insertOne({
-            companyID: ObjectId(result1.insertedId),
-            userAccID: account.accountID,
-            roles: [...companyRoles],
-            lastModified: new Date(),
-            createdOn: new Date(),
-        });
 
+        let companyRes = await createCompany({ ...preCompanyData })
+        if (companyRes.err) {
+            return res.json(companyRes)
+        }
+        let rolesRes = await createRoles({ roles, companyID: companyRes.companyID, creatorMeta: { accountID: account.accountID } })
+        if (rolesRes.err) {
+            return res.json(rolesRes.err)
+        }
+        console.log("ppppppppppppppp")
+        let resourceRes = await createResource({
+            accountID: account.accountID,
+            resource_type: "company"
+            , resourceDocID: companyRes.companyID
+        });
+        if (resourceRes.err) {
+            return res.json(rolesRes.err)
+        }
+        console.log({
+            companyID: companyRes.companyID,
+            rolesID: rolesRes.rolesID,
+            resourceID: resourceRes.resourceID
+        });
         res.status(201);
-
-        if (!result2.insertedId) {
-            return res.json({ err: { msg: "Unable to create" } })
-        }
-        return res.json({ companyID: result1.insertedId, rolesID: result2.insertedId })
+        return res.json({
+            companyID: companyRes.companyID,
+            rolesID: rolesRes.rolesID,
+            resourceID: resourceRes.resourceID
+        })
     } catch (error) {
-        res.status(500)
         console.log(error)
+        res.status(500)
         res.json({ err: error })
     }
 });

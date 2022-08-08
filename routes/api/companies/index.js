@@ -5,34 +5,43 @@ const waleprjDB = mongoClient.db("waleprj");
 const companyRolesRouter = require("./roles");
 const companyApiProperRouter = require("./company_new");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
+const { getCompaniesByIDs, getCompanyByID } = require("../../../db/company");
+const {  getResourcesByAccID } = require("../../../db/resource");
 const companiesCol = waleprjDB.collection("companies")
 
 router.use("/", getAuthAccount);
-router.use("/roles", companyRolesRouter);
-
-
-router.get("/:accountID/list", async (req, res, next) => {
-    let { accountID } = req.params;
-    console.log("ooooooooooooooooo")
-    let filter = req.query;
-    let { skip = 0, limit = 5, ...rest } = filter
-    let cursor = await companiesCol.find({
-      "creatorMeta.accountID":  accountID
-    }, { projection: { roles: 0 }, skip, limit });
-    let companies = await cursor.toArray() || [];
-    companies=companies.map(obj=>({...obj,companyID:obj._id}))
-    res.json({ companies })
-});
 
 router.get("/list", async (req, res, next) => {
-    let filter = req.query;
-    let { skip = 0, limit = 5, ...rest } = filter
-    let cursor = await companiesCol.find({
-        ...filter
-    }, { projection: { roles: 0 }, skip, limit });
-    let shops = await cursor.toArray() || [];
-    res.json({ shops })
+    let { accountID } = req.session.account;
+    let resourcesRes = await getResourcesByAccID({ accountID, filterIn: ["company"] });
+
+    let companiesRes = await getCompaniesByIDs({ ids: [...resourcesRes.resources].map(resource => resource.resourceDocID) });
+    console.log("companiesRes")
+    return res.json(companiesRes)
 });
+
+router.use("/:companyID", async (req, res, next) => {
+    try {
+        let { companyID } = req.params
+        console.log(companyID)
+        let companyRes = await getCompanyByID({ id: companyID });
+        if (companyRes.err) {
+            return res.json(companyRes)
+        }
+        req.session.company = companyRes.company;
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+});
+
+router.use("/:companyID/roles",companyRolesRouter);
+
+router.get("/:companyID", async (req, res, next) => {
+    let { company } = req.session;
+    return res.json({ company })
+});
+
 
 router.use("/", companyApiProperRouter);
 

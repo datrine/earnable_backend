@@ -1,6 +1,9 @@
 const { accountAccIDResetSet, getBiodataFunc } = require("../../../db/account");
+const { getMyResources, getResourcesByID } = require("../../../db/resource");
+const { getCompanyRoles } = require("../../../db/role");
 const { accTemplate } = require("../../../db/templates");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
+let resourcesRouter=require("./resources")
 
 const router = require("express").Router();
 
@@ -18,6 +21,8 @@ router.get("/user", async (req, res, next) => {
     }
 });
 
+router.use("/resources",resourcesRouter);
+
 router.get("/", async (req, res, next) => {
     try {
         let account = req.session.account
@@ -27,4 +32,14 @@ router.get("/", async (req, res, next) => {
     }
 });
 
+router.get("/", async(req,res,next)=>{
+    try {
+     let rolesRes=  await getCompanyRoles({companyID});
+     if (rolesRes.err) {
+        return res.json(rolesRes)
+     }
+    } catch (error) {
+        console.log(error)
+    }
+});
 module.exports = router

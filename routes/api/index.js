@@ -6,7 +6,7 @@ const selfRouter = require("./me");
 const paymentRouter = require("./payments");
 const verStatusRouter = require("./acc_ver");
 const registerRouter = require("./users/register");
-//const loginRouter = require("./users/login");
+const walletRouter = require("./wallets");
 const loginRouter = require("./users/login");
 //const selfRouter = require("./users/me");
 const emailRouter = require("./email");
@@ -20,7 +20,6 @@ const { getAuthAccount } = require("../../from/utils/middlewares/getAuthAccount"
 const { getAccount } = require("../../from/utils/middlewares/getAccount");
 
 router.use((req, res, next) => {
-    console.log("apis")
     next();
 });
 
@@ -72,5 +71,7 @@ router.use("/", async (req, res, next) => {
 }, getAuthAccount);
 
 router.use("/me", selfRouter);
+
+walletRouter
 
 module.exports = router;

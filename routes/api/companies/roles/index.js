@@ -3,13 +3,63 @@ const { mongoClient, ObjectID } = require("../../../../utils/conn/mongoConn");
 const waleprjDB = mongoClient.db("waleprj");
 const companiesCol = waleprjDB.collection("companies")
 const { cleanAndValidateNewCompany } = require("../../../../utils/validators/companies");//utils/validators/companies
-const { setDefaultRoles } = require("../../../../utils/misc/shop_roles");
+const { setDefaultRoles, defaultCompanyAdminRoles } = require("../../../../utils/misc/company_roles");
 const { companyRoleActionValidateMW, } = require("../../../../utils/mymiddleware/roleMW");
 const addUserToRoleRouter = require("./addUsersToRoles");
 const removeUserFromRoleRouter = require("./removeUserFromRole");
 const sessIDVerifyMW = require("../../../../utils/mymiddleware/sessIDVerifyMW");
+const { getCompanyRoles, createNewRole, hasRole, hasScope, getScopeByAccID } = require("../../../../db/role");
 
-router.use("/", sessIDVerifyMW);
+let hasRoleMW = async (req, res, next) => {
+    try {
+        let accountID = req.session.accountID
+        let hasRoleRes = await hasRole({ accountID, rolename: "createRole" });
+        if (!hasRoleRes) {
+            return res.json({ err: { msg: "No role access." } })
+        }
+        req.session.hasRole = hasRoleRes;
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+let hasAdminScopeMW = async (req, res, next) => {
+    try {
+        let accountID = req.session.accountID
+        let hasScopeRes = await hasScope({ accountID, rolenames: [...defaultCompanyAdminRoles] });
+        if (!hasScopeRes) {
+            return res.json({ err: { msg: "No scope access." } })
+        }
+        req.session.hasScope = hasScope;
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+router.get("/", async (req, res, next) => {
+    try {
+        let rolesRes = await getCompanyRoles({ companyID });
+        if (rolesRes.err) {
+            return res.json(rolesRes)
+        }
+    } catch (error) {
+        console.log(error)
+    }
+});
+
+router.get("/my_scope", async (req, res, next) => {
+    try {
+        let {companyID}=req.session.company
+        let {accountID}=req.session.account
+        console.log(companyID)
+        let scopeRes = await getScopeByAccID({ companyID,accountID });
+        return res.json(scopeRes)
+    } catch (error) {
+        console.log(error)
+    }
+});
 
 router.post("/role", async (req, res, next) => {
     try {
@@ -37,8 +87,21 @@ router.post("/role", async (req, res, next) => {
     }
 });
 
-router.use("/addToRole", companyRoleActionValidateMW, addUserToRoleRouter,);
 
-router.use("/removeUserFromRole", companyRoleActionValidateMW, removeUserFromRoleRouter,);
+router.post("/createRole", hasAdminScopeMW, async (req, res, next) => {
+    try {
+        let roleObj = req.body;
+        let addRoleRes = await createNewRole({ roleObj });
+        res.status(201)
+        console.log(addRoleRes);
+        return res.json(addRoleRes)
+    } catch (error) {
+        console.log(error)
+    }
+});
+
+router.use("/addToRole", hasAdminScopeMW, addUserToRoleRouter,);
+
+router.use("/removeUserFromRole", hasAdminScopeMW, removeUserFromRoleRouter,);
 
 module.exports = router;

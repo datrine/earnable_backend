@@ -16,7 +16,8 @@ function cleanAndValidateNewCompany(company) {
                 optional: false,
                 properties: {
                     _id: { type: "any", optional: false },
-                    email: { type: "string", optional: false,pattern:"email" },
+                    email: { type: "string", optional: true,pattern:"email" },
+                    accountID:{type:"string",optional:false}
                 }
             }
         }
@@ -27,28 +28,16 @@ function cleanAndValidateNewCompany(company) {
     return company;
 }
 
-function cleanCompanyDataUpdate(user) {
-    user = Object.assign({}, user);
-    if (user.address || user.cityOrTown || user.country) {
-        user.addressInfo = {
-            ...user.addressInfo,
-            address: user.address,
-            cityOrTown: user.cityOrTown,
-            country: user.country
-        }
-        delete user.address
-        delete user.cityOrTown
-        delete user.country
-        user.addressInfo = JSON.parse(JSON.stringify(user.addressInfo));
-    }
+function cleanCompanyDataUpdate(company) {
+    company = Object.assign({}, company);
 
     let resultOfValidation = inspector.validate({
         type: "object",
         strict: true,
         properties: {
-            f_name: { type: "string", optional: true },
-            l_name: { type: "string", optional: true },
-            gender: { type: 'string', optional: true },
+            company_name: { type: "string", optional: true },
+            rc_number: { type: "string", optional: true },
+            is_rc_verified: { type: 'string', optional: true },
             addressInfo: {
                 type: 'object',
                 optional: true,
@@ -58,9 +47,11 @@ function cleanCompanyDataUpdate(user) {
                     address: { type: "string", optional: true },
                 }
             },
-            prof_pic: { type: "any", optional: true },
+            payment_email: { type: "any", optional: true },
+            tax_id: { type: "any", optional: true },
+            
         }
-    }, user);
+    }, company);
     if (!resultOfValidation.valid) {
         throw resultOfValidation.error
     }
@@ -72,7 +63,7 @@ function cleanCompanyDataUpdate(user) {
             l_name: { type: "string", optional: true },
             prof_pic: { type: "any", optional: true },
         }
-    }, user);
+    }, company);
     return resultOfSanitation;
 }
 

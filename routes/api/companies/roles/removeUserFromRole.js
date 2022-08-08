@@ -3,7 +3,7 @@ const { mongoClient, ObjectID } = require("../../../../utils/conn/mongoConn");
 const tokenVerifyMW = require("../../../../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const companiesCol = waleprjDB.collection("companies")
-const { setDefaultRoles } = require("../../../../utils/misc/shop_roles");
+const { setDefaultRoles } = require("../../../../utils/misc/company_roles");
 const { companyRoleActionValidateMW } = require("../../../../utils/mymiddleware/roleMW");
 
 router.delete("/", tokenVerifyMW, companyRoleActionValidateMW,

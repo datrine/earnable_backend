@@ -20,7 +20,6 @@ let getAuthAccount = async (req, res, next) => {
             })
         }
         req.session.sessID = sessID
-        console.log(sessID)
         let accountRes = await retrieveAccountInfoBySessID(sessID);
         if (accountRes.err) {
             return res.json(accountRes)
@@ -55,7 +54,6 @@ let getAuthAccount = async (req, res, next) => {
                 return res.json({ err: { msg: "sessID cannot be empty" } })
             }
         }
-        console.log("sessID what????????");
         let { state, account: accFromServer, err } = await accountAccIDResetSet({ sessID });
         if (err) {
             res.status = 400
