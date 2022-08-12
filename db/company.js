@@ -30,7 +30,6 @@ let createCompany = async ({ ...companyDataToCreate }) => {
 
 let getCompaniesByIDs = async ({ ids }) => {
     try {
-        console.log({ ids });
         let companiesCursor = await companiesCol.find({ _id: { $in: [...ids].map(id => ObjectId(id)) } });
         let companies = await companiesCursor.toArray();
         companies = companies.map(com => ({ ...com, companyID: com._id.toString() }))

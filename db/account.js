@@ -26,7 +26,6 @@ async function accountLogOut({ sessID }) {
         let accountCheckd = await accountsCol.findOne({
             "loginInfo.current_session.sessID": sessID
         });
-        console.log({accountCheckd,sessID})
         if (!accountCheckd?.loginInfo?.current_session) {
             return { err: { msg: "No account matches sessID...", type: "no_acc" }, state: "failed" }
         }
@@ -324,9 +323,6 @@ async function accountSet({ account, factor, facAuthSuc = true }) {
 
             let factors_unauthenticated = getUnAuthenticatedFactors(account);
             let factors_unverified = getUnverifiedFactors(account);
-            console.log("factors_unverified")
-            console.log(factors_unverified)
-            console.log("factors_unverified")
             if (!!factors_unauthenticated.length) {
                 let verSessID = account.verInfo.verSessID
                 return {

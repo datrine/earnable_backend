@@ -10,6 +10,8 @@ const { accTemplate } = require("./templates");
 const { processImg } = require("../from/utils/processMedia");
 const { sendPhoneText } = require("../from/utils/phone_mgt");
 const { ObjectId } = require("mongodb");
+const { addEmployee } = require("./employee");
+const { addBankDetail } = require("./bank_detail");
 
 async function registerFunc(data) {
     try {
@@ -49,7 +51,8 @@ async function registerFunc(data) {
 
 async function registerEmployeeFunc(data) {
     try {
-        let { email, username, phonenum, phonePin, firstname, lastname, dob, gender, companyID, companyRoles = [] } = data
+        let { email, username=email, phonenum,job_title,monthly_salary, phonePin,employee_id, f_name, l_name, dob, gender,
+             companyID, bank_name, acc_number,bank_code, } = data
         if (!email) {
             // return { err: { msg: "Email not supplied..." } }
         }
@@ -74,17 +77,34 @@ async function registerEmployeeFunc(data) {
 
         let userRes = await createBiodataFunc({
             email, accountID: accountRes.accountID,
-            lastname, firstname, dob, gender
+            lastname: l_name, f_name, dob, gender
+        });
+        let addEmployeeRes = await addEmployee({
+            accountID: accountRes.accountID,
+            companyID,
+            job_title,
+            monthly_salary,
+            employeeID:  employee_id,
+            lastModified: new Date(),
+            createdOn: new Date()
         });
 
-        let result2 = await companyRolesCol.insertOne({
-            companyID: ObjectId(companyID),
-            userAccID: accountRes.accountID,
-            roles: [...companyRoles],
-            lastModified: new Date(),
-            createdOn: new Date(),
-        })
-        return { ...accountRes, companyRolesID: result2.insertedId }
+        if (addEmployeeRes.err) {
+            return { err: addEmployeeRes.err }
+        }
+        let det = { bank_name,bank_code, acc_number, accountID: accountRes.accountID }
+        let bankDetailRes = await addBankDetail({ ...det });
+        if (bankDetailRes.err) {
+            return { err: bankDetailRes.err }
+        }
+        /*  let result2 = await companyRolesCol.insertOne({
+              companyID: ObjectId(companyID),
+              userAccID: accountRes.accountID,
+              roles: [...companyRoles],
+              lastModified: new Date(),
+              createdOn: new Date(),
+          }) */
+        return { ...accountRes, ...userRes, ...addEmployeeRes,...bankDetailRes }
     } catch (error) {
         console.log(error);
         throw error
@@ -171,7 +191,7 @@ async function createAccountFunc(dataToSave) {
             info: "Account created",
             verSessID: accToSave.verInfo.verSessID,
             accountID,
-            factors_unverified: accToSave.verInfo.status.filter(obj=>!obj.isVerified).map(obj => obj.factor)
+            factors_unverified: accToSave.verInfo.status.filter(obj => !obj.isVerified).map(obj => obj.factor)
         }
     } catch (error) {
         console.log(error)

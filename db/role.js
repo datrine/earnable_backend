@@ -136,7 +136,7 @@ let removeUsersFromRole = async ({ accounts = [], companyID, role }) => {
 
 let hasRole = async ({ accountID, rolename }) => {
     try {
-        let rolesDoc = await companyRolesCol.findOne({ accountID, roles: { $elemMatch: { name: rolename } } });
+        let rolesDoc = await companyRolesCol.findOne({ roles: { $elemMatch: { name: rolename,"listOfUsers.accountID":accountID } } });
         console.log(rolename)
         return !!rolesDoc?._id
     } catch (error) {

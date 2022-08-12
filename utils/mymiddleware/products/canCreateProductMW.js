@@ -1,4 +1,6 @@
 const { ObjectId } = require("bson");
+const { getResourcesByAccID, getResourcesByResourceID, getResourceByResourceID } = require("../../../db/resource");
+const { hasRole } = require("../../../db/role");
 const { mongoClient } = require("../../conn/mongoConn");
 const waleprjDB = mongoClient.db("waleprj");
 const companiesCol = waleprjDB.collection("companies");
@@ -15,6 +17,7 @@ let canAddEmployeeMW = async (req, res, next) => {
     try {
         res.status(400)
         let account = req.session.account;
+        let { accountID } = account;
         let data = req.body;
         console.log(data)
         if (!data) {
@@ -43,23 +46,27 @@ let canAddEmployeeMW = async (req, res, next) => {
             return res.json({ err: "CompanyId not valid" });
         }
 
-        let hasSaveRole = company.roles.find(role =>
-            !!role.listOfUsers.find(userOnList =>
-                role.name === "addEmployee" && userOnList.email === account.email));
+        let hasSaveRole = await hasRole({ accountID, rolename: "addEmployee" });
 
         if (!hasSaveRole) {
             console.log("You are not authorized to create");
             return res.json({ err: "You are not authorized to create" });
         }
 
+        let resourceRes = await getResourceByResourceID({ resourceDocID: company._id.toString() });
+        console.log(resourceRes)
+        if (!resourceRes?.resource) {
+            return res.json({ err: "Resource not found..." });
+        }
+        let { resource } = resourceRes
         let subData = await subscriptionCol.findOne({
-            accountID: account.accountID,
+            accountID: resource.accountID,
             "subs.name": "company"
         });
 
         if (!subData) {
-            console.log(`No active 'shop' subscription for account with username ${account.username}`)
-            return res.json({ err: `No active 'shop' subscription for account with username ${account.username}` })
+            console.log(`No active 'company' subscription for account with username ${account.username}`)
+            return res.json({ err: `No active 'company' subscription for account with username ${account.username}` })
         }
 
         let currentCompanySub = subData.subs.find(sub => sub.name === "company");

@@ -1,3 +1,4 @@
+const { hasRole, hasScope } = require("../../db/role");
 const { mongoClient } = require("../conn/mongoConn");
 const { verifyToken } = require("../encdec");
 const { defaultCompanyAdminRoles, defaultCompanyActionRoles } = require("../misc/company_roles");
@@ -84,5 +85,33 @@ let companyRoleActionValidateMW = async (req, res, next) => {
     }
 };
 
+let hasRoleMW = async (req, res, next) => {
+    try {
+        let accountID = req.session.accountID
+        let rolename = req.session.rolename
+        let hasRoleRes = await hasRole({ accountID, rolename });
+        if (!hasRoleRes) {
+            return res.json({ err: { msg: "No role access." } })
+        }
+        req.session.hasRole = hasRoleRes;
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+}
 
-module.exports = { companyRoleActionValidateMW };
+let hasAdminScopeMW = async (req, res, next) => {
+    try {
+        let accountID = req.session.accountID
+        let hasScopeRes = await hasScope({ accountID, rolenames: [...defaultCompanyAdminRoles] });
+        if (!hasScopeRes) {
+            return res.json({ err: { msg: "No scope access." } })
+        }
+        req.session.hasScope = hasScope;
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+module.exports = { companyRoleActionValidateMW,hasAdminScopeMW,hasRoleMW };

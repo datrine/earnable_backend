@@ -30,7 +30,6 @@ router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next
         if (rolesRes.err) {
             return res.json(rolesRes.err)
         }
-        console.log("ppppppppppppppp")
         let resourceRes = await createResource({
             accountID: account.accountID,
             resource_type: "company"

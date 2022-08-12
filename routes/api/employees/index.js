@@ -12,4 +12,12 @@ router.use("/login", loginProductRouter);
 
 router.use("/change/phone_pin", changePhonepinEmployeeRouter);
 
+router.get("/", async(req,res,next)=>{
+    try {
+        
+    } catch (error) {
+        console.log(error)
+    }
+});
+
 module.exports = router;

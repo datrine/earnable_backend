@@ -4,39 +4,11 @@ const waleprjDB = mongoClient.db("waleprj");
 const companiesCol = waleprjDB.collection("companies")
 const { cleanAndValidateNewCompany } = require("../../../../utils/validators/companies");//utils/validators/companies
 const { setDefaultRoles, defaultCompanyAdminRoles } = require("../../../../utils/misc/company_roles");
-const { companyRoleActionValidateMW, } = require("../../../../utils/mymiddleware/roleMW");
+const { companyRoleActionValidateMW, hasAdminScopeMW, } = require("../../../../utils/mymiddleware/roleMW");
 const addUserToRoleRouter = require("./addUsersToRoles");
 const removeUserFromRoleRouter = require("./removeUserFromRole");
 const sessIDVerifyMW = require("../../../../utils/mymiddleware/sessIDVerifyMW");
 const { getCompanyRoles, createNewRole, hasRole, hasScope, getScopeByAccID } = require("../../../../db/role");
-
-let hasRoleMW = async (req, res, next) => {
-    try {
-        let accountID = req.session.accountID
-        let hasRoleRes = await hasRole({ accountID, rolename: "createRole" });
-        if (!hasRoleRes) {
-            return res.json({ err: { msg: "No role access." } })
-        }
-        req.session.hasRole = hasRoleRes;
-        next()
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-let hasAdminScopeMW = async (req, res, next) => {
-    try {
-        let accountID = req.session.accountID
-        let hasScopeRes = await hasScope({ accountID, rolenames: [...defaultCompanyAdminRoles] });
-        if (!hasScopeRes) {
-            return res.json({ err: { msg: "No scope access." } })
-        }
-        req.session.hasScope = hasScope;
-        next()
-    } catch (error) {
-        console.log(error)
-    }
-}
 
 router.get("/", async (req, res, next) => {
     try {

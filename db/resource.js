@@ -49,6 +49,21 @@ let getResourcesByAccID = async ({ accountID, filterIn = [] }) => {
     }
 }
 
+let getResourceByResourceID = async ({ resourceDocID, filterIn = [] }) => {
+    try {
+        let resourceDoc;
+        if (filterIn.length > 0) {
+            console.log(resourceDocID)
+            resourceDoc = await resourcesCol.findOne({ resourceDocID });
+        } else {
+            resourceDoc = await resourcesCol.findOne({ resourceDocID, });
+        }
+        let resource = resourceDoc
+        return { resource }
 
+    } catch (error) {
+        console.log(error)
+    }
+}
 
-module.exports = { createResource, getResourcesByAccID };
+module.exports = { createResource, getResourcesByAccID ,getResourceByResourceID};

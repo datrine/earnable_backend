@@ -1,6 +1,6 @@
 const { accountAccIDResetSet, getBiodataFunc } = require("../../../db/account");
 const { getCompaniesByIDs } = require("../../../db/company");
-const { getMyResources, getResourcesByID } = require("../../../db/resource");
+const { getMyResources, getResourcesByID, getResourcesByAccID } = require("../../../db/resource");
 const { accTemplate } = require("../../../db/templates");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 
@@ -20,7 +20,7 @@ router.use("/", async (req, res, next) => {
                 break;
         }
         console.log(filterIn)
-        let resourcesRes = await getResourcesByID({ accountID,filterIn });
+        let resourcesRes = await getResourcesByAccID({ accountID,filterIn });
         console.log(resourcesRes);
         if (resourcesRes.err) {
             return res.json(resourcesRes)

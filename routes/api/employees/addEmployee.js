@@ -7,11 +7,11 @@ const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
 const { registerEmployeeFunc } = require("../../../db/register");
 const { sendEmail } = require("../../../from/utils/email_mgt");
 const { sendPhoneText } = require("../../../from/utils/phone_mgt");
-const {generateMobileToken,generateToken, generatePhonePinToken} = require("../../../from/utils/middlewares/generateTokenMW");
+const { generateMobileToken, generateToken, generatePhonePinToken } = require("../../../from/utils/middlewares/generateTokenMW");
 const sendEmailToken = require("../../../from/utils/middlewares/sendEmailToken");
-const { sendPhonePinSMSToken} = require("../../../from/utils/middlewares/sendMobileSMSToken");
+const { sendPhonePinSMSToken } = require("../../../from/utils/middlewares/sendMobileSMSToken");
 
-router.post("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
+router.put("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
     try {
         res.status(400);
         let account = req.session.account;
@@ -23,7 +23,7 @@ router.post("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
             accountID: account.accountID
         }
         let data = employeeToSave;
-         let allResponses =await registerEmployeeFunc({ ...data });
+        let allResponses = await registerEmployeeFunc({ ...data });
 
         let { err, ...rest } = allResponses;
         if (err) {
@@ -48,7 +48,7 @@ router.post("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
         }
         res.json({ ...rest });
         req.session.email = req.body.email
-        req.session.phonenum=req.body.phonenum;
+        req.session.phonenum = req.body.phonenum;
         next()
 
     } catch (error) {
@@ -56,7 +56,7 @@ router.post("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
         console.log(error)
         res.json({ err: error })
     }
-},generateToken,sendEmailToken, generatePhonePinToken, sendPhonePinSMSToken, async (req, res, next) => {
+}, generateToken, sendEmailToken, generatePhonePinToken, sendPhonePinSMSToken, async (req, res, next) => {
     try {
         console.log({ info: "Email sent..." })
     } catch (error) {

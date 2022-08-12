@@ -1,17 +1,12 @@
-const router = require("express").Router()
 const { mongoClient } = require("../utils/conn/mongoConn");
-const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const employeesCol = waleprjDB.collection("employees");
-const companyRolesCol = waleprjDB.collection("companyRoles");
-const { ObjectId } = require("bson");
-const { getBiodataFunc } = require("./account");
-const { cleanAndValidateNewCompany } = require("../utils/validators/companies");
-const sessIDVerifyMW = require("../utils/mymiddleware/sessIDVerifyMW");
+const { ObjectId, UUID } = require("bson");
 
-let AddEmployee = async ({ ...employeeToData }) => {
+let addEmployee = async ({ ...employeeToData }) => {
     try {
         let result1 = await employeesCol.insertOne({
+            _id: employeeToData.employeeID ? employeeToData.employeeID : ObjectId(), //UUID.generate().toString(),
             ...employeeToData,
             lastModified: new Date(),
             createdOn: new Date(),
@@ -27,28 +22,62 @@ let AddEmployee = async ({ ...employeeToData }) => {
     }
 };
 
-let getCompaniesByIDs = async ({ ids }) => {
+let getEmployeesByCompanyID = async ({ companyID, filters }) => {
     try {
-        console.log({ ids });
-        let companiesCursor = await employeesCol.find({ _id: { $in: [...ids].map(id => ObjectId(id)) } });
-        let companies = await companiesCursor.toArray();
-        companies = companies.map(com => ({ ...com, companyID: com._id.toString() }))
-        return { companies }
+        let employeesCursor;
+        let filterBuilder = {}
+
+        if (filters.enrolled) {
+            filterBuilder.enrolled = true
+        }
+
+        if (filters.unenrolled) {
+            filterBuilder.enrolled = { $ne: true }
+        }
+
+        console.log(filters)
+        employeesCursor = await employeesCol.find({ $or: [{ companyID }, { companyID: ObjectId(companyID) }],...filterBuilder });
+        let employees = await employeesCursor.toArray();
+        employees = employees.map(employee => ({ ...employee, employeeID: employee._id }))
+        return { employees }
     } catch (error) {
-        console.log(error)
+        console.log({ err: error })
     }
 }
 
-let getCompanyByID = async ({ id }) => {
+let getEmployeesByDepartmentID = async ({ companyID, departmentID, filters }) => {
     try {
-        let companyDoc = await employeesCol.findOne({ _id: ObjectId(id) });
-        if (!companyDoc) {
-            return { err: { msg: "Company not found" } }
+        let employeesCursor;
+        let filterBuilder = {}
+
+        if (filters.enrolled) {
+            filterBuilder.enrolled = true
         }
-        
-        return { company:{...companyDoc,companyID:companyDoc._id.toString()} }
+
+        if (filters.unenrolled) {
+            filterBuilder.enrolled = { $ne: true }
+        }
+
+        employeesCursor = await employeesCol.find({ $or: [{ companyID }, { companyID: ObjectId(companyID) }], departmentID, filterBuilder });
+        let employees = await employeesCursor.toArray();
+        employees = employees.map(employee => ({ ...employee, employeeID: employee._id }))
+        return { employees }
     } catch (error) {
-        console.log(error)
+        console.log({ err: error })
     }
 }
-module.exports = { createCompany: AddEmployee, getCompaniesByIDs, getCompanyByID };
+
+let getEmployeeByEmployeeID = async ({ employeeID }) => {
+    try {
+        let employeeDoc = await employeesCol.find({ _id: ObjectId(employeeID) });
+        if (!employeeDoc) {
+            return { err: { msg: "Company not found" } }
+        }
+
+        return { company: { ...employeeDoc, employeeID } }
+    } catch (error) {
+        console.log({ err: error })
+    }
+}
+
+module.exports = { addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID, getEmployeesByDepartmentID };
