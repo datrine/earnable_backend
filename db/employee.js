@@ -36,12 +36,39 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
         }
 
         console.log(filters)
-        employeesCursor = await employeesCol.find({ $or: [{ companyID }, { companyID: ObjectId(companyID) }],...filterBuilder });
+        employeesCursor = await employeesCol.find({ $or: [{ companyID }, { companyID: ObjectId(companyID) }], ...filterBuilder });
         let employees = await employeesCursor.toArray();
         employees = employees.map(employee => ({ ...employee, employeeID: employee._id }))
         return { employees }
     } catch (error) {
         console.log({ err: error })
+    }
+}
+let getTotalSalaries = async ({ companyID }) => {
+    try {
+        console.log(companyID)
+        let docs = employeesCol.aggregate([
+            {
+              '$match': {
+                'companyID': new ObjectId(companyID)
+              }
+            }, {
+              '$group': {
+                '_id': null, 
+                'total_monthly_salaries': {
+                  '$sum': {
+                    '$toInt': '$monthly_salary'
+                  }
+                }
+              }
+            }
+          ]
+        )
+        let results=await docs.toArray()
+        let total_monthly_salaries= results[0].total_monthly_salaries
+        return { total_monthly_salaries }
+    } catch (error) {
+        console.log(error)
     }
 }
 
@@ -80,4 +107,4 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
     }
 }
 
-module.exports = { addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID, getEmployeesByDepartmentID };
+module.exports = { addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID, getEmployeesByDepartmentID, getTotalSalaries };

@@ -9,6 +9,7 @@ const companyApiProperRouter = require("./company_new");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 const { getCompaniesByIDs, getCompanyByID } = require("../../../db/company");
 const {  getResourcesByAccID } = require("../../../db/resource");
+const { getTotalSalaries } = require("../../../db/employee");
 
 router.use("/", getAuthAccount);
 
@@ -36,10 +37,16 @@ router.use("/:companyID", async (req, res, next) => {
     }
 });
 
-router.use("/:companyID/roles",companyRolesRouter);
 
+router.use("/:companyID/roles",companyRolesRouter);
 router.use("/:companyID/employees",companyEmployeesRouter);
 router.use("/:companyID/departments",companyDepartmentsRouter);
+
+router.get("/:companyID/total_salaries",async (req, res, next) => {
+    let {companyID}=req.session
+    let totalSalaries=await getTotalSalaries({companyID});
+    return res.json(totalSalaries)
+});
 
 router.get("/:companyID", async (req, res, next) => {
     let { company } = req.session;
