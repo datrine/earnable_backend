@@ -52,7 +52,7 @@ async function registerFunc(data) {
 async function registerEmployeeFunc(data) {
     try {
         let { email, username=email, phonenum,job_title,monthly_salary, phonePin,employee_id, f_name, l_name, dob, gender,
-             companyID, bank_name, acc_number,bank_code, } = data
+             companyID, bank_name, acc_number,bank_code,deptID,department } = data
         if (!email) {
             // return { err: { msg: "Email not supplied..." } }
         }
@@ -77,13 +77,15 @@ async function registerEmployeeFunc(data) {
 
         let userRes = await createBiodataFunc({
             email, accountID: accountRes.accountID,
-            lastname: l_name, f_name, dob, gender
+             l_name, f_name, dob, gender
         });
         let addEmployeeRes = await addEmployee({
             accountID: accountRes.accountID,
             companyID,
             job_title,
             monthly_salary,
+            deptID,
+            department,
             employeeID:  employee_id,
             lastModified: new Date(),
             createdOn: new Date()
@@ -282,7 +284,7 @@ async function createEmployeeAccountFunc(dataToSave) {
 
 /**
  * 
- * @param {*} bioToSave 
+ * @param {object} bioToSave 
  * @param {string} bioToSave.email
  * @param {string} bioToSave.l_name
  * @param {string} bioToSave.f_name

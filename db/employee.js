@@ -34,8 +34,6 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
         if (filters.unenrolled) {
             filterBuilder.enrolled = { $ne: true }
         }
-
-        console.log(filters)
         employeesCursor = await employeesCol.find({ $or: [{ companyID }, { companyID: ObjectId(companyID) }], ...filterBuilder });
         let employees = await employeesCursor.toArray();
         employees = employees.map(employee => ({ ...employee, employeeID: employee._id }))
@@ -46,7 +44,6 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
 }
 let getTotalSalaries = async ({ companyID }) => {
     try {
-        console.log(companyID)
         let docs = employeesCol.aggregate([
             {
               '$match': {
