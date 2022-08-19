@@ -16,7 +16,6 @@ let addEmployee = async ({ ...employeeToData }) => {
         }
         return { employeeID: result1.insertedId.toString(), }
     } catch (error) {
-        res.status(500)
         console.log(error)
         res.json({ err: error })
     }

@@ -5,7 +5,6 @@ const waleprjDB = mongoClient.db("waleprj");
 const bank_detailsCol = waleprjDB.collection("bank_details");
 const companyRolesCol = waleprjDB.collection("companyRoles");
 const { ObjectId } = require("bson");
-const { getBiodataFunc } = require("./account");
 const { cleanAndValidateNewCompany } = require("../utils/validators/companies");
 const sessIDVerifyMW = require("../utils/mymiddleware/sessIDVerifyMW");
 /**

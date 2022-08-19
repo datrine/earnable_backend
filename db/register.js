@@ -79,6 +79,7 @@ async function registerEmployeeFunc(data) {
             email, accountID: accountRes.accountID,
              l_name, f_name, dob, gender
         });
+        
         let addEmployeeRes = await addEmployee({
             accountID: accountRes.accountID,
             companyID,

@@ -5,6 +5,8 @@ const waleprjDB = mongoClient.db("waleprj");
 const companyRolesRouter = require("./roles");
 const companyEmployeesRouter = require("./employees");
 const companyDepartmentsRouter = require("./departments");
+const companyTransactionsRouter = require("./transactions");
+const companyWalletRouter = require("./wallets");
 const companyApiProperRouter = require("./company_new");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 const { getCompaniesByIDs, getCompanyByID } = require("../../../db/company");
@@ -41,6 +43,8 @@ router.use("/:companyID", async (req, res, next) => {
 router.use("/:companyID/roles",companyRolesRouter);
 router.use("/:companyID/employees",companyEmployeesRouter);
 router.use("/:companyID/departments",companyDepartmentsRouter);
+router.use("/:companyID/transactions",companyTransactionsRouter);
+router.use("/:companyID/wallet",companyWalletRouter);
 
 router.get("/:companyID/total_salaries",async (req, res, next) => {
     let {companyID}=req.session

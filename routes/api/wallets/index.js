@@ -8,17 +8,10 @@ const { createCompanyWallet, getWalletByCompanyID } = require("../../../db/walle
 
 router.use(tokenVerifyMW);
 
-router.post("/", async(req, res, next) => {
+router.post("/fund", async(req, res, next) => {
     try {
-    let { companyID,walletID } = req.body;
-    
-    if (!companyID) {
-       return res.json({err:{msg:"CompanyID Not supplied"}})
-    }
-    let company=getu
-    if (!companyID) {
-       return res.json({err:{msg:"CompanyID Not supplied"}})
-    }
+    let { companyID,account } = req.session;
+    let data=req.body
     } catch (error) {
         console.log(error)
     }

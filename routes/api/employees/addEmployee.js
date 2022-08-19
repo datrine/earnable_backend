@@ -10,19 +10,21 @@ const { sendPhoneText } = require("../../../from/utils/phone_mgt");
 const { generateMobileToken, generateToken, generatePhonePinToken } = require("../../../from/utils/middlewares/generateTokenMW");
 const sendEmailToken = require("../../../from/utils/middlewares/sendEmailToken");
 const { sendPhonePinSMSToken } = require("../../../from/utils/middlewares/sendMobileSMSToken");
-
+const { getRandomToken } = require("../../../from/utils/token_mgt");
+const { saveToken } = require("../../../db/token");
+const { DateTime } = require("luxon");
+const frontend_url = process.env.FRONTEND_URL
 router.put("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
     try {
         res.status(400);
-        let account = req.session.account;
-        let { employeeToSave } = req
+        let { employeeToSave,account,company } = req.session
+        let data = employeeToSave;
         employeeToSave.companyID = ObjectId(employeeToSave.companyID);
         employeeToSave.creatorMeta = {
             _id: ObjectId(account._id),
             email: account.email,
             accountID: account.accountID
         }
-        let data = employeeToSave;
         let allResponses = await registerEmployeeFunc({ ...data });
 
         let { err, ...rest } = allResponses;
@@ -30,13 +32,20 @@ router.put("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
             res.status = 400
             return res.json({ err });
         }
+        let employeeVerSessID=allResponses.verSessID
+        let token = getRandomToken({ minLength: 4 });
+        let ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
+        saveToken({token,factor:"phone_pin",type: "token_ver",factorValue:data.phonenum,ttl});
+        
         if (data.email) {
+            let {company_name}=company
             sendEmail({
                 subject: "Welcome To Earnable",
                 to: data.email,
                 html:
-                    `<p>Welcome to Earnable.
-             We hope you enjoy your time here</p>`
+                    `<h3>Welcome to Earnable</h3>.
+            <p>Your employer, ${company_name}, has registered you at Earnable. We hope you enjoy your time here. You can activate your account 
+            <a href='${frontend_url}/employee/register?verSessID=${employeeVerSessID}'>here</a>. Your OTP is ${token}.</p>`
             }).catch(err => { console.log(err) });
         }
 

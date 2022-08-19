@@ -3,7 +3,8 @@ const { mongoClient } = require("../../../utils/conn/mongoConn");
 const waleprjDB = mongoClient.db("waleprj");
 const paymentsCol = waleprjDB.collection("payments")
 var crypto = require('crypto');
-var secret = 'sk_test_9b43dbc08afbbb51848c736377fb8915be9b969e'
+let secret=process.env.PAYSTACK_SECRET_KEY
+var paystack = require("paystack-api")(secret);
 
 router.post("/", (req, res, next) => {
     //validate event

@@ -12,6 +12,7 @@ const { getBiodataFunc } = require("../../../db/account");
 const { createCompany } = require("../../../db/company");
 const { createRoles } = require("../../../db/role");
 const { createResource } = require("../../../db/resource");
+const { getOrCreateCompanyWallet } = require("../../../db/wallet");
 
 router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     try {
@@ -26,28 +27,35 @@ router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next
         if (companyRes.err) {
             return res.json(companyRes)
         }
-        let rolesRes = await createRoles({ roles, companyID: companyRes.companyID, creatorMeta: { accountID: account.accountID } })
+        let { companyID } = companyRes
+        let rolesRes = await createRoles({ roles, companyID, creatorMeta: { accountID: account.accountID } })
         if (rolesRes.err) {
             return res.json(rolesRes.err)
         }
         let resourceRes = await createResource({
             accountID: account.accountID,
-            resource_type: "company"
-            , resourceDocID: companyRes.companyID
+            resource_type: "company",
+            resourceDocID: companyID
         });
         if (resourceRes.err) {
             return res.json(rolesRes.err)
         }
+        let walletRes = await getOrCreateCompanyWallet({ companyID });
+        if (walletRes.err) {
+            return res.json(walletRes.err)
+        }
         console.log({
-            companyID: companyRes.companyID,
+            companyID: companyID,
             rolesID: rolesRes.rolesID,
-            resourceID: resourceRes.resourceID
+            resourceID: resourceRes.resourceID,
+            walletID: walletRes.walletID
         });
         res.status(201);
         return res.json({
             companyID: companyRes.companyID,
             rolesID: rolesRes.rolesID,
-            resourceID: resourceRes.resourceID
+            resourceID: resourceRes.resourceID,
+            walletID: walletRes.walletID
         })
     } catch (error) {
         console.log(error)

@@ -58,6 +58,7 @@ router.get("/info", async (req, res, next) => {
         console.log(error)
     }
 });
+
 router.get("/", async (req, res, next) => {
     try {
         let { employees } = req.session

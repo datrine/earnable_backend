@@ -75,7 +75,8 @@ let canAddEmployeeMW = async (req, res, next) => {
             console.log("subscription has expired.")
             return res.json({ err: `subscription has expired.` });
         }
-        req.employeeToSave = refinedData
+        req.session.employeeToSave = refinedData
+        req.session.company=company
         res.status(200)
         return next()
     } catch (error) {
