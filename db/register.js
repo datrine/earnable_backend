@@ -11,7 +11,11 @@ const { processImg } = require("../from/utils/processMedia");
 const { sendPhoneText } = require("../from/utils/phone_mgt");
 const { ObjectId } = require("mongodb");
 const { addEmployee } = require("./employee");
-const { addBankDetail } = require("./bank_detail");
+const { addBankDetail, updateRecieptCodeEmployeeID, createRecipientCode } = require("./bank_detail");
+/**
+ * @type {import("isomorphic-unfetch").default}
+ */
+const fetch = require("isomorphic-unfetch")
 
 async function registerFunc(data) {
     try {
@@ -51,8 +55,9 @@ async function registerFunc(data) {
 
 async function registerEmployeeFunc(data) {
     try {
-        let { email, username=email, phonenum,job_title,monthly_salary, phonePin,employee_id, f_name, l_name, dob, gender,
-             companyID, bank_name, acc_number,bank_code,deptID,department } = data
+        let { email, username, phonenum, job_title, monthly_salary, phonePin, employee_id, f_name, l_name, dob, gender,
+            companyID, bank_name, acc_number, bank_code, deptID, department, enrollment = "unenrolled" } = data
+        username = username || email
         if (!email) {
             // return { err: { msg: "Email not supplied..." } }
         }
@@ -77,9 +82,9 @@ async function registerEmployeeFunc(data) {
 
         let userRes = await createBiodataFunc({
             email, accountID: accountRes.accountID,
-             l_name, f_name, dob, gender
+            l_name, f_name, dob, gender
         });
-        
+
         let addEmployeeRes = await addEmployee({
             accountID: accountRes.accountID,
             companyID,
@@ -87,7 +92,8 @@ async function registerEmployeeFunc(data) {
             monthly_salary,
             deptID,
             department,
-            employeeID:  employee_id,
+            employeeID: employee_id,
+            enrollment,
             lastModified: new Date(),
             createdOn: new Date()
         });
@@ -95,11 +101,32 @@ async function registerEmployeeFunc(data) {
         if (addEmployeeRes.err) {
             return { err: addEmployeeRes.err }
         }
-        let det = { bank_name,bank_code, acc_number, accountID: accountRes.accountID }
+        let det = { bank_name, bank_code, acc_number, accountID: accountRes.accountID }
         let bankDetailRes = await addBankDetail({ ...det });
+
         if (bankDetailRes.err) {
             return { err: bankDetailRes.err }
         }
+        let bankDetailID=bankDetailRes.bankDetailID;
+        (async () => {
+            try {
+                let { err: recipientCodeErr, recipient_code } =
+                    await createRecipientCode({ l_name, f_name, acc_number, bank_code, bankDetailID });
+                if (recipientCodeErr) {
+                    return { err: recipientCodeErr }
+                }
+                let { err, info } = await updateRecieptCodeEmployeeID({ bankDetailID, recipient_code });
+                if (err) {
+                    console.log(err);
+                    return { err }
+                }
+                if (info) {
+                    console.log(info);
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        })()
         /*  let result2 = await companyRolesCol.insertOne({
               companyID: ObjectId(companyID),
               userAccID: accountRes.accountID,
@@ -107,7 +134,7 @@ async function registerEmployeeFunc(data) {
               lastModified: new Date(),
               createdOn: new Date(),
           }) */
-        return { ...accountRes, ...userRes, ...addEmployeeRes,...bankDetailRes }
+        return { ...accountRes, ...userRes, ...addEmployeeRes, ...bankDetailRes }
     } catch (error) {
         console.log(error);
         throw error
@@ -203,7 +230,7 @@ async function createAccountFunc(dataToSave) {
 
 async function createEmployeeAccountFunc(dataToSave) {
     try {
-        let { email, username, phonenum, prof_pic, phonePin } = dataToSave;
+        let { email, username, phonenum, prof_pic, phonePin, acc_type = "employee", } = dataToSave;
         let accountID = nanoid();
         let docExists = await accountsCol.findOne({
             $or: [{ email }, { username }, { phonenum }]
@@ -250,7 +277,17 @@ async function createEmployeeAccountFunc(dataToSave) {
                 ],
                 verSessID: nanoid()
             },
-            createdOn: new Date(), updatedOn: new Date()
+            acc_type,
+            activity: {
+                history: [],
+                current: {
+                    name: "inactive",
+                    from: new Date(),
+                    to: null
+                }
+            },
+            updatedOn: new Date(),
+            createdOn: new Date()
         }
 
         let res = await accountsCol.insertOne({ ...accToSave });

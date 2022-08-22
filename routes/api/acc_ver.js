@@ -43,6 +43,17 @@ router.get("/:verSessID/email", async (req, res, next) => {
     }
 });
 
+router.get("/:verSessID/phone_pin", async (req, res, next) => {
+    try {
+        let { verInfo } = req.session
+        let emailStatus = verInfo.status.find(item => item.factor === "phone_pin")
+        res.json({ status: emailStatus })
+    } catch (error) {
+        console.log(error);
+        next("Server error")
+    }
+});
+
 router.get("/:verSessID/", async (req, res, next) => {
     try {
         let { verInfo } = req.session

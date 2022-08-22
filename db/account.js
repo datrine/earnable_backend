@@ -10,8 +10,11 @@ const { accTemplate } = require("./templates");
 const { findAndVerifyToken, saveToken } = require("./token");
 const { DateTime } = require("luxon");
 const { getRandomToken } = require("../from/utils/token_mgt");
-const { loginInfo } = require("./templates/account");
+const { loginInfo, username } = require("./templates/account");
 const { sendPhoneText } = require("../from/utils/phone_mgt");
+const { ObjectID } = require("bson");
+const {phone}=require("phone");
+
 /**
     * @param {object} params
     * @param {accTemplate} params.account
@@ -501,13 +504,25 @@ async function setDefaultPhonePin({ phonenum, phonePin, }) {
     }
 }
 
-async function changePhonePin({ phonenum, phonePin, sessID }) {
+async function changePhonePin({ phonenum, oldPin, phonePin, sessID }) {
     try {
         if (!phonenum) {
             return { err: { msg: "Mobile not supplied..." } }
         }
         if (!phonePin) {
             return { err: { msg: "Pin not supplied..." } }
+        }
+        /**
+         * @type {accTemplate}
+         */
+        let accToEdit = await accountsCol.findOne({
+            phonenum,
+        });
+        if (!accToEdit) {
+            return { err: { msg: "Phone number not found..." } };
+        }
+        if (accToEdit.phonePin === phonePin) {
+            return { err: { msg: "Pin already exists..." } };
         }
         let accRes = await accountsCol.findOneAndUpdate({
             phonenum,
@@ -729,7 +744,72 @@ async function retrieveAccountInfoBySessID(sessID) {
     }
 }
 
-async function checkIfAccountPropExists({prop,value}) {
+async function activateEmployeeAccount({ identifier, verSessID, phonePin }) {
+    try {
+        /**
+         * @type {accTemplate}
+         */
+        let account = await accountsCol.findOne({
+           $or:[{phonenum:identifier},{username:identifier}] 
+        });
+        if (!account) {
+            return { err: { msg: "Account does not exist." } };
+        }
+
+        if (account.acc_type !== "employee") {
+            return { err: { msg: "Account isn't an Employee type." } };
+        }
+
+        if (!phonePin) {
+            return { err: { msg: "New pin required to activate." } };
+        }
+
+        if (account?.verInfo?.verSessID !== verSessID) {
+            return { err: { msg: "Account verification session ID does not match record." } };
+        }
+
+        account.phonePin = phonePin
+        let current_activity = account.activity.current;
+        current_activity.to = new Date()
+        account.activity.history.push(current_activity);
+        account.activity.current = { name: "active", from: new Date() };
+        account.updatedOn = new Date();
+        let result = await accountsCol.findOneAndUpdate({  $or:[{phonenum:identifier},{username:identifier}] },
+             { $set: { ...account } });
+
+        if (!result.ok) {
+            return { err: { msg: "Account activation failed." } };
+        }
+        return { info: "Account is activated." }
+    } catch (error) {
+        console.log(error);
+        throw { err: error }
+    }
+}
+
+async function getCurrentAccountActivity({ identifier }) {
+    try {
+        
+        /**
+         * @type {accTemplate}
+         */
+        let account = await accountsCol.findOne({
+          $or:[{phonenum: identifier,},{email:identifier}]  
+        });
+        console.log(identifier)
+        if (!account) {
+            return { err: { msg: "Account does not exist." } };
+        }
+        console.log(account)
+        return { activity: account?.activity?.current?.name };
+
+    } catch (error) {
+        console.log(error);
+        throw { err: error }
+    }
+}
+
+async function checkIfAccountPropExists({ prop, value }) {
     try {
         /**
          * @type {accTemplate}
@@ -738,9 +818,9 @@ async function checkIfAccountPropExists({prop,value}) {
             [prop]: value
         });
         if (!account) {
-            return { exists:false };
+            return { exists: false };
         }
-        return { exists:true }
+        return { exists: true }
     } catch (error) {
         console.log(error)
     }
@@ -961,5 +1041,7 @@ module.exports = {
     activateNext, updateAccVer,
     getUnAuthenticatedFactors, accountLogOut,
     retrieveAccountInfoByAccountID,
-    deepSearchAccountsAndUsers, changePhonePin, setDefaultPhonePin,checkIfAccountPropExists
+    deepSearchAccountsAndUsers, changePhonePin,
+    setDefaultPhonePin, checkIfAccountPropExists,
+    activateEmployeeAccount, getCurrentAccountActivity
 };

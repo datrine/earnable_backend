@@ -34,12 +34,13 @@ let addBankDetail = async ({ ...bankDetails }) => {
     }
 };
 
-let getEmployeesByCompanyID = async ({ ids }) => {
+let getBankDetailsByAccountID = async ({ accountID }) => {
     try {
-        let employeesCursor = await bank_detailsCol.find({ _id: { $in: [...ids].map(id => ObjectId(id)) } });
-        let employees = await employeesCursor.toArray();
-        employees = employees.map(com => ({ ...com, employeeID: com._id.toString() }))
-        return { employees }
+        let accBankDetails = await bank_detailsCol.findOne({ accountID });
+        if (!accBankDetails) {
+            return { err: { msg: "No bank details." } }
+        }
+        return { bankDetails: accBankDetails }
     } catch (error) {
         console.log(error)
     }
@@ -58,4 +59,48 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
     }
 }
 
-module.exports = { addBankDetail, getEmployeesByCompanyID, getEmployeeByEmployeeID };
+let updateRecieptCodeEmployeeID = async ({ bankDetailID, recipient_code }) => {
+    try {
+        let updateRes = await bank_detailsCol.findOneAndUpdate({ _id: ObjectId(bankDetailID) }, {
+            $set: { recipient_code }
+        });
+        if (!updateRes.ok) {
+            return { err: { msg: "Company not found" } }
+        }
+
+        return { info: "Recipient code saved" }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+let createRecipientCode = async ({ l_name, f_name, acc_number, bank_code, bankDetailID }) => {
+    try {
+        let bankObj = {
+            "type": "nuban",
+            "name": l_name + " " + f_name,
+            "account_number": acc_number,
+            "bank_code": bank_code,
+            "currency": "NGN"
+        }
+        console.log(bankObj)
+        let response = await fetch("https://api.paystack.co/transferrecipient", {
+            method: "post",
+            mode: "cors",
+            headers: {
+                "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+            },
+            body: JSON.stringify({ ...bankObj })
+        });
+        let jsonObj = await response.json();
+        console.log(jsonObj)
+        let {data}=jsonObj
+        if (data?.active) {
+            let recipient_code = data.recipient_code;
+            return { info:"recipient code created.", recipient_code }
+        }
+    } catch (error) {
+        console.log(error)
+    }
+};
+module.exports = { addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID, createRecipientCode };

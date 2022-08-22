@@ -94,13 +94,27 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
     try {
         let employeeDoc = await employeesCol.find({ _id: ObjectId(employeeID) });
         if (!employeeDoc) {
-            return { err: { msg: "Company not found" } }
+            return { err: { msg: "Employee not found" } }
         }
 
-        return { company: { ...employeeDoc, employeeID } }
+        return { employee: { ...employeeDoc, employeeID } }
     } catch (error) {
         console.log({ err: error })
     }
 }
 
-module.exports = { addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID, getEmployeesByDepartmentID, getTotalSalaries };
+let getEmployeeByAccountID = async ({ accountID }) => {
+    try {
+        let employeeDoc = await employeesCol.findOne({ accountID});
+        if (!employeeDoc) {
+            return { err: { msg: "Employee not found" } }
+        }
+
+        return { employee: { ...employeeDoc, employeeID:employeeDoc._id } }
+    } catch (error) {
+        console.log({ err: error })
+    }
+}
+
+module.exports = { addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID, 
+    getEmployeesByDepartmentID, getTotalSalaries,getEmployeeByAccountID };

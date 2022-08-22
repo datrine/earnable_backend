@@ -32,7 +32,7 @@ router.get("/", async (req, res, next) => {
     }
 });
 
-router.get("/", async(req,res,next)=>{
+router.get("/company_roles", async(req,res,next)=>{
     try {
      let rolesRes=  await getCompanyRoles({companyID});
      if (rolesRes.err) {

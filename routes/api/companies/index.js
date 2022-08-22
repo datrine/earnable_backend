@@ -7,11 +7,14 @@ const companyEmployeesRouter = require("./employees");
 const companyDepartmentsRouter = require("./departments");
 const companyTransactionsRouter = require("./transactions");
 const companyWalletRouter = require("./wallets");
-const companyApiProperRouter = require("./company_new");
+const createCompanyApiRouter = require("./company_new");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 const { getCompaniesByIDs, getCompanyByID } = require("../../../db/company");
 const {  getResourcesByAccID } = require("../../../db/resource");
 const { getTotalSalaries } = require("../../../db/employee");
+
+
+router.use("/create", createCompanyApiRouter);
 
 router.use("/", getAuthAccount);
 
@@ -28,14 +31,15 @@ router.use("/:companyID", async (req, res, next) => {
     try {
         let { companyID } = req.params
         let companyRes = await getCompanyByID({ id: companyID });
-        if (companyRes.err) {
+        if (companyRes?.err) {
             return res.json(companyRes)
         }
         req.session.company = companyRes.company;
         req.session.companyID = companyID;
         next()
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        res.json({err:error})
     }
 });
 
@@ -57,8 +61,6 @@ router.get("/:companyID", async (req, res, next) => {
     return res.json({ company })
 });
 
-
-router.use("/", companyApiProperRouter);
 
 
 module.exports = router;

@@ -96,6 +96,15 @@ let verInfo = {
     verSessID: null,
 }
 
+let current_activity = {
+    /**
+     * @type {"inactive"|"active"|"blocked"|"suspended"}
+     */
+    name: "",
+    from: new Date(),
+    to: null
+}
+
 let accTemplate = {
     /**
      * @type {string}
@@ -123,7 +132,20 @@ let accTemplate = {
     passHash: undefined,
     loginInfo,
     verInfo,
+    /**
+     * @type {"employer"|"employee"}
+     */
+    acc_type:"",
+    activity: {
+        /**
+         * @type {current_activity}
+         */
+        current:null,
+        /**
+         * @type {[current_activity]}
+         */
+        history: [],
+    },
     createdOn: new Date(), updatedOn: new Date()
 }
-
 module.exports = accTemplate;

@@ -10,11 +10,11 @@ const { ObjectId } = require("bson");
 const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
 const { getBiodataFunc } = require("../../../db/account");
 const { createCompany } = require("../../../db/company");
-const { createRoles } = require("../../../db/role");
+const { createInitialCompanyRoles } = require("../../../db/role");
 const { createResource } = require("../../../db/resource");
 const { getOrCreateCompanyWallet } = require("../../../db/wallet");
 
-router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
+router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     try {
         res.status(400)
         let account = req.session.account
@@ -28,7 +28,7 @@ router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next
             return res.json(companyRes)
         }
         let { companyID } = companyRes
-        let rolesRes = await createRoles({ roles, companyID, creatorMeta: { accountID: account.accountID } })
+        let rolesRes = await createInitialCompanyRoles({ roles, companyID, creatorMeta: { accountID: account.accountID } })
         if (rolesRes.err) {
             return res.json(rolesRes.err)
         }
@@ -38,7 +38,7 @@ router.post("/create", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next
             resourceDocID: companyID
         });
         if (resourceRes.err) {
-            return res.json(rolesRes.err)
+            return res.json(resourceRes.err)
         }
         let walletRes = await getOrCreateCompanyWallet({ companyID });
         if (walletRes.err) {
