@@ -124,7 +124,7 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
 
     } catch (error) {
         console.log(error);
-        throw error
+        return { err: error }
     }
 };
 

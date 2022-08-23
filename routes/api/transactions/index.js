@@ -9,7 +9,7 @@ const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccou
 const { getToken } = require("../../../utils/encdec");
 const { transactionTokenVerMW } = require("../../../utils/mymiddleware/transactionTokenMWs");
 const { canWithdrawVerMW } = require("../../../utils/mymiddleware/canWithdrawMW");
-const { createTransaction } = require("../../../db/transaction");
+const { createTransaction, updateTransactionByTransactionID } = require("../../../db/transaction");
 const { getBankDetailsByAccountID, createRecipientCode, updateRecieptCodeEmployeeID, initiateTransfer } = require("../../../db/bank_detail");
 
 router.post("/new/create", getAuthAccount, transactionTokenVerMW, canWithdrawVerMW, async (req, res, next) => {
@@ -18,6 +18,9 @@ router.post("/new/create", getAuthAccount, transactionTokenVerMW, canWithdrawVer
         let total_amount = amount + withdrawal_fee;
         let bank_details = { bank_code, bank_name, acc_number, acc_name }
         let transRes = await createTransaction({ transactionToken, total_amount, timestamp_started, bank_details });
+        if (transRes.err) {
+            return
+        }
         res.json(transRes);
         let { bankDetails } = await getBankDetailsByAccountID({ accountID });
         if (!bankDetails) {
@@ -34,11 +37,20 @@ router.post("/new/create", getAuthAccount, transactionTokenVerMW, canWithdrawVer
                 console.log("ooooooooo")
                 return
             }
-            recipient_code=createRes.recipient_code
-           let updateRes=await updateRecieptCodeEmployeeID({ bankDetailID, recipient_code });
+            recipient_code = createRes.recipient_code
+            let updateRes = await updateRecieptCodeEmployeeID({ bankDetailID, recipient_code });
         }
-      let transferInitiationRes=await  initiateTransfer({reason:"Earnable payment",amount,recipient:recipient_code});
-      
+        let transferInitiationRes = await initiateTransfer({ reason: "Earnable payment", amount, recipient: recipient_code });
+        if (transferInitiationRes.err) {
+            console.log(transferInitiationRes);
+            return
+        }
+        let transferReference=transferInitiationRes.reference
+        let transactionUpdateRes=  updateTransactionByTransactionID({ transactionID,transferReference })
+        if (transactionUpdateRes.err) {
+            console.log(transactionUpdateRes);
+            return;
+        }
         let data = req.body
     } catch (error) {
         console.log(error)

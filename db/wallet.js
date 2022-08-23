@@ -11,6 +11,12 @@ let getWalletByCompanyID = async (companyID) => {
     return { wallet }
 }
 
+let holdAmountInWallet = async (companyID) => {
+    console.log(companyID)
+    let { wallet } = await getOrCreateCompanyWallet({ companyID });
+    let balance = wallet.balance
+    return { wallet }
+}
 let getWalletByWalletID = async (walletID) => {
     let wallet = await walletsCol.findOne({
         walletID: ObjectID(walletID)
@@ -38,7 +44,7 @@ let getOrCreateCompanyWallet = async ({ companyID, ...rest }) => {
         let { err, walletID } = await createCompanyWallet({ companyID, ...rest });
         return { err, walletID }
     }
-    return { walletID: wallet._id.toString() }
+    return { ...wallet, walletID: wallet._id.toString() }
 }
 
 let fundWallet = async ({ companyID, walletID, amount, createorMeta, }) => {
@@ -48,7 +54,7 @@ let fundWallet = async ({ companyID, walletID, amount, createorMeta, }) => {
         }, {
             $inc: { amount: Number(amount) },
             $set: { lastModified: new Date() },
-            $setOnInsert: {companyID, createorMeta, createdOn: new Date(), }
+            $setOnInsert: { companyID, createorMeta, createdOn: new Date(), }
         }, { upsert: true });
         if (!result.acknowledged) {
             return { err: { msg: "Unable to fund this time." } }
