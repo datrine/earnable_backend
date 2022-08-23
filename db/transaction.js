@@ -29,14 +29,14 @@ let getWalletByWalletID = async (walletID) => {
     return { wallet }
 }
 
-let createTransaction = async ({ platform, status, ...data }) => {
+let createTransaction = async ({  ...data }) => {
     let result = await transactionsCol.insertOne({
-        platform, ...data, status,
+         ...data,status:"processing",
         lastModified: new Date(),
         createdOn: new Date(),
     });
     if (!result?.insertedId) {
-        return { err: { msg: "No wallet created." } }
+        return { err: { msg: "No trasanction created." } }
     }
     return { transactionID: result.insertedId.toString() }
 }

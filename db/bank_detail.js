@@ -7,6 +7,7 @@ const companyRolesCol = waleprjDB.collection("companyRoles");
 const { ObjectId } = require("bson");
 const { cleanAndValidateNewCompany } = require("../utils/validators/companies");
 const sessIDVerifyMW = require("../utils/mymiddleware/sessIDVerifyMW");
+const { nanoid } = require("nanoid");
 /**
  * 
  * @param {object} param0
@@ -88,19 +89,65 @@ let createRecipientCode = async ({ l_name, f_name, acc_number, bank_code, bankDe
             method: "post",
             mode: "cors",
             headers: {
-                "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+                "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ ...bankObj })
         });
         let jsonObj = await response.json();
         console.log(jsonObj)
-        let {data}=jsonObj
+        let { data } = jsonObj
         if (data?.active) {
             let recipient_code = data.recipient_code;
-            return { info:"recipient code created.", recipient_code }
+            return { info: "recipient code created.", recipient_code }
         }
     } catch (error) {
         console.log(error)
     }
 };
-module.exports = { addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID, createRecipientCode };
+
+let initiateTransfer = async ({ source = "balance", reason, amount, recipient }) => {
+    try {
+        let reference = nanoid();
+        let response = await fetch("https://api.paystack.co/transfer", {
+            method: "post",
+            mode: "cors",
+            headers: {
+                "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ source, reason, amount, recipient, reference })
+        });
+        let jsonObj = await response.json();
+        console.log(jsonObj)
+        return { ...jsonObj, reference }
+
+    } catch (error) {
+        console.log(error);
+        throw error
+    }
+};
+
+let verifyTransfer = async ({ reference }) => {
+    try {
+        console.log(bankObj)
+        let response = await fetch(`https://api.paystack.co/transfer/verify/${reference}`, {
+            method: "get",
+            mode: "cors",
+            headers: {
+                "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+            },
+        });
+        let jsonObj = await response.json();
+        console.log(jsonObj)
+        return jsonObj
+
+    } catch (error) {
+        console.log(error);
+        throw error
+    }
+};
+module.exports = {
+    addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID,
+    createRecipientCode, initiateTransfer
+};
