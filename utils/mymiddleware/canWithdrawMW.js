@@ -1,4 +1,5 @@
 const { getBankDetailsByAccountID } = require("../../db/bank_detail");
+const { getEmployeeByAccountID } = require("../../db/employee");
 const { findAndVerifyToken } = require("../../db/token");
 
 /**
@@ -21,7 +22,11 @@ let canWithdrawVerMW = async (req, res, next) => {
             withdrawal_fee = Number(amount) * 0.0015;
             req.body.withdrawal_fee = withdrawal_fee;
         }
-        let { accountID } = req.session.account
+        let { accountID } = req.session.account;
+        let getEmployeeRes=await getEmployeeByAccountID({accountID});
+       let employee= getEmployeeRes.employee;
+       
+        req.session.employee_details=employee
         next()
     } catch (error) {
         console.log(error);

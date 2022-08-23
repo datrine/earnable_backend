@@ -11,12 +11,57 @@ let getWalletByCompanyID = async (companyID) => {
     return { wallet }
 }
 
-let holdAmountInWallet = async (companyID) => {
-    console.log(companyID)
-    let { wallet } = await getOrCreateCompanyWallet({ companyID });
-    let balance = wallet.balance
-    return { wallet }
+let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
+    try {
+        
+        console.log(companyID)
+        let { wallet } = await getOrCreateCompanyWallet({ companyID });
+    let balance = Number(wallet.balance);
+    let amountOnHold = Number(wallet.amountOnHold);
+    amountOnHold = Number.isNaN(amountOnHold) ? 0 : amountOnHold;
+    if (amountToHold > balance) {
+        return { err: { msg: "Insufficient balance" } }
+    }
+    if (amountToHold > balance) {
+        return { err: { msg: "Insufficient balance" } }
+    }
+    let updateCondQuery = { $gt: ["$balance", amountToHold], $lt: [{ $add: ["$amountOnHold", amountOnHold] }, "$balance"] }
+    let withdrawer={accountID}
+    let updateRes = await walletsCol.findOneAndUpdate({ companyID, }, [{
+        $set: {
+            amountOnHold: {
+                $cond: {
+                    if: updateCondQuery,
+                    then: { $add: ["$amountOnHold", amountToHold] },
+                    else: "$amountOnHold"
+                }
+            },
+            withdrawers: {
+                $ifNull: {
+                    $cond: {
+                        if: updateCondQuery,
+                        then: { $concatArrays: ["$withdrawers",[withdrawer]] },
+                        else: "$lastModified"
+                    },$concatArrays:[[withdrawer]]
+                },
+            },
+            lastModified: {
+                $cond: {
+                    if: updateCondQuery,
+                    then: new Date(),
+                    else: "$lastModified"
+                }
+            }
+        }
+    }]);
+console.log(updateRes)
+    return { info:"Transaction" }
+    } catch (error) {
+        
+    }
+    
 }
+
 let getWalletByWalletID = async (walletID) => {
     let wallet = await walletsCol.findOne({
         walletID: ObjectID(walletID)

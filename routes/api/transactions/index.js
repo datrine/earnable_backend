@@ -46,11 +46,12 @@ router.post("/new/create", getAuthAccount, transactionTokenVerMW, canWithdrawVer
             return
         }
         let transferReference=transferInitiationRes.reference
-        let transactionUpdateRes=  updateTransactionByTransactionID({ transactionID,transferReference })
+        let transactionUpdateRes= await updateTransactionByTransactionID({ transactionID,transferReference })
         if (transactionUpdateRes.err) {
             console.log(transactionUpdateRes);
             return;
         }
+
         let data = req.body
     } catch (error) {
         console.log(error)
