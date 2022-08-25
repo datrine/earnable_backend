@@ -2,6 +2,7 @@ const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const walletsCol = db.collection("wallets");
 const { ObjectID } = require("bson");
+const { nanoid } = require("nanoid");
 
 let getWalletByCompanyID = async (companyID) => {
     console.log(companyID)
@@ -13,53 +14,72 @@ let getWalletByCompanyID = async (companyID) => {
 
 let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
     try {
-        
         console.log(companyID)
         let { wallet } = await getOrCreateCompanyWallet({ companyID });
-    let balance = Number(wallet.balance);
-    let amountOnHold = Number(wallet.amountOnHold);
-    amountOnHold = Number.isNaN(amountOnHold) ? 0 : amountOnHold;
-    if (amountToHold > balance) {
-        return { err: { msg: "Insufficient balance" } }
-    }
-    if (amountToHold > balance) {
-        return { err: { msg: "Insufficient balance" } }
-    }
-    let updateCondQuery = { $gt: ["$balance", amountToHold], $lt: [{ $add: ["$amountOnHold", amountOnHold] }, "$balance"] }
-    let withdrawer={accountID}
-    let updateRes = await walletsCol.findOneAndUpdate({ companyID, }, [{
-        $set: {
-            amountOnHold: {
-                $cond: {
-                    if: updateCondQuery,
-                    then: { $add: ["$amountOnHold", amountToHold] },
-                    else: "$amountOnHold"
-                }
-            },
-            withdrawers: {
-                $ifNull: {
+        let balance = Number.isNaN(wallet?.balance) ? 0 : Number(wallet?.balance);
+        let amountOnHold = Number.isNaN(wallet?.amountOnHold) ? 0 : amountOnHold;
+        console.log({ balance, amountOnHold, amountToHold })
+        if (amountToHold > balance) {
+            return { err: { msg: "Insufficient balance" } }
+        }
+        if (amountOnHold > balance) {
+            return { err: { msg: "Insufficient balance" } }
+        }
+        let updateCondQuery = {
+            $and: [
+                { $gt: ["$balance", amountToHold] },
+                //false
+                { $lt: [{ $add: ["$amountOnHold", amountOnHold] }, "$balance"] }
+            ]
+        }
+        let withdrawer = { accountID, amountToHold, createdOn: new Date(), withdrawID: nanoid() }
+        let updateRes = await walletsCol.findOneAndUpdate({ companyID, }, [{
+            $set: {
+                amountOnHold: {
                     $cond: {
                         if: updateCondQuery,
-                        then: { $concatArrays: ["$withdrawers",[withdrawer]] },
-                        else: "$lastModified"
-                    },$concatArrays:[[withdrawer]]
+                        //if: true,
+                        then: { $add: ["$amountOnHold", amountToHold] },
+                        //then: 60,
+                        else: "$amountOnHold"
+                        //else:80
+                    }
                 },
-            },
-            lastModified: {
-                $cond: {
-                    if: updateCondQuery,
-                    then: new Date(),
-                    else: "$lastModified"
+                withdrawers: {
+                    $cond: {
+                        if: updateCondQuery,
+                        //if: true,
+                        then: { $concatArrays: ["$withdrawers", [withdrawer]] },
+                        //then: 90,
+                        else: "$withdrawers"
+                        //else: 900
+                    }
+                },
+                lastModified: {
+                    $cond: {
+                        if: updateCondQuery,
+                        //if: true,
+                        then: new Date(),
+                        else: "$lastModified"
+                    }
                 }
             }
+        }], { returnDocument: "after" });
+        let newDoc = updateRes.value;
+        if (!newDoc?.withdrawers) {
+            return { err: { msg: "Could not process transaction" } }
         }
-    }]);
-console.log(updateRes)
-    return { info:"Transaction" }
+
+        let isSaved = !!Array.from(newDoc.withdrawers).find(obj => obj.accountID === withdrawer.accountID && obj.withdrawID === withdrawer.withdrawID)
+        if (!isSaved) {
+            return { err: { msg: "Could not process transaction" } }
+        }
+        console.log(updateRes)
+        return { info: "Amount held under lock" }
     } catch (error) {
-        
+        console.log(error)
     }
-    
+
 }
 
 let getWalletByWalletID = async (walletID) => {
@@ -112,4 +132,4 @@ let fundWallet = async ({ companyID, walletID, amount, createorMeta, }) => {
     }
 }
 
-module.exports = { getWalletByCompanyID, createCompanyWallet, getWalletByWalletID, fundWallet, getOrCreateCompanyWallet }
+module.exports = { getWalletByCompanyID, createCompanyWallet, getWalletByWalletID, fundWallet, getOrCreateCompanyWallet, holdAmountInWallet }

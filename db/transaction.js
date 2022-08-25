@@ -22,19 +22,29 @@ let getTransactionsByCompanyID = async (companyID) => {
     return { transactions }
 }
 
-let updateTransactionByTransactionID = async ({transactionID, ...updates}) => {
+let updateTransactionByTransactionID = async ({ transactionID, ...updates }) => {
     let result = await transactionsCol.findOneAndUpdate({
         _id: ObjectID(transactionID)
-    },{$set:{...updates,lastModified:new Date()}});
+    }, { $set: { ...updates, lastModified: new Date() }, });
     if (!result.ok) {
-        return {err:{msg:`Failed to update transaction ${transactionID}`}}
+        return { err: { msg: `Failed to update transaction ${transactionID}` } }
     }
-    return { info:"Transaction updated" }
+    return { info: "Transaction updated" }
 }
 
-let createTransaction = async ({  ...data }) => {
+let updateAndReturnTransactionByTransactionID = async ({ transactionID, ...updates }) => {
+    let result = await transactionsCol.findOneAndUpdate({
+        _id: ObjectID(transactionID)
+    }, { $set: { ...updates, lastModified: new Date() }, },{returnDocument:"after"});
+    if (!result.ok) {
+        return { err: { msg: `Failed to update transaction ${transactionID}` } }
+    }
+    return { info: "Transaction updated",transaction:result.value }
+}
+
+let createTransaction = async ({ ...data }) => {
     let result = await transactionsCol.insertOne({
-         ...data,status:"processing",
+        ...data, status: "initiated",
         lastModified: new Date(),
         createdOn: new Date(),
     });
@@ -52,4 +62,5 @@ let getOrCreateCompanyWallet = async ({ companyID }) => {
     return { wallet }
 }
 
-module.exports = { getTransactionsByCompanyID, createTransaction, getOrCreateCompanyWallet, updateTransactionByTransactionID }
+module.exports = { getTransactionsByCompanyID, createTransaction, getOrCreateCompanyWallet, updateTransactionByTransactionID,
+    updateAndReturnTransactionByTransactionID }

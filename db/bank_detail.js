@@ -75,16 +75,15 @@ let updateRecieptCodeEmployeeID = async ({ bankDetailID, recipient_code }) => {
     }
 }
 
-let createRecipientCode = async ({ l_name, f_name, acc_number, bank_code, bankDetailID }) => {
+let createRecipientCode = async ({ acc_name, acc_number, bank_code, bankDetailID }) => {
     try {
         let bankObj = {
             "type": "nuban",
-            "name": l_name + " " + f_name,
+            "name": acc_name,
             "account_number": acc_number,
             "bank_code": bank_code,
             "currency": "NGN"
         }
-        console.log(bankObj)
         let response = await fetch("https://api.paystack.co/transferrecipient", {
             method: "post",
             mode: "cors",
@@ -95,7 +94,6 @@ let createRecipientCode = async ({ l_name, f_name, acc_number, bank_code, bankDe
             body: JSON.stringify({ ...bankObj })
         });
         let jsonObj = await response.json();
-        console.log(jsonObj)
         let { data } = jsonObj
         if (data?.active) {
             let recipient_code = data.recipient_code;
@@ -119,7 +117,6 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
             body: JSON.stringify({ source, reason, amount, recipient, reference })
         });
         let jsonObj = await response.json();
-        console.log(jsonObj)
         return { ...jsonObj, reference }
 
     } catch (error) {
@@ -130,7 +127,6 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
 
 let verifyTransfer = async ({ reference }) => {
     try {
-        console.log(bankObj)
         let response = await fetch(`https://api.paystack.co/transfer/verify/${reference}`, {
             method: "get",
             mode: "cors",

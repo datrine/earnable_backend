@@ -20,6 +20,16 @@ let generateMobileToken= async (req, res, next) => {
     }
 }
 
+
+let generateOTPToken= async (req, res, next) => {
+    try {
+        let otp = getRandomToken({ minLength: 4 });
+        req.session.otp = otp;
+        next()
+    } catch (error) {
+        console.log(error);
+    }
+}
 let generatePhonePinToken= async (req, res, next) => {
     try {
         let token = getRandomToken({ minLength: 4 });
@@ -30,4 +40,4 @@ let generatePhonePinToken= async (req, res, next) => {
     }
 }
 
-module.exports={generateToken: generateEmailToken,generateMobileToken,generatePhonePinToken};
+module.exports={generateToken: generateEmailToken,generateMobileToken,generatePhonePinToken,generateOTPToken};

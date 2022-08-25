@@ -25,7 +25,6 @@ let createDepartment = async ({ companyID, ...deptToData }) => {
 
 let getDepartmentsByCompanyID = async ({ companyID, filters }) => {
     try {
-        console.log(filters)
         let departmentsCursor;
         let filterBuilder = null
 
@@ -94,4 +93,5 @@ let editDepartment = async ({ companyID, departmentID, ...deptToData }) => {
         res.json({ err: error })
     }
 };
+
 module.exports = { createDepartment, editDepartment, getDepartmentByDepartmentID, getDepartmentsByCompanyID };

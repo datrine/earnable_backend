@@ -4,10 +4,13 @@ const { sendPhoneText } = require("../../../from/utils/phone_mgt/");
 const { DateTime } = require("luxon");
 const { saveToken } = require("../../../db/token");
 const sendEmailToken = require("../../../from/utils/middlewares/sendEmailToken");
-const { generateToken, generateMobileToken, generatePhonePinToken } = require("../../../from/utils/middlewares/generateTokenMW");
+const { generateToken, generateMobileToken, generatePhonePinToken, generateOTPToken } = require("../../../from/utils/middlewares/generateTokenMW");
 const { updateAccVer, retrieveAccountInfoByVerSessID, mobileFactorDBUpdate, mobileFactorAuth, retrieveAccountInfoBySessID } = require("../../../db/account");
 const { sendMobileSMSToken, sendPhonePinSMSToken } = require("../../../from/utils/middlewares/sendMobileSMSToken");
 const { sessConfirmMW } = require("../../../from/utils/middlewares/sessIDMW");
+const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
+const { saveOTPToken } = require("../../../db/otp_token");
+const { sendOTPMW } = require("../../../utils/mymiddleware/sendOTPMW");
 let router = require("express").Router()
 
 router.get("/email/verification/:verSessID", async (req, res, next) => {
@@ -201,5 +204,12 @@ router.get("/phone_pin/verification/:verSessID", generateToken, async (req, res,
         console.log(error)
     }
 });
+
+router.get("/transaction/withdrawal/otp",getAuthAccount, generateOTPToken, sendOTPMW,async(req,res,next)=>{
+    
+        //res.json({ info: emailRes });
+        res.json({info:"OTP sent."})
+});
+
 
 module.exports = router;

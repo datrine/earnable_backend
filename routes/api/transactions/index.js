@@ -4,55 +4,92 @@ const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const ordersCol = waleprjDB.collection("orders")
 const { validateServerSidePaymentMW } = require("../../../utils/mymiddleware/accounts/validateServerSidePaymentMW");
-const { createCompanyWallet, getWalletByCompanyID } = require("../../../db/wallet");
+const { createCompanyWallet, getWalletByCompanyID, holdAmountInWallet } = require("../../../db/wallet");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 const { getToken } = require("../../../utils/encdec");
 const { transactionTokenVerMW } = require("../../../utils/mymiddleware/transactionTokenMWs");
 const { canWithdrawVerMW } = require("../../../utils/mymiddleware/canWithdrawMW");
-const { createTransaction, updateTransactionByTransactionID } = require("../../../db/transaction");
+const { createTransaction, updateTransactionByTransactionID, updateAndReturnTransactionByTransactionID } = require("../../../db/transaction");
 const { getBankDetailsByAccountID, createRecipientCode, updateRecieptCodeEmployeeID, initiateTransfer } = require("../../../db/bank_detail");
+const { sendOTPMW } = require("../../../utils/mymiddleware/sendOTPMW");
+const { generateOTPToken } = require("../../../from/utils/middlewares/generateTokenMW");
 
-router.post("/new/create", getAuthAccount, transactionTokenVerMW, canWithdrawVerMW, async (req, res, next) => {
+router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async (req, res, next) => {
     try {
-        let { transactionToken, bank_code, amount, withdrawal_fee, bank_name, l_name, f_name, acc_number, acc_name, timestamp_started } = req.body;
+        let { amount, withdrawal_fee, } = req.body;
+        let { company, department, } = req.session;
+        let withdrawal_charge_mode = Array.from().find(policy => policy.name === "withdrawal_charge_mode") ||
+            company?.withdrawal_charge_mode || "employee"
+        let employee_details = req.session.employee_details
+        let companyID = employee_details?.companyID;
+        let accountID = employee_details?.accountID;
+        let bank_details = req.session.bank_details;
+        if (withdrawal_charge_mode === "employee") {
+            amount = amount - withdrawal_fee;
+        }
+        if (withdrawal_charge_mode === "shared") {
+            amount = amount - (withdrawal_fee / 2);
+        }
         let total_amount = amount + withdrawal_fee;
-        let bank_details = { bank_code, bank_name, acc_number, acc_name }
-        let transRes = await createTransaction({ transactionToken, total_amount, timestamp_started, bank_details });
+        let holdRes = await holdAmountInWallet({ companyID, amountToHold: total_amount, accountID });
+        if (holdRes?.err) {
+            return res.json(holdRes)
+        }
+        let to_pay = { withdrawal: amount };
+        let transRes = await createTransaction({
+            accountID,
+            total_amount,
+            to_pay,
+            to_earn: { withdrawal_fee },
+            bank_details
+        });
         if (transRes.err) {
-            return
+            return res.json(transRes)
         }
         res.json(transRes);
-        let { bankDetails } = await getBankDetailsByAccountID({ accountID });
-        if (!bankDetails) {
-        }
-        let bankDetailID = bankDetails.bankDetailID;
-        let matchSavedBankDetails = (bank_code === bankDetails.bank_code) && (acc_number === bankDetails.acc_number);
-        if (!matchSavedBankDetails) {
+    } catch (error) {
+        console.log(error)
+    }
+}, generateOTPToken, sendOTPMW, async (req, res, next) => {
+    console.log("pikoihuggyggytfrsypoj")
+});
 
+router.post("/:transactionID/withdrawals/continue", getAuthAccount, transactionTokenVerMW, canWithdrawVerMW, async (req, res, next) => {
+    try {
+        let bank_details = req.session.bank_details;
+        let { transactionID } = req.params
+        let transRes = await updateAndReturnTransactionByTransactionID({ transactionID, status: "processing" });
+        if (transRes.err) {
+            return res.json(transRes)
         }
-        let recipient_code = bankDetails.recipient_code
+        res.json(transRes);
+        let recipient_code = bank_details.recipient_code
         if (!recipient_code) {
-            let createRes = await createRecipientCode({ l_name, f_name, acc_number, bank_code, bankDetailID });
+            let createRes = await createRecipientCode({ ...bank_details });
             if (!createRes.recipient_code) {
                 console.log("ooooooooo")
                 return
             }
             recipient_code = createRes.recipient_code
+            let bankDetailID = bank_details.bankDetailID
             let updateRes = await updateRecieptCodeEmployeeID({ bankDetailID, recipient_code });
         }
-        let transferInitiationRes = await initiateTransfer({ reason: "Earnable payment", amount, recipient: recipient_code });
+        let to_pay = transRes.transaction.to_pay?.withdrawal;
+        let transferInitiationRes = await initiateTransfer({
+            reason: "Earnable payment",
+            amount: to_pay * 100,
+            recipient: recipient_code
+        });
         if (transferInitiationRes.err) {
             console.log(transferInitiationRes);
             return
         }
-        let transferReference=transferInitiationRes.reference
-        let transactionUpdateRes= await updateTransactionByTransactionID({ transactionID,transferReference })
+        let transferReference = transferInitiationRes.reference
+        let transactionUpdateRes = await updateTransactionByTransactionID({ transactionID, transferReference })
         if (transactionUpdateRes.err) {
             console.log(transactionUpdateRes);
             return;
         }
-
-        let data = req.body
     } catch (error) {
         console.log(error)
     }

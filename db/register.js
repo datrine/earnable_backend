@@ -11,6 +11,10 @@ const { processImg } = require("../from/utils/processMedia");
 const { sendPhoneText } = require("../from/utils/phone_mgt");
 const { ObjectId } = require("mongodb");
 const { addEmployee } = require("./employee");
+/**
+ * @type {import("ng-banks").default}
+ */
+const ngBank = require("ng-banks")
 const { addBankDetail, updateRecieptCodeEmployeeID, createRecipientCode } = require("./bank_detail");
 /**
  * @type {import("isomorphic-unfetch").default}
@@ -101,13 +105,13 @@ async function registerEmployeeFunc(data) {
         if (addEmployeeRes.err) {
             return { err: addEmployeeRes.err }
         }
-        let det = { bank_name, bank_code, acc_number, accountID: accountRes.accountID }
+        let det = { acc_name: (l_name + " " + f_name), bank_name: ngBank.getBank(bank_code).name, bank_code, acc_number, accountID: accountRes.accountID }
         let bankDetailRes = await addBankDetail({ ...det });
 
         if (bankDetailRes.err) {
             return { err: bankDetailRes.err }
         }
-        let bankDetailID=bankDetailRes.bankDetailID;
+        let bankDetailID = bankDetailRes.bankDetailID;
         (async () => {
             try {
                 let { err: recipientCodeErr, recipient_code } =
