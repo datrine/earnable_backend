@@ -2,6 +2,7 @@ const http = require("http");
 require('dotenv').config()
 const express = require("express");
 const conn = require("./utils/conn/mongoConn");
+const { startJobs } = require("./jobs");
 
 const app = express();
 var cors = require('cors')
@@ -12,7 +13,7 @@ const sess = {
   secret: 'keyboard cat',
   cookie: {}
 };
-
+startJobs();
 if (app.get('env') === 'production') {
   app.set('trust proxy', 1) // trust first proxy
   sess.cookie.secure = true // serve secure cookies

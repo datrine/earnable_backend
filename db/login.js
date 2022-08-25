@@ -1,11 +1,7 @@
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const accountsCol = db.collection("accounts");
-const usersCol = db.collection("users");
-const { nanoid } = require("nanoid");
 const bcrypt = require("bcrypt");
-const { sendEmail } = require("../from/utils/email_mgt");
-const { createBiodataFunc } = require("./register");
 const { accTemplate } = require("./templates");
 const { directFactorAuth, emailFactorAuth, mobileFactorAuth, directPhonePinAuth } = require("./account");
 

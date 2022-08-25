@@ -1,7 +1,6 @@
 const router = require("express").Router()
 const { mongoClient } = require("../utils/conn/mongoConn");
 const { createRole } = require("../utils/misc/company_roles");
-const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const companyRolesCol = waleprjDB.collection("companyRoles");
 

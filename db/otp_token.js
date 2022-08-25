@@ -1,8 +1,6 @@
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const otpTokensCol = db.collection("otps");
-const { nanoid } = require("nanoid");
-const bcrypt = require("bcrypt");
 
 async function saveOTPToken({ otp, platforms, accountID, ttl }) {
     try {

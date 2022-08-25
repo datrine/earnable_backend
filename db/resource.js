@@ -1,9 +1,6 @@
-const router = require("express").Router()
 const { mongoClient } = require("../utils/conn/mongoConn");
-const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const resourcesCol = waleprjDB.collection("resources");
-const sessIDVerifyMW = require("../utils/mymiddleware/sessIDVerifyMW");
 /**
  * 
  * @param {object} param0

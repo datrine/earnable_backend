@@ -2,14 +2,10 @@ const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const accountsCol = db.collection("accounts");
 const usersCol = db.collection("users");
-const companyRolesCol = db.collection("companyRoles");
 const { nanoid } = require("nanoid");
 const bcrypt = require("bcrypt");
-const { sendEmail } = require("../from/utils/email_mgt");
 const { accTemplate } = require("./templates");
 const { processImg } = require("../from/utils/processMedia");
-const { sendPhoneText } = require("../from/utils/phone_mgt");
-const { ObjectId } = require("mongodb");
 const { addEmployee } = require("./employee");
 /**
  * @type {import("ng-banks").default}

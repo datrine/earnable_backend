@@ -1,12 +1,8 @@
 const router = require("express").Router()
 const { mongoClient } = require("../utils/conn/mongoConn");
-const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const bank_detailsCol = waleprjDB.collection("bank_details");
-const companyRolesCol = waleprjDB.collection("companyRoles");
 const { ObjectId } = require("bson");
-const { cleanAndValidateNewCompany } = require("../utils/validators/companies");
-const sessIDVerifyMW = require("../utils/mymiddleware/sessIDVerifyMW");
 const { nanoid } = require("nanoid");
 /**
  * 

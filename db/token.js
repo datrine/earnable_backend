@@ -1,8 +1,6 @@
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const tokensCol = db.collection("tokens");
-const { nanoid } = require("nanoid");
-const bcrypt = require("bcrypt");
 
 async function saveToken({ token, factor,type, factorValue, ttl }) {
     try {

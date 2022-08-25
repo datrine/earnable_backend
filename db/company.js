@@ -3,11 +3,8 @@ const { mongoClient } = require("../utils/conn/mongoConn");
 const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
 const waleprjDB = mongoClient.db("waleprj");
 const companiesCol = waleprjDB.collection("companies");
-const companyRolesCol = waleprjDB.collection("companyRoles");
 const { ObjectId } = require("bson");
-const { getBiodataFunc } = require("./account");
 const { cleanAndValidateNewCompany } = require("../utils/validators/companies");
-const sessIDVerifyMW = require("../utils/mymiddleware/sessIDVerifyMW");
 
 let createCompany = async ({ ...companyDataToCreate }) => {
     try {
