@@ -30,7 +30,6 @@ async function findAndVerifyOTPToken({  otp }) {
             //ttl: { $gte: new Date() }
         }, { $set: { verified: true, time_verified: new Date() } },
             { returnDocument: "after" });
-            console.log( result);
             let { ok, value: tokenDoc } =result
         if (!tokenDoc) {
             return { err: { msg: "OTP Token does not match record..." } }
@@ -46,7 +45,6 @@ async function findAndVerifyOTPToken({  otp }) {
 
 async function findOTPToken({ otp }) {
     try {
-        console.log(otp)
         let tokenDoc = await otpTokensCol.findOne({
              otp,
         });

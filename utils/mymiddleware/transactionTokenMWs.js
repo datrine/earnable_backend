@@ -1,3 +1,4 @@
+const { findAndVerifyOTPToken } = require("../../db/otp_token");
 const { findAndVerifyToken } = require("../../db/token");
 
 /**
@@ -8,17 +9,17 @@ const { findAndVerifyToken } = require("../../db/token");
  */
 let transactionTokenVerMW= async (req, res, next) => {
     try {
-        let transactionToken = req.body;
-        if (!transactionToken) {
+        let {otp} = req.body;
+        if (!otp) {
             return res.json({err:{msg:"Transaction token must be included."}})
         }
-        let findVerRes = await findAndVerifyToken({ token: transactionToken });
+        let findVerRes = await findAndVerifyOTPToken({ otp });
         if (findVerRes.err) {
             return res.json(findVerRes)
         }
-        if (findVerRes.tokenDoc.token_type !== "otp") {
-            return res.json({ err: { msg: "Token not appropriate OTP..." } })
-        }
+       /*if (findVerRes.tokenDoc.token_type !== "otp") {
+            return res.json({ err: { msg: "Token not appropriate OTP..." } });
+        }*/ 
         next()
     } catch (error) {
         console.log(error);

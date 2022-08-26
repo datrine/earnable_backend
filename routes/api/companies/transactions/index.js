@@ -4,7 +4,7 @@ const waleprjDB = mongoClient.db("waleprj");
 const ordersCol = waleprjDB.collection("orders")
 const { validateServerSidePaymentMW } = require("../../../../utils/mymiddleware/accounts/validateServerSidePaymentMW");
 const { createCompanyWallet, getWalletByCompanyID, getOrCreateCompanyWallet, fundWallet } = require("../../../../db/wallet");
-const { createTransaction } = require("../../../../db/transaction");
+const { createTransaction, updateTransactionByTransactionID } = require("../../../../db/transaction");
 const { default: axios } = require("axios");
 const fetch = require("isomorphic-unfetch")
 let secret = process.env.PAYSTACK_SECRET_KEY
@@ -13,6 +13,7 @@ router.post("/wallet/fund/save", async (req, res, next) => {
     try {
         let { companyID, account } = req.session;
         let data = req.body
+        data.type = "wallet_fund"
         let { err, transactionID } = await createTransaction({ ...data });
         if (err) {
             return res.json({ err })
@@ -31,6 +32,7 @@ router.post("/wallet/fund/save", async (req, res, next) => {
                         amount: Number(dataFromPaystack?.data?.amount) / 100,
                         createorMeta: { id: account.accountID }
                     });
+                    updateTransactionByTransactionID({ transactionID, status: "success" })
                     console.log(info)
                 }
             }

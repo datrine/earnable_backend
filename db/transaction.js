@@ -2,6 +2,7 @@ const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const transactionsCol = db.collection("transactions");
 const { ObjectID } = require("bson");
+const { verifyTransfer } = require("./bank_detail");
 
 let getTransactionsByCompanyID = async (companyID) => {
     let results = await transactionsCol.find({
@@ -9,6 +10,22 @@ let getTransactionsByCompanyID = async (companyID) => {
     });
     let transactions = await results.toArray()
     return { transactions }
+}
+
+let getTransactionByTransactionID = async ({ transactionID, ...updates }) => {
+    try {
+        
+    let transaction = await transactionsCol.findOne({
+        _id: ObjectID(transactionID)
+    });
+    if (!transaction) {
+        return { err: { msg: `Transaction ${transactionID}` } }
+    }
+    return { transaction }
+    } catch (error) {
+        console.log(error);
+        return {err:error}
+    }
 }
 
 let updateTransactionByTransactionID = async ({ transactionID, ...updates }) => {
@@ -43,13 +60,21 @@ let createTransaction = async ({ ...data }) => {
     return { transactionID: result.insertedId.toString() }
 }
 
-let getOrCreateCompanyWallet = async ({ companyID }) => {
-    let { wallet } = await getTransactionsByCompanyID(companyID);
-    if (!wallet) {
-        wallet = await createTransaction({ companyID })
+let transactionWork=async()=>{
+    try {
+        let listOfProcessingTransactionsCursor=await transactionsCol.find({status:"processing"});
+        let listOfProcessingTransactions=await listOfProcessingTransactionsCursor.toArray();
+        for (const transaction of listOfProcessingTransactions) {
+            let reference=transaction.reference;
+            if (reference) {
+                continue;
+            }
+            let pou=  await verifyTransfer({reference})
+        }
+    } catch (error) {
+        console.log(error)
     }
-    return { wallet }
 }
 
-module.exports = { getTransactionsByCompanyID, createTransaction, getOrCreateCompanyWallet, updateTransactionByTransactionID,
+module.exports = { getTransactionsByCompanyID, createTransaction, getTransactionByTransactionID, updateTransactionByTransactionID,
     updateAndReturnTransactionByTransactionID }

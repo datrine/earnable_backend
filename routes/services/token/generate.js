@@ -205,8 +205,14 @@ router.get("/phone_pin/verification/:verSessID", generateToken, async (req, res,
     }
 });
 
-router.get("/transaction/withdrawal/otp",getAuthAccount, generateOTPToken, sendOTPMW,async(req,res,next)=>{
-    
+router.get("/transactions/:transactionID/withdrawal/otp",getAuthAccount,async(req,res,next)=>{
+    try {
+
+        next()
+    } catch (error) {
+        
+    }
+}, generateOTPToken, sendOTPMW,async(req,res,next)=>{
         //res.json({ info: emailRes });
         res.json({info:"OTP sent."})
 });

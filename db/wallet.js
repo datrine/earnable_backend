@@ -5,7 +5,6 @@ const { ObjectID } = require("bson");
 const { nanoid } = require("nanoid");
 
 let getWalletByCompanyID = async (companyID) => {
-    console.log(companyID)
     let wallet = await walletsCol.findOne({
         companyID
     });
@@ -14,11 +13,10 @@ let getWalletByCompanyID = async (companyID) => {
 
 let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
     try {
-        console.log(companyID)
-        let { wallet } = await getOrCreateCompanyWallet({ companyID });
-        let balance = Number.isNaN(wallet?.balance) ? 0 : Number(wallet?.balance);
-        let amountOnHold = Number.isNaN(wallet?.amountOnHold) ? 0 : amountOnHold;
-        console.log({ balance, amountOnHold, amountToHold })
+        let wallet = await getOrCreateCompanyWallet({ companyID });
+        let balance = Number.isNaN(parseInt(wallet?.balance)) ? 0 : Number(parseInt(wallet?.balance));
+        let amountOnHold = Number.isNaN(parseInt(wallet?.amountOnHold)) ? 0 : Number(parseInt(wallet?.amountOnHold));
+        console.log({ balance, amountOnHold, amountToHold });
         if (amountToHold > balance) {
             return { err: { msg: "Insufficient balance" } }
         }
@@ -29,9 +27,10 @@ let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
             $and: [
                 { $gt: ["$balance", amountToHold] },
                 //false
-                { $lt: [{ $add: ["$amountOnHold", amountOnHold] }, "$balance"] }
+                { $lt: [{ $add: ["$amountOnHold", amountToHold] }, "$balance"] }
             ]
         }
+
         let withdrawer = { accountID, amountToHold, createdOn: new Date(), withdrawID: nanoid() }
         let updateRes = await walletsCol.findOneAndUpdate({ companyID, }, [{
             $set: {
@@ -39,9 +38,9 @@ let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
                     $cond: {
                         if: updateCondQuery,
                         //if: true,
-                        then: { $add: ["$amountOnHold", amountToHold] },
+                        then: { $add: [{ $ifNull: ["$amountOnHold", 0] }, amountToHold] },
                         //then: 60,
-                        else: "$amountOnHold"
+                        else: { $ifNull: ["$amountOnHold", 0] }
                         //else:80
                     }
                 },
@@ -49,9 +48,15 @@ let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
                     $cond: {
                         if: updateCondQuery,
                         //if: true,
-                        then: { $concatArrays: ["$withdrawers", [withdrawer]] },
+                        then: {
+                            $concatArrays: [{
+                                $ifNull: ["$withdrawers", []]
+                            }, [withdrawer]]
+                        },
                         //then: 90,
-                        else: "$withdrawers"
+                        else: {
+                            $ifNull: ["$withdrawers", []]
+                        }
                         //else: 900
                     }
                 },
@@ -74,10 +79,10 @@ let holdAmountInWallet = async ({ companyID, amountToHold, accountID }) => {
         if (!isSaved) {
             return { err: { msg: "Could not process transaction" } }
         }
-        console.log(updateRes)
         return { info: "Amount held under lock" }
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        return { err: error }
     }
 
 }
@@ -91,7 +96,7 @@ let getWalletByWalletID = async (walletID) => {
 
 let createCompanyWallet = async ({ companyID, ...rest }) => {
     let wallet = await walletsCol.insertOne({
-        companyID, ...rest,
+        companyID, balance: 0, ...rest,
         createdOn: new Date(),
         lastModified: new Date()
     });
@@ -100,8 +105,6 @@ let createCompanyWallet = async ({ companyID, ...rest }) => {
     }
     return { walletID: wallet.insertedId.toString() }
 }
-
-
 
 let getOrCreateCompanyWallet = async ({ companyID, ...rest }) => {
     let { err, wallet } = await getWalletByCompanyID(companyID)
@@ -117,14 +120,13 @@ let fundWallet = async ({ companyID, walletID, amount, createorMeta, }) => {
         let result = await walletsCol.updateOne({
             $or: [{ walletID: ObjectID(walletID) }, { companyID }]
         }, {
-            $inc: { amount: Number(amount) },
+            $inc: { balance: Number(amount) },
             $set: { lastModified: new Date() },
             $setOnInsert: { companyID, createorMeta, createdOn: new Date(), }
         }, { upsert: true });
         if (!result.acknowledged) {
             return { err: { msg: "Unable to fund this time." } }
         }
-        console.log(result)
         return { info: "Wallet was funded" }
     } catch (error) {
         console.log(error);
@@ -132,4 +134,7 @@ let fundWallet = async ({ companyID, walletID, amount, createorMeta, }) => {
     }
 }
 
-module.exports = { getWalletByCompanyID, createCompanyWallet, getWalletByWalletID, fundWallet, getOrCreateCompanyWallet, holdAmountInWallet }
+module.exports = {
+    getWalletByCompanyID, createCompanyWallet, getWalletByWalletID, fundWallet,
+    getOrCreateCompanyWallet, holdAmountInWallet
+}

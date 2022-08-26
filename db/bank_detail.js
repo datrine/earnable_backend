@@ -139,7 +139,8 @@ let verifyTransfer = async ({ reference }) => {
         throw error
     }
 };
+
 module.exports = {
     addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID,
-    createRecipientCode, initiateTransfer
+    createRecipientCode, initiateTransfer, verifyTransfer
 };
