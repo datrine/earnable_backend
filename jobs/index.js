@@ -5,23 +5,21 @@ let job = new CronJob("0 * * * * *", function (params) {
 /**
  * @type {Map<string,CronJob}
  */
-let jobList;
+let jobList = new Map();
 /**
  * 
  * @type {(title: string, cronJob:CronJob)=>{}}
  * @returns
  */
-let registerJobs
+let registerJob = (title, cronJob) => {
+        jobList.set(title, cronJob);
+        return jobList
+    }
 let stopAll;
 let stopJob;
 let startJob;
 
 let startJobs = async () => {
-    jobList = new Map();
-    registerJobs = (title, cronJob) => {
-        jobList.set(title, cronJob);
-        return jobList
-    }
     for (const [title, job] of jobList) {
         job.start()
     }
@@ -36,7 +34,8 @@ let startJobs = async () => {
     let startJob = (title) => {
         jobList.get(title).start()
     }
-    return { registerJobs, jobList, stopAll, stopJob, startJob }
+    
+    return { registerJob, jobList, stopAll, stopJob, startJob }
 }
 
-module.exports = { startJobs, stopAll, startJob, stopJob }
+module.exports = { startJobs, stopAll, startJob, stopJob,registerJob }

@@ -1,41 +1,44 @@
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
-const walletsCol = db.collection("wallets");
-const { ObjectID } = require("bson");
+const withdrawalsCol = db.collection("withdrawals");
 
-let getTransactionsByCompanyID = async (companyID) => {
-    let results = await walletsCol.find({
-        companyID
-    });
-    let transactions = await results.toArray()
-    return { transactions }
-}
-
-let getWalletByWalletID = async (walletID) => {
-    let wallet = await walletsCol.findOne({
-        walletID: ObjectID(walletID)
-    });
-    return { wallet }
-}
-
-let createTransaction = async ({  ...data }) => {
-    let result = await walletsCol.insertOne({
-         ...data,status:"processing",
+let createWithdrawal = async ({ accountID, employeeID, companyID, amount, withdrawal_fee,transactionID, withdrawal_charge_mode, type = "employee_payment", status = "processing" }) => {
+    let result = await withdrawalsCol.insertOne({
+        accountID, employeeID, companyID,transactionID, status, amount, withdrawal_fee, withdrawal_charge_mode,
+        type,
         lastModified: new Date(),
         createdOn: new Date(),
     });
     if (!result?.insertedId) {
-        return { err: { msg: "No trasanction created." } }
+        return { err: { msg: "No withdrawal created." } }
     }
-    return { transactionID: result.insertedId.toString() }
+    return { withdrawalID: result.insertedId.toString() }
 }
 
-let getOrCreateCompanyWallet = async ({ companyID }) => {
-    let { wallet } = await getTransactionsByCompanyID(companyID);
-    if (!wallet) {
-        wallet = await createTransaction({ companyID })
+/**
+ * 
+ * @param {object} param0 
+ * @param {string} param0.accountID
+ * @param {number} param0.amount
+ * @param {"employee"|"employer"|"shared"} param0.withdrawal_charge_moded
+ * @param {number} param0.withdrawal_fee
+ * @param {"employee_payment"|"employer_payment"} param0.type
+ * @param {"initiated"|"processing"|"success"|"failed"} param0.status
+ * @returns 
+ */
+let updateWithdrawalByTransactionID = async ({transactionID,...updates }) => {
+    let result = await withdrawalsCol.findOneAndUpdate({
+        transactionID 
+    }, {
+        $set: {
+            ...updates,
+            lastModified:new Date()
+        }
+    });
+    if (!result?.ok) {
+        return { err: { msg: "No withdrawal created." } }
     }
-    return { wallet }
+    return { withdrawalID: result.insertedId.toString() }
 }
 
-module.exports = { getTransactionsByCompanyID, createTransaction, getOrCreateCompanyWallet, getWalletByWalletID }
+module.exports = { createWithdrawal, updateWithdrawalByTransactionID }

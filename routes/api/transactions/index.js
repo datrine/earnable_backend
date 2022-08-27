@@ -14,6 +14,7 @@ const { getBankDetailsByAccountID, createRecipientCode, updateRecieptCodeEmploye
 const { sendOTPMW } = require("../../../utils/mymiddleware/sendOTPMW");
 const { generateOTPToken } = require("../../../from/utils/middlewares/generateTokenMW");
 const { canContinueWithdrawMW } = require("../../../utils/mymiddleware/canContinueWithdrawMW");
+const { createWithdrawal } = require("../../../db/withdrawal");
 
 router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async (req, res, next) => {
     try {
@@ -25,6 +26,7 @@ router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async
         let employee_details = req.session.employee_details
         let companyID = company?.companyID;
         let accountID = employee_details?.accountID;
+        let employeeID = employee_details?.employeeID;
         let bank_details = req.session.bank_details;
         if (withdrawal_charge_mode === "employee") {
             amount = amount - withdrawal_fee;
@@ -50,12 +52,18 @@ router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async
             return res.json(transRes)
         }
         res.json(transRes);
+        req.session.transactionID = transRes.transactionID
+        let { transactionID } = transRes
+        await createWithdrawal({
+            withdrawal_charge_mode, withdrawal_fee, accountID, companyID, transactionID, amount,
+            employeeID, type: "employee_payment", status: "initiated"
+        });
         next()
     } catch (error) {
         console.log(error)
     }
 }, generateOTPToken, sendOTPMW, async (req, res, next) => {
-    console.log("pikoihuggyggytfrsypoj")
+    console.log("pikoihuggyggytfrsypoj");
 });
 
 router.post("/:transactionID/withdrawals/continue", async (req, res, next) => {
@@ -95,8 +103,8 @@ router.post("/:transactionID/withdrawals/continue", async (req, res, next) => {
             console.log(transferInitiationRes);
             return
         }
-        let transferReference = transferInitiationRes.reference
-        let transactionUpdateRes = await updateTransactionByTransactionID({ transactionID, transferReference });
+        let transferCode = transferInitiationRes.transfer_code
+        let transactionUpdateRes = await updateTransactionByTransactionID({ transactionID, transferCode });
         if (transactionUpdateRes.err) {
             console.log(transactionUpdateRes);
             return;

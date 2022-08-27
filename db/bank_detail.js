@@ -4,6 +4,7 @@ const waleprjDB = mongoClient.db("waleprj");
 const bank_detailsCol = waleprjDB.collection("bank_details");
 const { ObjectId } = require("bson");
 const { nanoid } = require("nanoid");
+const { transferVerifyResponseObj, initiateTransferResonseObj } = require("./templates/paystack/responses");
 /**
  * 
  * @param {object} param0
@@ -102,7 +103,6 @@ let createRecipientCode = async ({ acc_name, acc_number, bank_code, bankDetailID
 
 let initiateTransfer = async ({ source = "balance", reason, amount, recipient }) => {
     try {
-        let reference = nanoid();
         let response = await fetch("https://api.paystack.co/transfer", {
             method: "post",
             mode: "cors",
@@ -110,10 +110,17 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
                 "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ source, reason, amount, recipient, reference })
+            body: JSON.stringify({ source, reason, amount, recipient })
         });
+        /**
+         * @type {initiateTransferResonseObj}
+         */
         let jsonObj = await response.json();
-        return { ...jsonObj, reference }
+        console.log(jsonObj)
+        if (jsonObj.status!==true) {
+            return {err:{msg:"Transfer failed. "}}
+        }
+        return { ...jsonObj.data }
 
     } catch (error) {
         console.log(error);
@@ -121,24 +128,31 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
     }
 };
 
-let verifyTransfer = async ({ reference }) => {
+let verifyTransfer = async ({ transfer_code }) => {
     try {
-        let response = await fetch(`https://api.paystack.co/transfer/verify/${reference}`, {
+        let response = await fetch(`https://api.paystack.co/transfer/${transfer_code}`, {
             method: "get",
             mode: "cors",
             headers: {
                 "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
             },
         });
-        let jsonObj = await response.json();
-        console.log(jsonObj)
-        return jsonObj
 
+        /**
+         * @type {transferVerifyResponseObj}
+         */
+        let jsonObj = await response.json();
+        //console.log(jsonObj);
+        if (jsonObj.status !== true) {
+        }
+            return { data: jsonObj.data }
     } catch (error) {
         console.log(error);
         throw error
     }
 };
+
+
 
 module.exports = {
     addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID,
