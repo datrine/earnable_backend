@@ -63,6 +63,7 @@ let getAuthAccount = async (req, res, next) => {
             return res.json({ state, })
         }
         req.session.account = accFromServer;
+        req.session.accountID = accFromServer.accountID;
         req.session.state = state;
         req.session.sessID = accFromServer.loginInfo.current_session.sessID;
 

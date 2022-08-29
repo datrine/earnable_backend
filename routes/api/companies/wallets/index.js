@@ -34,7 +34,8 @@ router.use("/", async (req, res, next) => {
 router.get("/balance", async (req, res, next) => {
     try {
         let { wallet } = req.session;
-        res.json({ balance:wallet.amount })
+
+        res.json({ balance:wallet.balance })
     } catch (error) {
         console.log(error)
     }

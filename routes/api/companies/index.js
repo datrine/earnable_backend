@@ -1,11 +1,9 @@
 const router = require("express").Router()
-const { mongoClient } = require("../../../utils/conn/mongoConn");
-const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
 const companyRolesRouter = require("./roles");
 const companyEmployeesRouter = require("./employees");
 const companyDepartmentsRouter = require("./departments");
 const companyTransactionsRouter = require("./transactions");
+const companyWithdrawalHistoryRouter = require("./withdrawal_history");
 const companyWalletRouter = require("./wallets");
 const createCompanyApiRouter = require("./company_new");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
@@ -49,18 +47,15 @@ router.use("/:companyID/employees",companyEmployeesRouter);
 router.use("/:companyID/departments",companyDepartmentsRouter);
 router.use("/:companyID/transactions",companyTransactionsRouter);
 router.use("/:companyID/wallet",companyWalletRouter);
-
+router.use("/:companyID/withdrawal_history",companyWithdrawalHistoryRouter);
 router.get("/:companyID/total_salaries",async (req, res, next) => {
     let {companyID}=req.session
     let totalSalaries=await getTotalSalaries({companyID});
     return res.json(totalSalaries)
 });
-
 router.get("/:companyID", async (req, res, next) => {
     let { company } = req.session;
     return res.json({ company })
 });
-
-
 
 module.exports = router;

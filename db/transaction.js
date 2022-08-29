@@ -68,15 +68,11 @@ let createTransaction = async ({ ...data }) => {
 
 let transactionWork = async () => {
     try {
-        console.log("transactionWork doingpojnjnjnjnhbh...")
         let listOfProcessingTransactionsCursor = await transactionsCol.find({ status: "processing" });
         let listOfProcessingTransactions = await listOfProcessingTransactionsCursor.toArray();
-        console.log(listOfProcessingTransactions.length)
         for await (const transaction of listOfProcessingTransactions) {
             let transactionID = transaction._id.toString();
             let transfer_code = transaction.transferCode;
-            console.log(transfer_code)
-            console.log(transactionID)
             if (!transfer_code) {
                 continue;
             }
@@ -86,7 +82,6 @@ let transactionWork = async () => {
                     let updateRes = await updateAndReturnTransactionByTransactionID({ transactionID, status: "success" });
                     if (updateRes.transaction) {
                         let withdrawalUpdateRes = await updateWithdrawalByTransactionID({ transactionID, status: "success" });
-                        console.log(withdrawalUpdateRes)
                     }
                 }
             }
@@ -96,10 +91,8 @@ let transactionWork = async () => {
     }
 }
 let job = new CronJob("0 * * * * *", () => {
-    console.log("transactionWork doing...")
     transactionWork()
 }, () => {
-    console.log("transactionWork done...")
 });
 job.start()
 

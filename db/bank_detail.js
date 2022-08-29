@@ -116,7 +116,6 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
          * @type {initiateTransferResonseObj}
          */
         let jsonObj = await response.json();
-        console.log(jsonObj)
         if (jsonObj.status!==true) {
             return {err:{msg:"Transfer failed. "}}
         }

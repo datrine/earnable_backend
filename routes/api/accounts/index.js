@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
 const subscriptionsRouter = require("./subscriptions");
+const accountIDRouter = require("./[accountID]");
 const actionsRouter = require("./actions");
 const activityRouter = require("./activity");
 const loginRouter = require("./login");
@@ -26,32 +27,28 @@ router.use("/login", loginRouter,);
 router.use("/", getAuthAccount,);
 router.use("/subscriptions", subscriptionsRouter);
 
-router.get("/:accountID/employee_details", async (req, res, next) => {
+router.use("/:accountID", async (req, res, next) => {
+    req.session.accountID = req.params.accountID
+    next()
+}, accountIDRouter);
+
+router.get("/", async (req, res, next) => {
     try {
-        let { accountID } = req.params
-        let employeeRes = await getEmployeeByAccountID({ accountID });
-        return res.json({ ...employeeRes })
+        let { companyID, account } = req.session;
+        let { accountID } = account
+        getEmployeeByAccountID({ accountID })
+        let filters = req.query;
+        let withdrawalHistoryRes = await getEmployeeWithdrawalHistory({ employeeID, filters });
+        res.json(withdrawalHistoryRes);
     } catch (error) {
-
-    }
-});
-
-router.get("/:accountID/bank_details", async (req, res, next) => {
-    try {
-        let { accountID } = req.params
-        let bankDetailsRes = await getBankDetailsByAccountID({ accountID });
-        return res.json({ ...bankDetailsRes })
-    } catch (error) {
-
+        console.log(error)
     }
 });
 
 router.get("/", (req, res, next) => {
-    
+
     return res.json([])
 });
-
-
 
 router.use("/logout", getAuthAccount, async (req, res, next) => {
     try {
