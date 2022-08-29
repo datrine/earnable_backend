@@ -44,12 +44,36 @@ let updateWithdrawalByTransactionID = async ({ transactionID, ...updates }) => {
 
 let getEmployeeWithdrawalHistory = async ({ employeeID, filters = {} }) => {
     try {
-        let filterQuery;
+        let filterQuery={};
         if (filters.from && DateTime.fromISO(filters.from)) {
-            filterQuery = filterQuery || {};
             filterQuery = { ...filterQuery, $gte: { createdOn: DateTime.fromISO(filters.from).toJSDate() } }
         }
-        let historyCursor = await withdrawalsCol.find({ employeeID, ...filterQuery });
+        if (filters.year && DateTime.fromObject({year: filters.year})) {
+            filterQuery = { ...filterQuery, 
+                '$eq': [
+                    {
+                        '$year': '$createdOn'
+                    }, DateTime.fromObject({year: filters.year}).year
+                ] }
+        }
+        if (filters.month && DateTime.fromObject({month: filters.month})) {
+            filterQuery = { ...filterQuery, 
+                '$eq': [
+                    {
+                        '$month': '$createdOn'
+                    }, DateTime.fromObject({month: filters.month}).month
+                ] }
+        }
+        if (filters.weekNumber && DateTime.fromObject({weekNumber: filters.weekNumber})) {
+            filterQuery = filterQuery || {};
+            filterQuery = { ...filterQuery, 
+                '$eq': [
+                    {
+                        '$week': '$createdOn'
+                    }, DateTime.fromObject({weekNumber: filters.weekNumber}).weekNumber
+                ] }
+        }
+        let historyCursor = await withdrawalsCol.find({ employeeID, $expr:filterQuery });
         let history = await historyCursor.toArray();
         return { withdrawal_history: history }
     } catch (error) {
@@ -84,7 +108,7 @@ let getCompanyEmployeesWithdrawalHistory = async ({ companyID, filters = {} }) =
                     }, DateTime.fromObject({weekNumber: filters.weekNumber}).weekNumber
                 ] }
         }
-        console.log(filterQuery)
+        //console.log(filterQuery)
         let historyCursor = await withdrawalsCol.find({ companyID,$expr:filterQuery });
         let history = await historyCursor.toArray();
         return { withdrawal_history: history }

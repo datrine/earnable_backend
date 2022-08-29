@@ -14,7 +14,8 @@ const { getBankDetailsByAccountID, createRecipientCode, updateRecieptCodeEmploye
 const { sendOTPMW } = require("../../../utils/mymiddleware/sendOTPMW");
 const { generateOTPToken } = require("../../../from/utils/middlewares/generateTokenMW");
 const { canContinueWithdrawMW } = require("../../../utils/mymiddleware/canContinueWithdrawMW");
-const { createWithdrawal } = require("../../../db/withdrawal");
+const { createWithdrawal, getEmployeeWithdrawalHistory } = require("../../../db/withdrawal");
+const { DateTime } = require("luxon");
 
 router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async (req, res, next) => {
     try {
@@ -35,6 +36,14 @@ router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async
             amount = amount - (withdrawal_fee / 2);
         }
         let total_amount = amount + withdrawal_fee;
+        let resWiHx = await getEmployeeWithdrawalHistory({ employeeID, filters: { month: DateTime.now().month } });
+        let withdrawnWithdraw = resWiHx.withdrawal_history.filter((obj) => (obj.status === "processing" || obj.status === "success")).reduce((prev, cur) => (prev + cur.amount + cur.withdrawal_fee), 0)
+        let maxWithdrawable = (Number(employee_details.monthly_salary) * Number(company.salary_access)  / 100);
+        let withdrawable = maxWithdrawable - (total_amount + withdrawnWithdraw)
+        console.log({maxWithdrawable,monthly_salary:Number(employee_details.monthly_salary), withdrawable,withdrawn: (total_amount + withdrawnWithdraw)});
+        if (withdrawable <= 0) {
+            return res.json({ err: { msg: "Flexible salary linits reached" } })
+        }
         let holdRes = await holdAmountInWallet({ companyID, amountToHold: total_amount, accountID });
         if (holdRes?.err) {
             return res.json(holdRes)

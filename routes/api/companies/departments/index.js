@@ -8,7 +8,6 @@ router.post("/", async (req, res, next) => {
         let { companyID } = req.session
         let deptCreationObj = req.body
         let rolesRes = await createDepartment({ companyID,...deptCreationObj });
-        console.log(rolesRes)
         if (rolesRes.err) {
             return res.json(rolesRes)
         }
@@ -23,9 +22,7 @@ router.put("/:departmentID", async (req, res, next) => {
     try {
         let {departmentID,companyID} = req.params
         let {_id,...editedDeptObj} = req.body;
-        console.log({editedDeptObj});
         let rolesRes = await editDepartment({ departmentID, companyID,...editedDeptObj});
-        console.log(rolesRes)
         if (rolesRes.err) {
             return res.json(rolesRes)
         }
@@ -40,7 +37,6 @@ router.use("/:departmentID", async (req, res, next) => {
     try {
         let {departmentID} = req.params
         let rolesRes = await getDepartmentByDepartmentID({ departmentID, });
-        console.log(rolesRes)
         if (rolesRes.err) {
             return res.json(rolesRes)
         }
