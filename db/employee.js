@@ -50,7 +50,7 @@ let getTotalSalaries = async ({ companyID }) => {
               }
             }, {
               '$group': {
-                '_id': null, 
+                '_id': "$companyID", 
                 'total_monthly_salaries': {
                   '$sum': {
                     '$toInt': '$monthly_salary'

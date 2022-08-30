@@ -8,7 +8,7 @@ const companyWalletRouter = require("./wallets");
 const createCompanyApiRouter = require("./company_new");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 const { getCompaniesByIDs, getCompanyByID } = require("../../../db/company");
-const {  getResourcesByAccID } = require("../../../db/resource");
+const { getResourcesByAccID } = require("../../../db/resource");
 const { getTotalSalaries } = require("../../../db/employee");
 
 
@@ -37,20 +37,21 @@ router.use("/:companyID", async (req, res, next) => {
         next()
     } catch (error) {
         console.log(error);
-        res.json({err:error})
+        res.json({ err: error })
     }
 });
 
 
-router.use("/:companyID/roles",companyRolesRouter);
-router.use("/:companyID/employees",companyEmployeesRouter);
-router.use("/:companyID/departments",companyDepartmentsRouter);
-router.use("/:companyID/transactions",companyTransactionsRouter);
-router.use("/:companyID/wallet",companyWalletRouter);
-router.use("/:companyID/withdrawal_history",companyWithdrawalHistoryRouter);
-router.get("/:companyID/total_salaries",async (req, res, next) => {
-    let {companyID}=req.session
-    let totalSalaries=await getTotalSalaries({companyID});
+router.use("/:companyID/roles", companyRolesRouter);
+router.use("/:companyID/employees", companyEmployeesRouter);
+router.use("/:companyID/departments", companyDepartmentsRouter);
+router.use("/:companyID/transactions", companyTransactionsRouter);
+router.use("/:companyID/wallet", companyWalletRouter);
+router.use("/:companyID/withdrawal_history", companyWithdrawalHistoryRouter);
+router.get("/:companyID/total_salaries", async (req, res, next) => {
+    let { companyID } = req.session
+    let filters = req.query
+    let totalSalaries = await getTotalSalaries({ companyID, filters });
     return res.json(totalSalaries)
 });
 router.get("/:companyID", async (req, res, next) => {
