@@ -7,6 +7,7 @@ const { directFactorAuth, emailFactorAuth, mobileFactorAuth, directPhonePinAuth 
 
 async function directLoginFunc(data) {
     try {
+        //console.log(data)
         let { err, account, state } =  await directFactorAuth(data)
         if (err) {
             return { err }

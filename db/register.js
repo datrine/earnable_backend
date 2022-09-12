@@ -56,7 +56,7 @@ async function registerFunc(data) {
 async function registerEmployeeFunc(data) {
     try {
         let { email, username, phonenum, job_title, monthly_salary, phonePin, employee_id, f_name, l_name, dob, gender,
-            companyID, bank_name, acc_number, bank_code, deptID, department, enrollment = "unenrolled" } = data
+            companyID, bank_name, acc_number, bank_code, deptID, department, enroll } = data
         username = username || email
         if (!email) {
             // return { err: { msg: "Email not supplied..." } }
@@ -74,7 +74,7 @@ async function registerEmployeeFunc(data) {
         let accountRes = await createEmployeeAccountFunc({ email, username, phonenum, phonePin });
 
         if (accountRes.err) {
-            return { err: accountRes.err }
+            return accountRes
         }
         if (!accountRes.accountID) {
             return { err: { msg: "Unable to complete account creation..." } }
@@ -84,7 +84,7 @@ async function registerEmployeeFunc(data) {
             email, accountID: accountRes.accountID,
             l_name, f_name, dob, gender
         });
-
+        let enrollment_state = { state: (enroll ? "pending" : "unenrolled"), createdOn: new Date() }
         let addEmployeeRes = await addEmployee({
             accountID: accountRes.accountID,
             companyID,
@@ -93,19 +93,19 @@ async function registerEmployeeFunc(data) {
             deptID,
             department,
             employeeID: employee_id,
-            enrollment,
+            enrollment_state,
             lastModified: new Date(),
             createdOn: new Date()
         });
 
         if (addEmployeeRes.err) {
-            return { err: addEmployeeRes.err }
+            return addEmployeeRes
         }
         let det = { acc_name: (l_name + " " + f_name), bank_name: ngBank.getBank(bank_code).name, bank_code, acc_number, accountID: accountRes.accountID }
         let bankDetailRes = await addBankDetail({ ...det });
 
         if (bankDetailRes.err) {
-            return { err: bankDetailRes.err }
+            return bankDetailRes
         }
         let bankDetailID = bankDetailRes.bankDetailID;
         (async () => {

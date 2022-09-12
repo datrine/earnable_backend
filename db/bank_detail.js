@@ -95,9 +95,12 @@ let createRecipientCode = async ({ acc_name, acc_number, bank_code, bankDetailID
         if (data?.active) {
             let recipient_code = data.recipient_code;
             return { info: "recipient code created.", recipient_code }
+        }else{
+            throw data;
         }
     } catch (error) {
         console.log(error)
+        return { err: error }
     }
 };
 
@@ -116,8 +119,8 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
          * @type {initiateTransferResonseObj}
          */
         let jsonObj = await response.json();
-        if (jsonObj.status!==true) {
-            return {err:{msg:"Transfer failed. "}}
+        if (jsonObj.status !== true) {
+            return { err: { msg: "Transfer failed. " } }
         }
         return { ...jsonObj.data }
 
@@ -144,7 +147,7 @@ let verifyTransfer = async ({ transfer_code }) => {
         //console.log(jsonObj);
         if (jsonObj.status !== true) {
         }
-            return { data: jsonObj.data }
+        return { data: jsonObj.data }
     } catch (error) {
         console.log(error);
         throw error

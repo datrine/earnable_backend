@@ -6,7 +6,7 @@ router.use("/", async (req, res, next) => {
     try {
         let { companyID } = req.session
         let filters = req.query
-        console.log(filters)
+        //console.log(req.query)
         let rolesRes = await getEmployeesByCompanyID({ companyID,filters });
         if (rolesRes.err) {
             return res.json(rolesRes)

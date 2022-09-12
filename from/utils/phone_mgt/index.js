@@ -1,3 +1,5 @@
+const TERMII = require('../../../termii/sendSMS');
+
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
@@ -13,12 +15,14 @@ async function sendPhoneText(data) {
         if (!data) {
             throw "Empty data...";
         }
-        let res = await client.messages
+        
+        let res=await TERMII.sendSMS({to:data.to,sms:data.text});
+       /* let res = await client.messages
             .create({
                 body: data.text,
                 from: '+16072845454',
                 to: data.to
-            })
+            }) */
         //.then(message => console.log(message.sid));
         console.log(res.sid)
 

@@ -17,7 +17,7 @@ let addEmployee = async ({ ...employeeToData }) => {
         return { employeeID: result1.insertedId.toString(), }
     } catch (error) {
         console.log(error)
-        res.json({ err: error })
+        return ({ err: error })
     }
 };
 
@@ -25,43 +25,45 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
     try {
         let employeesCursor;
         let filterBuilder = {}
-
-        if (filters.enrolled) {
-            filterBuilder.enrolled = true
+        //console.log(filterBuilder)
+        if (filters.enrollment_state === "enrolled") {
+            filterBuilder["enrollment_state.state"] = { $eq: "enrolled" }
         }
 
-        if (filters.unenrolled) {
-            filterBuilder.enrolled = { $ne: true }
+        if (filters.enrollment_state && filters.enrollment_state !== "enrolled") {
+            filterBuilder["enrollment_state.state"] = { $ne: "enrolled" }
         }
-        employeesCursor = await employeesCol.find({ $or: [{ companyID }, { companyID: ObjectId(companyID) }], ...filterBuilder });
+        employeesCursor = await employeesCol.find({ companyID, ...filterBuilder });
         let employees = await employeesCursor.toArray();
         employees = employees.map(employee => ({ ...employee, employeeID: employee._id }))
         return { employees }
     } catch (error) {
         console.log({ err: error })
+        return ({ err: error })
     }
 }
+
 let getTotalSalaries = async ({ companyID }) => {
     try {
         let docs = employeesCol.aggregate([
             {
-              '$match': {
-                'companyID': new ObjectId(companyID)
-              }
-            }, {
-              '$group': {
-                '_id': "$companyID", 
-                'total_monthly_salaries': {
-                  '$sum': {
-                    '$toInt': '$monthly_salary'
-                  }
+                '$match': {
+                    'companyID': new ObjectId(companyID)
                 }
-              }
+            }, {
+                '$group': {
+                    '_id': "$companyID",
+                    'total_monthly_salaries': {
+                        '$sum': {
+                            '$toInt': '$monthly_salary'
+                        }
+                    }
+                }
             }
-          ]
+        ]
         )
-        let results=await docs.toArray()
-        let total_monthly_salaries= results[0].total_monthly_salaries
+        let results = await docs.toArray()
+        let total_monthly_salaries = results[0]?.total_monthly_salaries || 0;
         return { total_monthly_salaries }
     } catch (error) {
         console.log(error)
@@ -105,16 +107,18 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
 
 let getEmployeeByAccountID = async ({ accountID }) => {
     try {
-        let employeeDoc = await employeesCol.findOne({ accountID});
+        let employeeDoc = await employeesCol.findOne({ accountID });
         if (!employeeDoc) {
             return { err: { msg: "Employee not found" } }
         }
 
-        return { employee: { ...employeeDoc, employeeID:employeeDoc._id } }
+        return { employee: { ...employeeDoc, employeeID: employeeDoc._id } }
     } catch (error) {
         console.log({ err: error })
     }
 }
 
-module.exports = { addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID, 
-    getEmployeesByDepartmentID, getTotalSalaries,getEmployeeByAccountID };
+module.exports = {
+    addEmployee, getEmployeesByCompanyID, getEmployeeByEmployeeID,
+    getEmployeesByDepartmentID, getTotalSalaries, getEmployeeByAccountID
+};
