@@ -22,7 +22,7 @@ router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async
         let { amount, withdrawal_fee, } = req.body;
         let { company, department, } = req.session;
         let withdrawal_charge_mode = (Array.isArray(department?.policies) &&
-            Array.from(department?.policies).find(policy => policy.name === "withdrawal_charge_mode")) ||
+            Array.from(department?.policies).reverse().find(policy => policy.name === "withdrawal_charge_mode")) ||
             company?.withdrawal_charge_mode || "employee"
         let employee_details = req.session.employee_details
         let companyID = company?.companyID;

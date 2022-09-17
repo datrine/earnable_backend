@@ -723,7 +723,7 @@ async function getBiodataFunc({ email, accountID }) {
         console.log(error);
     }
 }
-
+let getUserInfo=getBiodataFunc;
 async function retrieveAccountInfoBySessID(sessID) {
     try {
         /**
@@ -1031,7 +1031,7 @@ module.exports = {
     directFactorAuth, directPhonePinAuth,
     directFactorDBUpdate,
     retrieveAccountInfoFunc,
-    getBiodataFunc,
+    getBiodataFunc,getUserInfo,
     accountAccIDResetSet: accountAccIDReset,
     retrieveAccountInfoBySessID,
     retrieveAccountInfoBasic,

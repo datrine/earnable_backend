@@ -2,7 +2,7 @@ const router = require("express").Router();
 const subscriptionsRouter = require("../subscriptions");
 const withdrawalHistoryRouter = require("./withdrawal_history");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
-const { accountLogOut, } = require("../../../../db/account");
+const { accountLogOut, getUserInfo, } = require("../../../../db/account");
 const { getEmployeeByAccountID } = require("../../../../db/employee");
 const { getBankDetailsByAccountID } = require("../../../../db/bank_detail");
 
@@ -19,6 +19,17 @@ router.get("/employee_details", async (req, res, next) => {
     try {
         let { accountID } = req.session
         let employeeRes = await getEmployeeByAccountID({ accountID });
+        return res.json({ ...employeeRes })
+    } catch (error) {
+
+    }
+});
+
+
+router.get("/userinfo", async (req, res, next) => {
+    try {
+        let { accountID } = req.session
+        let employeeRes = await getUserInfo({ accountID });
         return res.json({ ...employeeRes })
     } catch (error) {
 
