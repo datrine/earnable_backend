@@ -2,6 +2,7 @@ const router = require("express").Router()
 const companyRolesRouter = require("./roles");
 const companyEmployeesRouter = require("./employees");
 const companyDepartmentsRouter = require("./departments");
+const companyAdminsRouter = require("./admins");
 const companyTransactionsRouter = require("./transactions");
 const companyWithdrawalHistoryRouter = require("./withdrawal_history");
 const companyWalletRouter = require("./wallets");
@@ -48,6 +49,7 @@ router.use("/:companyID/departments", companyDepartmentsRouter);
 router.use("/:companyID/transactions", companyTransactionsRouter);
 router.use("/:companyID/wallet", companyWalletRouter);
 router.use("/:companyID/withdrawal_history", companyWithdrawalHistoryRouter);
+router.use("/:companyID/admins", companyAdminsRouter);
 router.get("/:companyID/total_salaries", async (req, res, next) => {
     let { companyID } = req.session
     let filters = req.query

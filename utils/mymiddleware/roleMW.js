@@ -1,3 +1,4 @@
+const { retrieveAccountInfoBasic } = require("../../db/account");
 const { hasRole, hasScope } = require("../../db/role");
 const { mongoClient } = require("../conn/mongoConn");
 const { verifyToken } = require("../encdec");
@@ -39,7 +40,7 @@ let companyRoleActionValidateMW = async (req, res, next) => {
         for (const { name, userObjs } of data.roleObjs) {
             if (!name) {
                 console.log(`Role name cannot be empty`)
-                return res.json({ err: `Role name cannot be empty` })
+                return res.json({ err: `Role name cannot be empty` });
             }
             if (!userObjs) {
                 console.log(`userObjs array is not defined`)
@@ -47,11 +48,11 @@ let companyRoleActionValidateMW = async (req, res, next) => {
             }
             if (!Array.isArray(userObjs)) {
                 console.log(`'userObjs' must be an array`)
-                return res.json({ err: `'userObjs' must be an array` })
+                return res.json({ err: `'userObjs' must be an array` });
             }
             if (userObjs.length < 1) {
                 console.log(`'userObjs' array must not be empty`)
-                return res.json({ err: `'userObjs' array must not be empty` })
+                return res.json({ err: `'userObjs' array must not be empty` });
             }
             let foundRole = defaultCompanyAdminRoles.
                 find(defaultRole => defaultRole === name) || defaultCompanyActionRoles.
@@ -62,15 +63,14 @@ let companyRoleActionValidateMW = async (req, res, next) => {
             }
             if (!userObjs) {
                 console.log("No users selected to be added to role")
-                return res.json({ err: "No company id" })
+                return res.json({ err: "No users selected to be added to role" })
             }
-
-            for (const userObj of userObjs) {
-                if (!((userObj.id || userObj._id) && userObj.email)) {
-                    console.log("Wrong userObj format")
+            let mapConfirmedIdentifiers=await Promise.allSettled( userObjs.map(obj=>retrieveAccountInfoBasic({identifier:obj.email}) ))
+            for (const userConfirmed of mapConfirmedIdentifiers) {
+                if (userConfirmed.status==="rejected") {
                     return res.json({
                         err:
-                            `Wrong userObj format  for role action id '${name}'`,
+                            {msg:"Error looking up"},
                         format: userObj
                     })
                 }
@@ -91,7 +91,7 @@ let hasRoleMW = async (req, res, next) => {
         let rolename = req.session.rolename
         let hasRoleRes = await hasRole({ accountID, rolename });
         if (!hasRoleRes) {
-            return res.json({ err: { msg: "No role access." } })
+            return res.json({ err: { msg: `No role ${rolename} access.` } })
         }
         req.session.hasRole = hasRoleRes;
         next()
@@ -114,4 +114,68 @@ let hasAdminScopeMW = async (req, res, next) => {
     }
 }
 
-module.exports = { companyRoleActionValidateMW,hasAdminScopeMW,hasRoleMW };
+let addToRole=async (req, res, next) => {
+    try {
+        res.status(400);
+        let user = req.user
+        let data = req.body;
+        let { shopId, roleObjs, } = data
+        let resultFindUserCanAddUserToRole = await companiesCol.findOne({
+            _id: new ObjectID(shopId),
+            roles: {
+                $elemMatch: {
+                    name: {
+                        $eq: "addUserToRole"
+                    },
+                    "listOfUsers.email": user.email
+                }
+            },
+        });
+        //console.log(resultFindUserCanAddUserToRole)
+        if (!resultFindUserCanAddUserToRole) {
+            console.log("User Not  Authorized to add another to role")
+            return res.json({ err: "User Not  Authorized to add another to role" });
+        };
+
+        const session = mongoClient.startSession();
+        try {
+            await session.withTransaction(async () => {
+                let updateOneArray = []
+                for (const roleObj of roleObjs) {
+                    const updateOne = {
+                        filter: {
+                            _id: new ObjectID(shopId),
+                            "roles.name": { $eq: roleObj.name }
+                        },
+                        arrayFilters: [{ "role.name": { $eq: roleObj.name } }],
+                        update: {
+                            $addToSet:
+                                { "roles.$[role].listOfUsers": { $each: roleObj.userObjs } }
+                        },
+                        upsert: true
+                    }
+                    updateOneArray.push({ updateOne })
+                }
+                //console.log(JSON.stringify(updateOneArray,null,2) )
+                let result = await companiesCol.bulkWrite([...updateOneArray,], { session });
+                console.log(result)
+            });
+            //await session.endSession();
+        } catch (error) {
+            console.log("failed...");
+            console.log(error)
+            return res.json({ err: error });
+        } finally {
+            // await session.endSession();
+        }
+        res.status(201)
+     res.json({ info: "added to role" })
+     next()
+    } catch (error) {
+        res.status(500)
+        console.log(error)
+        res.json({ err: error })
+    }
+}
+
+module.exports = { companyRoleActionValidateMW,hasAdminScopeMW,hasRoleMW,addToRole };
