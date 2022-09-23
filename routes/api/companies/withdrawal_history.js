@@ -33,6 +33,15 @@ router.get("/total_withdrawal", async (req, res, next) => {
     }
 });
 
+router.get("/count", async (req, res, next) => {
+    try {
+        let { withdrawal_history } = req.session;
+        res.json({ withdrawal_count:withdrawal_history.length });
+    } catch (error) {
+        console.log(error)
+    }
+});
+
 router.get("/", async (req, res, next) => {
     try {
         let { withdrawal_history } = req.session;

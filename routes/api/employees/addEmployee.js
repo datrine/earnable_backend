@@ -36,7 +36,7 @@ router.put("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
         let employeeVerSessID = allResponses.verSessID
         let token = getRandomToken({ minLength: 4 });
         let ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
-        saveToken({ token, factor: "phone_pin", type: "token_ver", factorValue: data.phonenum, ttl });
+          saveToken({ token, factor: "phone_pin", type: "token_ver", factorValue: data.phonenum, ttl }).then(console.log).catch(console.log);
 
         if (data.email) {
             let { company_name } = company
@@ -46,15 +46,15 @@ router.put("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
                 html:
                     `<h3>Welcome to Earnable</h3>.
             <p>Your employer, ${company_name}, has registered you at Earnable. We hope you enjoy your time here. You can activate your account 
-            <a href='${frontend_url}/employee/register?verSessID=${employeeVerSessID}'>here</a>. Your OTP is ${token}.</p>`
+            <a href='${frontend_url}/employee/register?verSessID=${employeeVerSessID}'>here</a>. Your verification session ID, verSessID=${employeeVerSessID}. Your Mobile OTP is ${token}.</p>`
             }).catch(err => { console.log(err) });
         }
 
         if (data.phonenum) {
-            sendPhoneText({ to: data.phonenum, text: `Welcome to Earnable` }).
+            sendPhoneText({ to: data.phonenum, text: `Welcome to Earnable. VerSessID=${employeeVerSessID}. Your mobile OTP is ${token}.` }).
                 then(res => {
                     console.log(res)
-                })
+                }).catch(console.log)
         }
         res.statusCode = 201;
         res.json({ ...rest });

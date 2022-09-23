@@ -45,10 +45,8 @@ let sendPhonePinSMSToken = async (req, res, next) => {
         req.session.type = "token_ver";
         req.session.factorValue = phonenumToSendToken;
         req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
-        await saveToken({ ...req.session })
-        let msg = `Thanks for registering at Mini_Chat.
-        Please verify Your phone number. 
-        Token to input: ${req.session.token}.`;
+        await saveToken({ ...req.session });
+        let msg = `Thanks for registering at Earnable. Please verify Your phone number. Token to input: ${req.session.token}.`;
         let emailRes = await sendPhoneText({
             to: phonenumToSendToken,
             text: msg

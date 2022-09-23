@@ -1,11 +1,11 @@
 const router = require("express").Router()
-const { getEmployeesByCompanyID } = require("../../../../../db/employee");
+const { getEmployeesByCompanyID, getEmployeesByDepartmentID } = require("../../../../../db/employee");
 
 router.use("/", async (req, res, next) => {
     try {
-        let { companyID,departments } = req.session
+        let { companyID,departmentID:deptID, } = req.session
         let filters = req.query
-        let rolesRes = await getEmployeesByCompanyID({ companyID,filters });
+        let rolesRes = await getEmployeesByDepartmentID({ companyID,deptID,filters });
         if (rolesRes.err) {
             return res.json(rolesRes)
         }

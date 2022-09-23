@@ -29,7 +29,6 @@ router.put("/:departmentID", async (req, res, next) => {
     let { accountID } = req.session.account;
     let { departmentID, companyID } = req.params;
     let { _id, ...editedDeptObj } = req.body;
-    console.log(editedDeptObj)
     if (editedDeptObj.dept_policies && editedDeptObj.dept_policies.length > 0) {
       editedDeptObj.dept_policies = editedDeptObj.dept_policies.map((obj) => ({
         id: nanoid(),
@@ -43,17 +42,16 @@ router.put("/:departmentID", async (req, res, next) => {
       companyID,
       ...editedDeptObj,
     });
-    console.log(rolesRes);
     return res.json(rolesRes);
   } catch (error) {
     console.log(error);
   }
 });
 
-
 router.use("/:departmentID", async (req, res, next) => {
   try {
     let { departmentID } = req.params;
+    req.session.departmentID=departmentID;
     let rolesRes = await getDepartmentByDepartmentID({ departmentID });
     if (rolesRes.err) {
       return res.json(rolesRes);
@@ -65,10 +63,13 @@ router.use("/:departmentID", async (req, res, next) => {
   }
 });
 
-router.use("/:departmentID/policies",async(req,res,next)=>{
-  req.session.departmentID=req.params.departmentID;
-  next()
-}, departmentPoliciesRouter);
+router.use( "/:departmentID/policies",
+  async (req, res, next) => {
+    req.session.departmentID = req.params.departmentID;
+    next();
+  },
+  departmentPoliciesRouter
+);
 
 router.use("/:departmentID/employees", departmentEmployeesRouter);
 

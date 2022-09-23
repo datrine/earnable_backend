@@ -22,13 +22,13 @@ let sendEmailToken = async (req, res, next) => {
         req.session.factorValue = emailToSendToken;
         req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
         await saveToken({ ...req.session })
-        let msg = `Thanks for registering at Mini_Chat.
+        let msg = `Thanks for registering at Earnable.
         Please verify Your email address. 
         Token to input: ${req.session.token}.`
 
         let emailRes = await sendEmail({
             to: emailToSendToken,
-            subject: "Mini_Chat Email Verification",
+            subject: "Earnable Email Verification",
             html: msg
         });
         if (!emailRes) {
