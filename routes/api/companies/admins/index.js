@@ -92,7 +92,7 @@ router.post("/create", async (req, res, next) => {
       to: toAddAcc.email,
       text: `<p>Hello, ${user.l_name} ${user.f_name}. 
     You have been added as a dashboard administrator of company ${company.company_name}. 
-    Please click on this link to log in and access the dashboard</p>`,
+    Please click on this link to log in and access the dashboard</p>`,subject:"Admin Invite"
     })
       .then(console.log)
       .catch(console.log);

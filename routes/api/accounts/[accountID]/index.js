@@ -17,8 +17,8 @@ router.use("/subscriptions", subscriptionsRouter);
 
 router.get("/employee_details", async (req, res, next) => {
     try {
-        let { accountID } = req.session
-        let employeeRes = await getEmployeeByAccountID({ accountID });
+        let { paramAccountID } = req.session
+        let employeeRes = await getEmployeeByAccountID({ accountID: paramAccountID });
         return res.json({ ...employeeRes })
     } catch (error) {
 
@@ -28,8 +28,8 @@ router.get("/employee_details", async (req, res, next) => {
 
 router.get("/userinfo", async (req, res, next) => {
     try {
-        let { accountID } = req.session
-        let employeeRes = await getUserInfo({ accountID });
+        let { paramAccountID } = req.session
+        let employeeRes = await getUserInfo({ accountID: paramAccountID });
         return res.json({ ...employeeRes })
     } catch (error) {
 
@@ -38,9 +38,9 @@ router.get("/userinfo", async (req, res, next) => {
 
 router.get("/bank_details", async (req, res, next) => {
     try {
-        let { accountID } = req.session
+        let { paramAccountID } = req.session
 
-        let bankDetailsRes = await getBankDetailsByAccountID({ accountID });
+        let bankDetailsRes = await getBankDetailsByAccountID({ accountID: paramAccountID });
         return res.json({ ...bankDetailsRes })
     } catch (error) {
         console.log(error)

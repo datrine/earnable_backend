@@ -1,12 +1,23 @@
 const router = require("express").Router();
 const addEmployeeRouter = require("./addEmployee");
 const changePhonepinEmployeeRouter = require("./changePhone");
-const editProductRouter = require("./editEmployee");
+const editEmployeeRouter = require("./editEmployee");
 const loginProductRouter = require("./login");
 
 router.use("/add", addEmployeeRouter);
 
-router.use("/edit", editProductRouter);
+router.use("/:employeeID/", async(req,res,next)=>{
+    try {
+        let {employeeID}=req.params;
+        req.session.employeeID=employeeID;
+        next()
+    } catch (error) {
+        console.log(error);
+        
+    }
+});
+
+router.use("/:employeeID/edit", editEmployeeRouter);
 
 router.use("/login", loginProductRouter);
 

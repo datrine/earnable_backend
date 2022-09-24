@@ -28,7 +28,7 @@ router.use("/", getAuthAccount,);
 router.use("/subscriptions", subscriptionsRouter);
 
 router.use("/:accountID", async (req, res, next) => {
-    req.session.accountID = req.params.accountID
+    req.session.paramAccountID = req.params.accountID
     next()
 }, accountIDRouter);
 
