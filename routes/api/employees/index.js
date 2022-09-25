@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { checkIfEmployeePropExists } = require("../../../db/employee");
 const addEmployeeRouter = require("./addEmployee");
 const changePhonepinEmployeeRouter = require("./changePhone");
 const editEmployeeRouter = require("./editEmployee");
@@ -29,6 +30,13 @@ router.get("/", async(req,res,next)=>{
     } catch (error) {
         console.log(error)
     }
+});
+
+router.get("/checkifexists/:prop/:value", async (req, res, next) => {
+    let { prop, value } = req.params;
+    let { exists } = await checkIfEmployeePropExists({ prop, value });
+    console.log({ exists })
+    return res.json({ exists })
 });
 
 module.exports = router;
