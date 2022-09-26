@@ -5,6 +5,7 @@ const bank_detailsCol = waleprjDB.collection("bank_details");
 const { ObjectId } = require("bson");
 const { nanoid } = require("nanoid");
 const { transferVerifyResponseObj, initiateTransferResonseObj } = require("./templates/paystack/responses");
+const { bankDetailsTemplate } = require("./templates");
 /**
  * 
  * @param {object} param0
@@ -34,6 +35,9 @@ let addBankDetail = async ({ ...bankDetails }) => {
 
 let getBankDetailsByAccountID = async ({ accountID }) => {
     try {
+        /**
+         * @type {bankDetailsTemplate}
+         */
         let accBankDetails = await bank_detailsCol.findOne({ accountID });
         if (!accBankDetails) {
             return { err: { msg: "No bank details." } }
@@ -153,8 +157,6 @@ let verifyTransfer = async ({ transfer_code }) => {
         throw error
     }
 };
-
-
 
 module.exports = {
     addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID,

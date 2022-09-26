@@ -796,7 +796,9 @@ async function getBiodataFunc({ email, accountID }) {
     console.log(error);
   }
 }
+
 let getUserInfo = getBiodataFunc;
+
 async function retrieveAccountInfoBySessID(sessID) {
   try {
     /**
@@ -1101,9 +1103,7 @@ let getUnverifiedFactors = (account) =>
 
 let retrieveAccountInfoByAccountID = async (accountID) => {
   let res = await retrieveAccountInfoBasic({ identifier: accountID });
-  if (res.err) {
-    return { msg: "No accountID matches the one supplied..." };
-  }
+  return res
 };
 
 /**

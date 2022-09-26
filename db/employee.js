@@ -2,6 +2,7 @@ const { mongoClient } = require("../utils/conn/mongoConn");
 const waleprjDB = mongoClient.db("waleprj");
 const employeesCol = waleprjDB.collection("employees");
 const { ObjectId, UUID } = require("bson");
+const { employeeTemplate } = require("./templates");
 
 let addEmployee = async ({ ...employeeToData }) => {
   try {
@@ -22,22 +23,72 @@ let addEmployee = async ({ ...employeeToData }) => {
   }
 };
 
-let updateEmployeeInfo = async ({
-  employeeID,
-  companyIssuedEmployeeID,
-  ...employeeUpdateData
-}) => {
+let updateEmployeeInfo = async ({ employeeID, ...employeeUpdateData }) => {
   try {
+    let obj = {};
+    if (employeeUpdateData.enrollment_status) {
+      let { enrollment_status, ...rest } = employeeUpdateData;
+      obj.enrollment_state = {
+        state: enrollment_status,
+        createdOn: new Date(),
+      };
+      employeeUpdateData = rest;
+    }
+    if (employeeUpdateData.lastModified) {
+      //destructure away lastModified
+      let { lastModified, ...rest } = employeeUpdateData;
+      employeeUpdateData = rest;
+    }
+    if (employeeUpdateData.accountID) {
+      //destructure away lastModified
+      let { accountID, ...rest } = employeeUpdateData;
+      employeeUpdateData = rest;
+    }
+    if (employeeUpdateData.deptID) {
+      //destructure away deptID
+      let { deptID, department, ...rest } = employeeUpdateData;
+      obj.deptID = deptID;
+      obj.department = department;
+      employeeUpdateData = rest;
+    }
+
+    if (employeeUpdateData.companyIssuedEmployeeID) {
+      //destructure away lastModified
+      let { companyIssuedEmployeeID, ...rest } = employeeUpdateData;
+      obj.companyIssuedEmployeeID = companyIssuedEmployeeID;
+      employeeUpdateData = rest;
+    }
+
+    if (employeeUpdateData.job_title) {
+      //destructure away lastModified
+      let { job_title, ...rest } = employeeUpdateData;
+      obj.job_title = job_title;
+      employeeUpdateData = rest;
+    }
+
+    if (employeeUpdateData.monthly_salary) {
+      //destructure away lastModified
+      let { monthly_salary, ...rest } = employeeUpdateData;
+      monthly_salary = Number(monthly_salary);
+      if (!Number.isNaN(monthly_salary)) {
+        obj.monthly_salary = Number(monthly_salary);
+      }
+      employeeUpdateData = rest;
+    }
+
     let result1 = await employeesCol.findOneAndUpdate(
       {
-        $or: [{ _id: ObjectId.isValid(employeeID)?ObjectId(employeeID):employeeID }, { companyIssuedEmployeeID }],
+        _id: ObjectId.isValid(employeeID)
+          ? ObjectId(employeeID)
+          : employeeID.toString(),
       },
-      { $set: { ...employeeUpdateData, lastModified: new Date() } }
+      { $set: { ...obj, lastModified: new Date() } },
+      { upsert: true, returnDocument: "after" }
     );
     if (!result1.ok) {
       return { err: { msg: "Unable to update employee..." } };
     }
-    return {info:"Employee details updated..." };
+    return { info: "Employee details updated..." };
   } catch (error) {
     console.log(error);
     return { err: error };
@@ -128,7 +179,12 @@ let getEmployeesByDepartmentID = async ({ companyID, deptID, filters }) => {
 
 let getEmployeeByEmployeeID = async ({ employeeID }) => {
   try {
-    let employeeDoc = await employeesCol.find({ _id: ObjectId(employeeID) });
+    /**
+     * @type {employeeTemplate}
+     */
+    let employeeDoc = await employeesCol.findOne({
+      _id: ObjectId.isValid(employeeID) ? ObjectId(employeeID) : employeeID,
+    });
     if (!employeeDoc) {
       return { err: { msg: "Employee not found" } };
     }
@@ -168,11 +224,14 @@ async function checkIfEmployeePropExists({ prop, value }) {
     console.log(error);
   }
 }
+
 module.exports = {
   addEmployee,
   getEmployeesByCompanyID,
   getEmployeeByEmployeeID,
   getEmployeesByDepartmentID,
   getTotalSalaries,
-  getEmployeeByAccountID,updateEmployeeInfo,checkIfEmployeePropExists
+  getEmployeeByAccountID,
+  updateEmployeeInfo,
+  checkIfEmployeePropExists,
 };

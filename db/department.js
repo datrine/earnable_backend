@@ -49,6 +49,7 @@ let getDepartmentsByCompanyID = async ({ companyID, filters }) => {
       filterBuilder.enrolled = { $ne: true };
     }
     console.log(filterBuilder);
+
     departmentsCursor = await departmentsCol.find({
       $or: [{ companyID }, { companyID: ObjectId(companyID) }],
       ...filterBuilder,
@@ -79,6 +80,7 @@ let getDepartmentByDepartmentID = async ({ departmentID }) => {
     throw error;
   }
 };
+
 
 let editDepartment = async ({
   companyID,

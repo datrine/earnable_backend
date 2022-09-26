@@ -12,6 +12,7 @@ let jobList = new Map();
  * @returns
  */
 let registerJob = (title, cronJob) => {
+    console.log("Adding a new job")
         jobList.set(title, cronJob);
         return jobList
     }
@@ -20,6 +21,7 @@ let stopJob;
 let startJob;
 
 let startJobs = async () => {
+   // registerJob("testingJob",job)
     for (const [title, job] of jobList) {
         job.start()
     }
@@ -38,4 +40,4 @@ let startJobs = async () => {
     return { registerJob, jobList, stopAll, stopJob, startJob }
 }
 
-module.exports = { startJobs, stopAll, startJob, stopJob,registerJob }
+module.exports = { startJobs, stopAll, startJob, stopJob,registerJob ,jobList}
