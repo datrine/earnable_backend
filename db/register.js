@@ -87,7 +87,7 @@ async function registerEmployeeFunc(data) {
       job_title,
       monthly_salary,
       phonePin,
-      employee_id,
+      companyIssuedEmployeeID,
       f_name,
       l_name,
       dob,
@@ -102,13 +102,22 @@ async function registerEmployeeFunc(data) {
     } = data;
     username = username || email;
     if (!email) {
-      // return { err: { msg: "Email not supplied..." } }
+       return { err: { msg: "Email not supplied..." } }
     }
     if (!username) {
-      // return { err: { msg: "Username not supplied..." } }
+       return { err: { msg: "Username not supplied..." } }
+    }
+    if (!l_name) {
+       return { err: { msg: "Last name not supplied..." } }
+    }
+    if (!f_name) {
+       return { err: { msg: "First name not supplied..." } }
     }
     if (!phonenum) {
       return { err: { msg: "Phone number not supplied..." } };
+    }
+    if (!deptID) {
+      return { err: { msg: "Department not supplied..." } }
     }
     if (!phonePin) {
       //return { err: { msg: "Password not supplied..." } }
@@ -147,7 +156,7 @@ async function registerEmployeeFunc(data) {
       monthly_salary,
       deptID,
       department,
-      employeeID: employee_id,
+      companyIssuedEmployeeID,
       enrollment_state,
       lastModified: new Date(),
       createdOn: new Date(),
@@ -156,19 +165,22 @@ async function registerEmployeeFunc(data) {
     if (addEmployeeRes.err) {
       return addEmployeeRes;
     }
-    let det = {
-      acc_name: l_name + " " + f_name,
-      bank_name: ngBank.getBank(bank_code).name,
-      bank_code,
-      acc_number,
-      accountID: accountRes.accountID,
-    };
-    let bankDetailRes = await addBankDetail({ ...det });
+    let bankDetailRes;
+    if (bank_name && bank_code && acc_number) {
+      let det = {
+        acc_name: l_name + " " + f_name,
+        bank_name: ngBank.getBank(bank_code).name,
+        bank_code,
+        acc_number,
+        accountID: accountRes.accountID,
+      };
+      bankDetailRes = await addBankDetail({ ...det });
+    }
 
-    if (bankDetailRes.err) {
+    if (bankDetailRes?.err) {
       return bankDetailRes;
     }
-    let bankDetailID = bankDetailRes.bankDetailID;
+    let bankDetailID = bankDetailRes?.bankDetailID;
     (async () => {
       try {
         let { err: recipientCodeErr, recipient_code } =
@@ -197,13 +209,6 @@ async function registerEmployeeFunc(data) {
         console.log(error);
       }
     })();
-    /*  let result2 = await companyRolesCol.insertOne({
-              companyID: ObjectId(companyID),
-              userAccID: accountRes.accountID,
-              roles: [...companyRoles],
-              lastModified: new Date(),
-              createdOn: new Date(),
-          }) */
     return { ...accountRes, ...userRes, ...addEmployeeRes, ...bankDetailRes };
   } catch (error) {
     console.log(error);

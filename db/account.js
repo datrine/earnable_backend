@@ -918,6 +918,22 @@ async function retrieveAccountInfoByVerSessID(verSessID) {
   }
 }
 
+async function retrieveVerSessIDByIdentifier({identifierValue,identifierName}) {
+  try {
+    /**
+     * @type {accTemplate}
+     */
+    let account = await accountsCol.findOne({
+      [identifierName]: identifierValue,
+    });
+    if (!account) {
+      return { err: { msg: "verSessID does not exist in record..." } };
+    }
+    return { verSessID:account.verInfo.verSessID };
+  } catch (error) {
+    console.log(error);
+  }
+}
 /**
  *
  * @param {object} param0
@@ -1174,5 +1190,5 @@ module.exports = {
   checkIfAccountPropExists,
   activateEmployeeAccount,
   getCurrentAccountActivity,
-  updateAccInfo,
+  updateAccInfo,retrieveVerSessIDByIdentifier
 };

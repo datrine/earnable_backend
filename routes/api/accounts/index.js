@@ -5,6 +5,8 @@ const accountIDRouter = require("./[accountID]");
 const actionsRouter = require("./actions");
 const activityRouter = require("./activity");
 const loginRouter = require("./login");
+const verSessIDsRouter= require("./verSessIDs");
+
 const { getAccountMW } = require("../../../utils/mymiddleware/accounts");
 const { createAccount } = require("../../../utils/dbmethods/account_methods");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
@@ -21,6 +23,7 @@ router.get("/checkifexists/:prop/:value", async (req, res, next) => {
 });
 router.use("/actions", actionsRouter,);
 router.use("/activity", activityRouter,);
+router.use("/verSessIDs", verSessIDsRouter);
 router.use("/login", loginRouter,);
 
 //user id, email or username
