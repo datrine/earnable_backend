@@ -1,5 +1,5 @@
 const { verifyToken, findAndVerifyToken } = require("../../../db/token");
-const { updateAccVer, retrieveAccountInfoBasic, mobileFactorDBUpdate, mobileFactorAuth, setDefaultPhonePin } = require("../../../db/account");
+const { updateAccVer, retrieveAccountInfoBasic, mobileFactorDBUpdate, mobileFactorAuth, setDefaultPhonePin, activateEmployeeAccount, getCurrentAccountActivity } = require("../../../db/account");
 const { getRandomToken } = require("../../../from/utils/token_mgt");
 const { sendPhoneText } = require("../../../from/utils/phone_mgt");
 let router = require("express").Router()
@@ -89,9 +89,9 @@ router.post("/phone_pin/verification/", async (req, res, next) => {
         if (retrieveAccRes.err) {
             return res.json(retrieveAccRes)
         }
-        req.session.account = retrieveAccRes.account
-        req.session.phonenum = retrieveAccRes.account.phonenum
-        req.session.verSessID = retrieveAccRes.account.verInfo.verSessID
+        req.session.account = retrieveAccRes?.account
+        req.session.phonenum = retrieveAccRes?.account?.phonenum
+        req.session.verSessID = retrieveAccRes?.account.verInfo.verSessID
         let updateAccVerRes = await updateAccVer({
             verSessID: req.session.verSessID,
             factor: "phone_pin", tokenSent: true,
@@ -99,10 +99,11 @@ router.post("/phone_pin/verification/", async (req, res, next) => {
         });
         let phonePin = getRandomToken({ minLength: 4 });
         let defaultRes = await setDefaultPhonePin({ phonenum: req.session.phonenum, phonePin });
-        
+        //getCurrentAccountActivity({})
+        //activateEmployeeAccount()
         sendPhoneText({ to: req.session.phonenum, text: `Your default password: ${phonePin}` }).
         then(res => {
-            console.log(res)
+            console.log(res.info)
         });
         res.json({ ...updateAccVerRes, ...defaultRes })
 

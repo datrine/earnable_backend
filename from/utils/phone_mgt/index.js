@@ -24,7 +24,7 @@ async function sendPhoneText(data) {
                 to: data.to
             }) */
         //.then(message => console.log(message.sid));
-        console.log(res.sid)
+        console.log(res)
 
         return { info: "SMS sent" }
     } catch (error) {

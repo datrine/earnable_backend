@@ -20,8 +20,7 @@ let sendMobileSMSToken = async (req, res, next) => {
         req.session.factorValue = phonenumToSendToken;
         req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
         await saveToken({ ...req.session })
-        let msg = `Thanks for registering at Earnable.
-        Please verify Your phone number. 
+        let msg = `Please verify Your phone number. 
         Token to input: ${req.session.token}.`;
         let mobileRes = await sendPhoneText({
             to: phonenumToSendToken,

@@ -208,6 +208,15 @@ let getEmployeeByAccountID = async ({ accountID }) => {
   }
 };
 
+let getEmployeeDetailsByAccountID = async ({ accountID }) => {
+  try {
+   let prom1= getEmployeeByAccountID({accountID})
+
+    return { employee: { ...employeeDoc, employeeID: employeeDoc._id } };
+  } catch (error) {
+    console.log({ err: error });
+  }
+};
 async function checkIfEmployeePropExists({ prop, value }) {
   try {
     /**
@@ -233,5 +242,5 @@ module.exports = {
   getTotalSalaries,
   getEmployeeByAccountID,
   updateEmployeeInfo,
-  checkIfEmployeePropExists,
+  checkIfEmployeePropExists,getEmployeeDetailsByAccountID
 };

@@ -2,13 +2,24 @@ const router = require("express").Router();
 const subscriptionsRouter = require("../subscriptions");
 const withdrawalHistoryRouter = require("./withdrawal_history");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
-const { accountLogOut, getUserInfo, } = require("../../../../db/account");
+const { accountLogOut, getUserInfo,updateAccInfo } = require("../../../../db/account");
 const { getEmployeeByAccountID } = require("../../../../db/employee");
 const { getBankDetailsByAccountID } = require("../../../../db/bank_detail");
 
 //user id, email or username
 router.use("/", getAuthAccount, async (req, res, next) => {
     next()
+});
+
+router.put("/update", async (req, res, next) => {
+    try {
+        let {accountID}=req.session
+        let {}=req.query;
+       let updateRes= await updateAccInfo({accountID,prop,propValue});
+       console.log(updateRes);
+    } catch (error) {
+        
+    }
 });
 
 router.use("/withdrawal_history", withdrawalHistoryRouter);

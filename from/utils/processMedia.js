@@ -22,7 +22,7 @@ async function processImg({ data, folderName }) {
         })
         let promArray = [formats, res];
         let responseArray = [];
-        for await (const item of promArray) {
+        for (const item of promArray) {
             responseArray.push(item)
         }
         if (responseArray[0]) {

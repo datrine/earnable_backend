@@ -167,7 +167,6 @@ router.get("/phone_pin/verification/:verSessID", generateToken, async (req, res,
         if (!verSessID) {
             return res.json({ err: { msg: "No verSessID provided" } })
         }
-        console.log("verSessID....:   " + verSessID)
         let retrieveAccByVerSessIDRes = await retrieveAccountInfoByVerSessID(verSessID);
         if (retrieveAccByVerSessIDRes.err) {
             return res.json(retrieveAccByVerSessIDRes)
@@ -185,7 +184,6 @@ router.get("/phone_pin/verification/:verSessID", generateToken, async (req, res,
         }
         req.session.account = retrieveAccByVerSessIDRes.account
         req.session.phonenum = retrieveAccByVerSessIDRes.account.phonenum
-        console.log(verSessID)
         req.session.verSessID = verSessID
 
         next()
@@ -198,7 +196,6 @@ router.get("/phone_pin/verification/:verSessID", generateToken, async (req, res,
             verSessID: req.session.verSessID, tokenSent: true,
             factor: "phone_pin", isVerified: false, mode: "start"
         });
-        console.log(updateAccRes);
         res.json(updateAccRes)
     } catch (error) {
         console.log(error)

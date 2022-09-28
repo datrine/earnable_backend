@@ -844,20 +844,23 @@ async function activateEmployeeAccount({ identifier, verSessID, phonePin }) {
     }
 
     account.phonePin = phonePin;
-    let current_activity = account.activity.current;
+    let current_activity = account.activity?.current||{};
     current_activity.to = new Date();
+    account.activity.history=account.activity.history||[];
     account.activity.history.push(current_activity);
     account.activity.current = { name: "active", from: new Date() };
     account.updatedOn = new Date();
+    console.log("Activating account...")
+    console.log(account.activity)
     let result = await accountsCol.findOneAndUpdate(
       { $or: [{ phonenum: identifier }, { username: identifier }] },
-      { $set: { ...account } }
+      { $set: { ...account } },
     );
 
     if (!result.ok) {
       return { err: { msg: "Account activation failed." } };
     }
-    return { info: "Account is activated." };
+    return { info: "Account is activated.",accountID:account._id.toString() };
   } catch (error) {
     console.log(error);
     throw { err: error };
@@ -872,11 +875,11 @@ async function getCurrentAccountActivity({ identifier }) {
     let account = await accountsCol.findOne({
       $or: [{ phonenum: identifier }, { email: identifier }],
     });
-    console.log(identifier);
+    //console.log(identifier);
     if (!account) {
       return { err: { msg: "Account does not exist." } };
     }
-    console.log(account);
+   // console.log(account);
     return { activity: account?.activity?.current?.name };
   } catch (error) {
     console.log(error);
