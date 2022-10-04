@@ -99,7 +99,6 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
   try {
     let employeesCursor;
     let filterBuilder = {};
-    //console.log(filterBuilder)
     if (filters.enrollment_state === "enrolled") {
       filterBuilder["enrollment_state.state"] = { $eq: "enrolled" };
     }
@@ -140,7 +139,6 @@ let getTotalSalaries = async ({ companyID }) => {
       },
     ]);
     let results = await cursor.toArray();
-    console.log(cursor.loadBalanced);
     let total_monthly_salaries = results[0]?.total_monthly_salaries || 0;
     return { total_monthly_salaries };
   } catch (error) {
@@ -197,12 +195,16 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
 
 let getEmployeeByAccountID = async ({ accountID }) => {
   try {
+    console.log(accountID)
+    /**
+     * @type {employeeTemplate}
+     */
     let employeeDoc = await employeesCol.findOne({ accountID });
     if (!employeeDoc) {
       return { err: { msg: "Employee not found" } };
     }
 
-    return { employee: { ...employeeDoc, employeeID: employeeDoc._id } };
+    return { employee: { ...employeeDoc, employeeID: employeeDoc._id.toString() } };
   } catch (error) {
     console.log({ err: error });
   }
@@ -210,7 +212,7 @@ let getEmployeeByAccountID = async ({ accountID }) => {
 
 let getEmployeeDetailsByAccountID = async ({ accountID }) => {
   try {
-   let prom1= getEmployeeByAccountID({accountID})
+   let prom1=await getEmployeeByAccountID({accountID})
 
     return { employee: { ...employeeDoc, employeeID: employeeDoc._id } };
   } catch (error) {

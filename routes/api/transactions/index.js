@@ -1,155 +1,319 @@
-const router = require("express").Router()
-const { mongoClient } = require("../../../utils/conn/mongoConn");
-const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
-const ordersCol = waleprjDB.collection("orders")
-const { validateServerSidePaymentMW } = require("../../../utils/mymiddleware/accounts/validateServerSidePaymentMW");
-const { createCompanyWallet, getWalletByCompanyID, holdAmountInWallet } = require("../../../db/wallet");
-const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
+const router = require("express").Router();
+const {
+  validateServerSidePaymentMW,
+} = require("../../../utils/mymiddleware/accounts/validateServerSidePaymentMW");
+const {
+  createCompanyWallet,
+  getWalletByCompanyID,
+  holdAmountInWallet,
+} = require("../../../db/wallet");
+const {
+  getAuthAccount,
+} = require("../../../from/utils/middlewares/getAuthAccount");
 const { getToken } = require("../../../utils/encdec");
-const { transactionTokenVerMW } = require("../../../utils/mymiddleware/transactionTokenMWs");
-const { canWithdrawVerMW } = require("../../../utils/mymiddleware/canWithdrawMW");
-const { createTransaction, updateTransactionByTransactionID, updateAndReturnTransactionByTransactionID } = require("../../../db/transaction");
-const { getBankDetailsByAccountID, createRecipientCode, updateRecieptCodeEmployeeID, initiateTransfer } = require("../../../db/bank_detail");
+const {
+  transactionTokenVerMW,
+} = require("../../../utils/mymiddleware/transactionTokenMWs");
+const {
+  canWithdrawVerMW,
+} = require("../../../utils/mymiddleware/canWithdrawMW");
+const {
+  createTransaction,
+  updateTransactionByTransactionID,
+  updateAndReturnTransactionByTransactionID,
+  getTransactionByID,
+  updateTransactionByID,
+} = require("../../../db/transaction");
+const {
+  getBankDetailsByAccountID,
+  createRecipientCode,
+  updateRecieptCodeEmployeeID,
+  initiateTransfer,
+} = require("../../../db/bank_detail");
 const { sendOTPMW } = require("../../../utils/mymiddleware/sendOTPMW");
-const { generateOTPToken } = require("../../../from/utils/middlewares/generateTokenMW");
-const { canContinueWithdrawMW } = require("../../../utils/mymiddleware/canContinueWithdrawMW");
-const { createWithdrawal, getEmployeeWithdrawalHistory } = require("../../../db/withdrawal");
+const {
+  generateOTPToken,
+} = require("../../../from/utils/middlewares/generateTokenMW");
+const {
+  canContinueWithdrawMW,
+} = require("../../../utils/mymiddleware/canContinueWithdrawMW");
+getTransactionByID;
+const { createWithdrawal } = require("../../../db/withdrawal");
 const { DateTime } = require("luxon");
+const {
+  resolveTransactionMW,
+} = require("../../../utils/mymiddleware/transactionMWs");
+const { retrieveAccountInfoByAccountID } = require("../../../db/account");
 
-router.post("/withdrawals/new/initiate", getAuthAccount, canWithdrawVerMW, async (req, res, next) => {
+// get: /withdrawals/new/preview
+router.get(
+  "/withdrawals/new/preview",
+  async (req, res, next) => {
+    let queried = { ...req.query };
+    req.session.queried = { ...req.session.queried, ...queried };
+    next();
+  },
+  getAuthAccount,
+  canWithdrawVerMW,
+  resolveTransactionMW,
+  async (req, res, next) => {
     try {
-        let { amount, withdrawal_fee, } = req.body;
-        let { company, department, } = req.session;
-        let withdrawal_charge_mode = (Array.isArray(department?.policies) &&
-            Array.from(department?.policies).reverse().find(policy => policy.name === "withdrawal_charge_mode")) ||
-            company?.withdrawal_charge_mode || "employee"
-        let employee_details = req.session.employee_details
-        let companyID = company?.companyID;
-        let accountID = employee_details?.accountID;
-        let employeeID = employee_details?.employeeID;
-        let bank_details = req.session.bank_details;
-        if (withdrawal_charge_mode === "employee") {
-            amount = amount - withdrawal_fee;
+      let { transactionInfo } = req.session.queried;
+      res.json({ transactionInfo });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+// post: /withdrawals/new/initiate
+router.post(
+  "/withdrawals/new/initiate",
+  async (req, res, next) => {
+    let queried = { accountID: req.query.accountID };
+    queried = { ...queried, amount: req.body.amount };
+    req.session.queried = { ...req.session.queried, ...queried };
+    next();
+  },
+  getAuthAccount,
+  canWithdrawVerMW,
+  resolveTransactionMW,
+  async (req, res, next) => {
+    try {
+      let {
+        company: { companyID },
+        department: { departmentID },
+        employee_details: { employeeID },
+        transactionInfo,
+        account: { accountID },
+      } = req.session.queried;
+      let transRes = await createTransaction({
+        accountID,
+        amountToWithdraw: transactionInfo.netAmountToWithdraw,
+        type: "withdrawal",
+      });
+      res.json(transRes);
+      req.session.transactionID = transRes.transactionID;
+      let { transactionID } = transRes;
+      await createWithdrawal({
+        accountID,
+        employeeID,
+        companyID,
+        departmentID,
+        transactionID,
+        transactionInfo,
+        purpose: "employee_payment",
+        status: "initiated",
+      });
+      next();
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  generateOTPToken,
+  sendOTPMW,
+  async (req, res, next) => {
+    console.log("OTP sent...");
+  }
+);
+
+// use: /:transactionID/withdrawals
+router.use("/:transactionID/withdrawals", async (req, res, next) => {
+  try {
+    let { transactionID } = req.params;
+    if (!transactionID) {
+      return res.json({ err: { msg: "No Transaction ID supplied" } });
+    }
+    let getTransactionByIDRes = await getTransactionByID({
+      transactionID,
+    });
+    if (getTransactionByIDRes.err) {
+      return res.json(getTransactionByIDRes);
+    }
+    req.session.queried = {
+      ...req.session.queried,
+      transactionID,
+      transaction: getTransactionByIDRes.transaction,
+    };
+    let transactionAccountID = getTransactionByIDRes.transaction.accountID;
+    let retrieveAccountInfoByAccountIDRes =
+      await retrieveAccountInfoByAccountID(transactionAccountID);
+    if (retrieveAccountInfoByAccountIDRes.err) {
+      return res.json(retrieveAccountInfoByAccountIDRes);
+    }
+    req.session.queried.account = retrieveAccountInfoByAccountIDRes.account;
+    req.session.queried.accountID =
+      retrieveAccountInfoByAccountIDRes.account.accountID;
+    next();
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// post: /:transactionID/withdrawals/continue
+router.post(
+  "/:transactionID/withdrawals/continue",
+  getAuthAccount,
+  transactionTokenVerMW,
+  async (req, res, next) => {
+    try {
+      let { transaction } = req.session.queried;
+      let { amountToWithdraw } = transaction;
+      console.log({ amountToWithdraw });
+      req.session.queried.amount = amountToWithdraw;
+      next();
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  canWithdrawVerMW,
+  async (req, res, next) => {
+    try {
+      let {
+        bank_details: queriedBankDetails,
+        transactionID: queriedTransactionID,
+        account: queriedAccount,
+      } = req.session.queried;
+      let transRes = await updateTransactionByID({
+        transactionID: queriedTransactionID,
+        updates: {
+          status: "processing",
+          accountIDofUpdater: queriedAccount.accountID,
+        },
+      });
+      if (transRes.err) {
+        return res.json(transRes);
+      }
+      res.json({ info: transRes.err });
+      let recipient_code = queriedBankDetails.recipient_code;
+      if (!recipient_code) {
+        let createRes = await createRecipientCode({ ...queriedBankDetails });
+        if (!createRes.recipient_code) {
+          return;
         }
-        if (withdrawal_charge_mode === "shared") {
-            amount = amount - (withdrawal_fee / 2);
-        }
-        let total_amount = amount + withdrawal_fee;
-        let resWiHx = await getEmployeeWithdrawalHistory({ employeeID, filters: { month: DateTime.now().month } });
-        let withdrawnWithdraw = resWiHx.withdrawal_history.filter((obj) => (obj.status === "processing" || obj.status === "success")).reduce((prev, cur) => (prev + cur.amount + cur.withdrawal_fee), 0)
-        let maxWithdrawable = (Number(employee_details.monthly_salary) * Number(company.salary_access)  / 100);
-        let withdrawable = maxWithdrawable - (total_amount + withdrawnWithdraw)
-        console.log({maxWithdrawable,monthly_salary:Number(employee_details.monthly_salary), withdrawable,withdrawn: (total_amount + withdrawnWithdraw)});
-        if (withdrawable <= 0) {
-            return res.json({ err: { msg: "Flexible salary linits reached" } })
-        }
-        let holdRes = await holdAmountInWallet({ companyID, amountToHold: total_amount, accountID });
-        if (holdRes?.err) {
-            return res.json(holdRes)
-        }
-        let to_pay = { withdrawal: amount };
-        let transRes = await createTransaction({
-            accountID,
-            type: "withdrawal",
-            total_amount,
-            to_pay,
-            to_earn: { withdrawal_fee },
-            bank_details
+        recipient_code = createRes.recipient_code;
+        let bankDetailID = queriedBankDetails.bankDetailID;
+        let updateRes = await updateRecieptCodeEmployeeID({
+          bankDetailID,
+          recipient_code,
         });
-        if (transRes.err) {
-            return res.json(transRes)
+      }
+      let to_pay = transRes.value.transaction?.amountToWithdraw;
+      let transferInitiationRes = await initiateTransfer({
+        reason: "Earnable payment",
+        amount: to_pay * 100,
+        recipient: recipient_code,
+      });
+      if (transferInitiationRes.err) {
+        let err = transferInitiationRes.err;
+        console.log(transferInitiationRes);
+        if (err?.type === "failed_transfer") {
+          let updates = {};
+          let transactionUpdateRes = await updateTransactionByID({
+            transactionID: queriedTransactionID,
+            update_processing_attempts: true,
+          });
         }
-        res.json(transRes);
-        req.session.transactionID = transRes.transactionID
-        let { transactionID } = transRes
-        await createWithdrawal({
-            withdrawal_charge_mode, withdrawal_fee, accountID, companyID, transactionID, amount,
-            employeeID, type: "employee_payment", status: "initiated"
-        });
-        next()
+
+        return;
+      }
+      let transferCode = transferInitiationRes.transfer_code;
+      let transactionUpdateRes = await updateTransactionByTransactionID({
+        transactionID: queriedTransactionID,
+        transferCode,
+      });
+      if (transactionUpdateRes.err) {
+        console.log(transactionUpdateRes);
+        return;
+      }
     } catch (error) {
-        console.log(error)
+      console.log(error);
     }
-}, generateOTPToken, sendOTPMW, async (req, res, next) => {
-    console.log("pikoihuggyggytfrsypoj");
+  }
+);
+
+// get: /:transactionID/withdrawals/otp/resend
+router.get(
+  "/:transactionID/withdrawals/otp/resend",
+  getAuthAccount,
+  async (req, res, next) => {
+    let { transaction } = req.session.queried;
+    if (transaction.status.name !== "initiated") {
+      return res.json({
+        err: { msg: `transaction status: ${transaction.status.name}` },
+      });
+    }
+    let transactionAccountID = transaction.accountID;
+    let retrieveAccountInfoByAccountIDRes =
+      await retrieveAccountInfoByAccountID(transactionAccountID);
+    if (retrieveAccountInfoByAccountIDRes.err) {
+      return res.json(retrieveAccountInfoByAccountIDRes);
+    }
+    req.session.queried.account = retrieveAccountInfoByAccountIDRes.account;
+    next();
+  },
+  generateOTPToken,
+  sendOTPMW,
+  async (req, res, next) => {
+    try {
+      res.json({ info: "Sent..." });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+// get: /withdrawals/:transactionID/status
+router.get("/:transactionID/withdrawals/status", async (req, res, next) => {
+  try {
+    let { transaction } = req.session.queried;
+    if (!transaction) {
+      return res.json({
+        err: { msg: "No Transaction found that matches supplied transaction" },
+      });
+    }
+    let status = transaction?.status.name;
+    return res.json({ status });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
-router.post("/:transactionID/withdrawals/continue", async (req, res, next) => {
+// get: /:transactionID/withdrawals/cancel
+router.get(
+  "/:transactionID/withdrawals/cancel",
+  async (req, res, next) => {
     try {
-        let { transactionID } = req.params;
-        req.session.transactionID = transactionID;
-        next()
+      let { transactionID } = req.params;
+      if (!transactionID) {
+        return res.json({ err: { msg: "No Transaction ID supplied" } });
+      }
+      req.session.queried = { ...req.session.queried, transactionID };
+      next();
     } catch (error) {
-
+      console.log(error);
     }
-}, getAuthAccount, transactionTokenVerMW, canContinueWithdrawMW, async (req, res, next) => {
+  },
+  getAuthAccount,
+  async (req, res, next) => {
     try {
-        let bank_details = req.session.bank_details;
-        let { transactionID } = req.params
-        let transRes = await updateAndReturnTransactionByTransactionID({ transactionID, status: "processing" });
-        if (transRes.err) {
-            return res.json(transRes)
-        }
-        res.json(transRes);
-        let recipient_code = bank_details.recipient_code
-        if (!recipient_code) {
-            let createRes = await createRecipientCode({ ...bank_details });
-            if (!createRes.recipient_code) {
-                return
-            }
-            recipient_code = createRes.recipient_code
-            let bankDetailID = bank_details.bankDetailID
-            let updateRes = await updateRecieptCodeEmployeeID({ bankDetailID, recipient_code });
-        }
-        let to_pay = transRes.transaction.to_pay?.withdrawal;
-        let transferInitiationRes = await initiateTransfer({
-            reason: "Earnable payment",
-            amount: to_pay * 100,
-            recipient: recipient_code
-        });
-        if (transferInitiationRes.err) {
-            console.log(transferInitiationRes);
-            return
-        }
-        let transferCode = transferInitiationRes.transfer_code
-        let transactionUpdateRes = await updateTransactionByTransactionID({ transactionID, transferCode });
-        if (transactionUpdateRes.err) {
-            console.log(transactionUpdateRes);
-            return;
-        }
+      let { transactionID: queriedtransactionID } = req.session.queried;
+      let { account: authAccount } = req.session.self;
+      let cancelTransactionByIDRes = await updateTransactionByID({
+        transactionID: queriedtransactionID,
+        updates: {
+          status: "cancelled",
+          accountIDofUpdater: authAccount.accountID,
+        },
+      });
+      if (cancelTransactionByIDRes.err) {
+        return res.json(cancelTransactionByIDRes);
+      }
+      res.json(cancelTransactionByIDRes);
     } catch (error) {
-        console.log(error)
+      console.log(error);
     }
-});
-
-router.post("/", async (req, res, next) => {
-    try {
-        let { companyID, walletID } = req.body;
-
-        if (companyID) {
-            let walletRes = await createCompanyWallet({ companyID, });
-            console.log(walletRes);
-            return res.json(walletRes)
-        }
-    } catch (error) {
-        console.log(error)
-    }
-});
-
-
-router.get("/:companyID", async (req, res, next) => {
-    try {
-        let { companyID, walletID } = req.params
-        if (companyID) {
-            let walletRes = await getWalletByCompanyID();
-            console.log(walletRes);
-            return res.json(walletRes)
-        }
-    } catch (error) {
-        console.log(error)
-    }
-});
-
+  }
+);
 
 module.exports = router;

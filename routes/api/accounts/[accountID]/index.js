@@ -1,30 +1,22 @@
 const router = require("express").Router();
 const subscriptionsRouter = require("../subscriptions");
 const withdrawalHistoryRouter = require("./withdrawal_history");
+const bankDetailsHistoryRouter = require("./bank_details");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
 const { accountLogOut, getUserInfo,updateAccInfo } = require("../../../../db/account");
 const { getEmployeeByAccountID } = require("../../../../db/employee");
-const { getBankDetailsByAccountID } = require("../../../../db/bank_detail");
 
 //user id, email or username
-router.use("/", getAuthAccount, async (req, res, next) => {
+router.use("/", async (req, res, next) => {
     next()
-});
+} ,getAuthAccount,);
 
-router.put("/update", async (req, res, next) => {
-    try {
-        let {accountID}=req.session
-        let {}=req.query;
-       let updateRes= await updateAccInfo({accountID,prop,propValue});
-       console.log(updateRes);
-    } catch (error) {
-        
-    }
-});
 
 router.use("/withdrawal_history", withdrawalHistoryRouter);
 
 router.use("/subscriptions", subscriptionsRouter);
+
+router.use("/bank_details", bankDetailsHistoryRouter);
 
 router.get("/employee_details", async (req, res, next) => {
     try {
@@ -32,10 +24,21 @@ router.get("/employee_details", async (req, res, next) => {
         let employeeRes = await getEmployeeByAccountID({ accountID: paramAccountID });
         return res.json({ ...employeeRes })
     } catch (error) {
-
+        console.log(error);
+        res.json({err:error})
     }
 });
 
+router.put("/update", async (req, res, next) => {
+    try {
+       /* let {accountID}=req.session
+        let {}=req.query;
+       let updateRes= await updateAccInfo({accountID,prop,propValue});
+       console.log(updateRes); */
+    } catch (error) {
+        
+    }
+});
 
 router.get("/userinfo", async (req, res, next) => {
     try {
@@ -44,17 +47,6 @@ router.get("/userinfo", async (req, res, next) => {
         return res.json({ ...employeeRes })
     } catch (error) {
 
-    }
-});
-
-router.get("/bank_details", async (req, res, next) => {
-    try {
-        let { paramAccountID } = req.session
-
-        let bankDetailsRes = await getBankDetailsByAccountID({ accountID: paramAccountID });
-        return res.json({ ...bankDetailsRes })
-    } catch (error) {
-        console.log(error)
     }
 });
 

@@ -18,7 +18,7 @@ const { getTransactionByTransactionID } = require("../../db/transaction");
 let canContinueWithdrawMW = async (req, res, next) => {
     try {
         let { amount, withdrawal_fee, } = req.body;
-        let { transactionID } = req.session
+        let { transactionID } = req.session.queried 
         if (!amount) {
             return res.json({ err: { msg: "Amount to withdraw must be included." } })
         }

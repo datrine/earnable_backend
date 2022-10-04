@@ -26,7 +26,7 @@ async function findAndVerifyOTPToken({  otp }) {
             return findTokenRes
         }
         let result = await otpTokensCol.findOneAndUpdate({
-             otp,
+            $or:[{otp},{otp:`${otp}`}],
             //ttl: { $gte: new Date() }
         }, { $set: { verified: true, time_verified: new Date() } },
             { returnDocument: "after" });
@@ -46,13 +46,10 @@ async function findAndVerifyOTPToken({  otp }) {
 async function findOTPToken({ otp }) {
     try {
         let tokenDoc = await otpTokensCol.findOne({
-             otp,
+             $or:[{otp},{otp:`${otp}`}]
         });
         if (!tokenDoc) {
             return { err: {msg:"OTP does not exist..."} }
-        }
-        if (otp !== tokenDoc.otp) {
-            return { err: {msg:"OTP does not match record..."} }
         }
         if (new Date(tokenDoc.ttl) < new Date()) {
             return { err: {msg:"OTP has expired..."} }

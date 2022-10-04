@@ -1,20 +1,10 @@
 const router = require("express").Router();
 const { mongoClient } = require("../../../../utils/conn/mongoConn");
 const waleprjDB = mongoClient.db("waleprj");
-const ordersCol = waleprjDB.collection("orders");
 const {
-  validateServerSidePaymentMW,
-} = require("../../../../utils/mymiddleware/accounts/validateServerSidePaymentMW");
-const {
-  createCompanyWallet,
   getWalletByCompanyID,
   getOrCreateCompanyWallet,
-  fundWallet,
 } = require("../../../../db/wallet");
-const {
-  createTransaction,
-  updateTransactionByTransactionID,
-} = require("../../../../db/transaction");
 const { default: axios } = require("axios");
 const fetch = require("isomorphic-unfetch");
 const {

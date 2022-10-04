@@ -17,9 +17,6 @@ let transactionTokenVerMW= async (req, res, next) => {
         if (findVerRes.err) {
             return res.json(findVerRes)
         }
-       /*if (findVerRes.tokenDoc.token_type !== "otp") {
-            return res.json({ err: { msg: "Token not appropriate OTP..." } });
-        }*/ 
         next()
     } catch (error) {
         console.log(error);

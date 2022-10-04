@@ -61,6 +61,22 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
     }
 }
 
+let updateBankDetailsByAccountID = async ({ accountID,...updates }) => {
+    try {
+        let updateRes = await bank_detailsCol.findOneAndUpdate({ accountID }, {
+            $set: { ...updates,lastModified:new Date(), }
+        },{upsert:true});
+        if (!updateRes.ok) {
+            return { err: { msg: "Bank details not updated" } }
+        }
+
+        return { info: "Bank details updated." }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
 let updateRecieptCodeEmployeeID = async ({ bankDetailID, recipient_code }) => {
     try {
         let updateRes = await bank_detailsCol.findOneAndUpdate({ _id: ObjectId(bankDetailID) }, {
@@ -124,7 +140,7 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
          */
         let jsonObj = await response.json();
         if (jsonObj.status !== true) {
-            return { err: { msg: "Transfer failed. " } }
+            return { err: { msg: "Transfer failed. " ,type:"failed_transfer"} }
         }
         return { ...jsonObj.data }
 
@@ -148,7 +164,6 @@ let verifyTransfer = async ({ transfer_code }) => {
          * @type {transferVerifyResponseObj}
          */
         let jsonObj = await response.json();
-        //console.log(jsonObj);
         if (jsonObj.status !== true) {
         }
         return { data: jsonObj.data }
@@ -160,5 +175,5 @@ let verifyTransfer = async ({ transfer_code }) => {
 
 module.exports = {
     addBankDetail, getBankDetailsByAccountID, getEmployeeByEmployeeID, updateRecieptCodeEmployeeID,
-    createRecipientCode, initiateTransfer, verifyTransfer
+    createRecipientCode, initiateTransfer, verifyTransfer,updateBankDetailsByAccountID
 };

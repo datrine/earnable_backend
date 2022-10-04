@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
 const subscriptionsRouter = require("./subscriptions");
 const accountIDRouter = require("./[accountID]");
 const actionsRouter = require("./actions");
@@ -7,12 +6,9 @@ const activityRouter = require("./activity");
 const loginRouter = require("./login");
 const verSessIDsRouter= require("./verSessIDs");
 
-const { getAccountMW } = require("../../../utils/mymiddleware/accounts");
-const { createAccount } = require("../../../utils/dbmethods/account_methods");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 const { accountLogOut, checkIfAccountPropExists } = require("../../../db/account");
 const { getEmployeeByAccountID } = require("../../../db/employee");
-const { getBankDetailsByAccountID } = require("../../../db/bank_detail");
 
 //user id, email or username
 router.get("/checkifexists/:prop/:value", async (req, res, next) => {
@@ -32,6 +28,7 @@ router.use("/subscriptions", subscriptionsRouter);
 
 router.use("/:accountID", async (req, res, next) => {
     req.session.paramAccountID = req.params.accountID
+    console.log(req.session.paramAccountID)
     next()
 }, accountIDRouter);
 

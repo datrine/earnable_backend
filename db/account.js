@@ -751,7 +751,7 @@ async function retrieveAccountInfoBasic({ identifier }) {
     if (!account) {
       return { err: { msg: "Email/phone number does not exist in record..." } };
     }
-    return { account:{...account,accountID:account._id.toString()} };
+    return { account:{...account,/*accountID:account._id.toString()*/} };
   } catch (error) {
     console.log(error);
   }

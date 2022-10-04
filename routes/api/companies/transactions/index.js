@@ -1,11 +1,6 @@
 const router = require("express").Router()
-const { mongoClient } = require("../../../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
-const ordersCol = waleprjDB.collection("orders")
-const { validateServerSidePaymentMW } = require("../../../../utils/mymiddleware/accounts/validateServerSidePaymentMW");
-const { createCompanyWallet, getWalletByCompanyID, getOrCreateCompanyWallet, fundWallet } = require("../../../../db/wallet");
-const { createTransaction, updateTransactionByTransactionID } = require("../../../../db/transaction");
-const { default: axios } = require("axios");
+const { getWalletByCompanyID, getOrCreateCompanyWallet, fundWallet } = require("../../../../db/wallet");
+const { createTransaction, updateTransactionByID } = require("../../../../db/transaction");
 const fetch = require("isomorphic-unfetch")
 let secret = process.env.PAYSTACK_SECRET_KEY
 
@@ -13,7 +8,9 @@ router.post("/wallet/fund/save", async (req, res, next) => {
     try {
         let { companyID, account } = req.session;
         let data = req.body
-        data.type = "wallet_fund"
+        let dataToSave={...data}
+        dataToSave.type = "wallet_fund"
+        dataToSave.status={name:"initiated",updatedBy:account.accountID,updatedAt:new Date()}
         let { err, transactionID } = await createTransaction({ ...data });
         if (err) {
             return res.json({ err })
@@ -32,7 +29,7 @@ router.post("/wallet/fund/save", async (req, res, next) => {
                         amount: Number(dataFromPaystack?.data?.amount) / 100,
                         createorMeta: { id: account.accountID }
                     });
-                    updateTransactionByTransactionID({ transactionID, status: "success" })
+                    updateTransactionByID({ transactionID, updates:{status: "completed",accountIDofUpdater:account.accountID }})
                     console.log(info)
                 }
             }

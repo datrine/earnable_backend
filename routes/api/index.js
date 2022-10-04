@@ -10,6 +10,7 @@ const walletRouter = require("./wallets");
 const loginRouter = require("./users/login");
 //const selfRouter = require("./users/me");
 const transactionsRouter=require("./transactions")
+const withdrawalsRouter=require("./withdrawals")
 const emailRouter = require("./email");
 const accountRouter = require("./accounts");
 const employeesRouter = require("./employees");
@@ -41,6 +42,8 @@ router.use("/payments", paymentRouter);
 router.use("/ver_status", verStatusRouter);
 
 router.use("/transactions", transactionsRouter);
+
+router.use("/withdrawals", withdrawalsRouter);
 
 router.use("/companies", companiesRouter);
 
