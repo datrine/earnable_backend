@@ -19,8 +19,6 @@ const {
 } = require("../../../utils/mymiddleware/canWithdrawMW");
 const {
   createTransaction,
-  updateTransactionByTransactionID,
-  updateAndReturnTransactionByTransactionID,
   getTransactionByID,
   updateTransactionByID,
 } = require("../../../db/transaction");
@@ -173,6 +171,7 @@ router.post(
         bank_details: queriedBankDetails,
         transactionID: queriedTransactionID,
         account: queriedAccount,
+        transaction: queriedTransaction,
       } = req.session.queried;
       let transRes = await updateTransactionByID({
         transactionID: queriedTransactionID,
@@ -180,12 +179,17 @@ router.post(
           status: "processing",
           accountIDofUpdater: queriedAccount.accountID,
         },
+        update_processing_attempts: true,
       });
+
       if (transRes.err) {
         return res.json(transRes);
       }
-      res.json({ info: transRes.err });
+
+      res.json({ info: transRes.info });
+
       let recipient_code = queriedBankDetails.recipient_code;
+
       if (!recipient_code) {
         let createRes = await createRecipientCode({ ...queriedBankDetails });
         if (!createRes.recipient_code) {
@@ -198,34 +202,45 @@ router.post(
           recipient_code,
         });
       }
-      let to_pay = transRes.value.transaction?.amountToWithdraw;
+
+      let to_pay = transRes.value?.amountToWithdraw;
       let transferInitiationRes = await initiateTransfer({
         reason: "Earnable payment",
         amount: to_pay * 100,
         recipient: recipient_code,
       });
+
       if (transferInitiationRes.err) {
         let err = transferInitiationRes.err;
-        console.log(transferInitiationRes);
         if (err?.type === "failed_transfer") {
-          let updates = {};
           let transactionUpdateRes = await updateTransactionByID({
             transactionID: queriedTransactionID,
+            updates: {},
             update_processing_attempts: true,
           });
         }
-
         return;
       }
+
       let transferCode = transferInitiationRes.transfer_code;
-      let transactionUpdateRes = await updateTransactionByTransactionID({
+
+      if (!transferCode) {
+        console.log("No transfer code");
+        return;
+      }
+      let transactionUpdateRes = await updateTransactionByID({
         transactionID: queriedTransactionID,
-        transferCode,
+        updates: {
+          transfer_code: transferCode,
+          accountIDofUpdater: queriedAccount.accountID,
+          status: "completed",
+        },
       });
       if (transactionUpdateRes.err) {
         console.log(transactionUpdateRes);
         return;
       }
+      console.log(transactionUpdateRes);
     } catch (error) {
       console.log(error);
     }

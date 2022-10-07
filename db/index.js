@@ -3,7 +3,6 @@ const waleprjDB = mongoClient.db("waleprj");
 const employeesCol = waleprjDB.collection("employees");
 const transactionsCol = waleprjDB.collection("transactions");
 const bank_detailsCol = waleprjDB.collection("bank_details");
-const { ObjectId, UUID } = require("bson");
 const { employeeTemplate, bankDetailsTemplate } = require("./templates");
 const { updateEmployeeInfo, getEmployeeByEmployeeID } = require("./employee");
 const { retrieveAccountInfoByAccountID } = require("./account");
@@ -16,8 +15,13 @@ const {
 } = require("./bank_detail");
 const { CronJob } = require("cron");
 const { registerJob } = require("../jobs");
-const { updateTransactionByID, updateTransactionByTransactionID } = require("./transaction");
+const {
+  updateTransactionByID,
+  getTransactionsByFilters,
+} = require("./transaction");
+
 const { updateWithdrawalByTransactionID } = require("./withdrawal");
+const { getEmployeesSumOfWithdrawn } = require("./calculations");
 
 let attemptChangeEnrollmentStatus = async ({
   accountID,
@@ -130,6 +134,7 @@ let attemptReInitiateTransferCronJob = async () => {
       {
         $match: {
           "status.name": "processing",
+          "status.transfer_code": { $exists: false },
           $or: [
             {
               processing_attempts: {
@@ -179,19 +184,20 @@ let attemptReInitiateTransferCronJob = async () => {
       amount: obj.amountToWithdraw * 100,
       recipient: obj.recipient_code,
       transactionID: obj._id.toString(),
+      accountID: obj.status.updatedBy,
     }));
     let promises = await Promise.allSettled([
-      ...toGoArray.map((obj) => ({
-        ...initiateTransfer(obj),
+      ...toGoArray.map(async (obj) => ({
+        ...(await initiateTransfer(obj)),
         transactionID: obj.transactionID,
+        accountID: obj.accountID,
       })),
     ]);
-
     for (const promise of promises) {
       if (promise.status === "rejected") {
         continue;
       }
-      
+
       if (promise.value?.err) {
         let err = promise.value.err;
         if (err?.type === "failed_transfer") {
@@ -204,17 +210,19 @@ let attemptReInitiateTransferCronJob = async () => {
         continue;
       }
       let transferCode = promise.value.transfer_code;
-      let transactionUpdateRes = await updateTransactionByTransactionID({
-        transactionID:promise.value.transactionID,
-        transferCode,
+      let transactionUpdateRes = await updateTransactionByID({
+        transactionID: promise.value.transactionID,
+        updates: {
+          transfer_code: transferCode,
+          accountIDofUpdater: promise.value.accountID,
+          status: "completed",
+        },
       });
       if (transactionUpdateRes.err) {
         console.log(transactionUpdateRes);
         return;
       }
     }
-
-   
   } catch (error) {
     console.log(error);
     return { err: error };
@@ -314,17 +322,53 @@ let transactionWork = async () => {
   }
 };
 
+let attemptUpdateWithdrawal = async () => {
+  try {
+    let getTransactionsByFiltersRes = await getTransactionsByFilters({
+      status: "completed",
+      transfer_code_exists: true,
+    });
+    // console.log(getTransactionsByFiltersRes)
+    let { transactions: listOfCompletedTransactions } =
+      getTransactionsByFiltersRes;
+    let promises = listOfCompletedTransactions.map((obj) =>
+      updateWithdrawalByTransactionID({
+        transactionID: obj._id.toString(),
+        updates: { status: "completed" },
+      })
+    );
+    let settledPromises = await Promise.allSettled([...promises]);
+    for await (const settledPromise of settledPromises) {
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 let job = new CronJob("0 * * * * *", async function (params) {
   attemptChangeEnrollmentStatusCronJob();
 });
+
 let job2 = new CronJob("0 * * * * *", async function (params) {
   createRecipientCodeCronJob();
 });
+
 let job3 = new CronJob("*/10 * * * * *", async function (params) {
   transactionWork();
 });
+
+let job4 = new CronJob("*/10 * * * * *", async function (params) {
+  attemptReInitiateTransferCronJob();
+});
+
+let job5 = new CronJob("*/10 * * * * *", async function (params) {
+  attemptUpdateWithdrawal();
+});
+
 registerJob("attemptChangeEnrollmentStatusCronJob", job);
 registerJob("createRecipientCodeCronJob", job2);
 registerJob("transactionWork", job3);
+registerJob("attemptReInitiateTransferCronJob", job4);
+registerJob("attemptUpdateWithdrawal", job5);
 
-module.exports = { attemptChangeEnrollmentStatus };
+module.exports = { attemptChangeEnrollmentStatus ,getEmployeesSumOfWithdrawn};

@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { getEmployeesSumOfWithdrawn } = require("../../../db");
 const { getCompanyEmployeesWithdrawalHistory } = require("../../../db/withdrawal");
 
 //user id, email or username
@@ -21,11 +22,8 @@ router.use("/", async (req, res, next) => {
 
 router.get("/total_withdrawal", async (req, res, next) => {
     try {
-        let { withdrawal_history } = req.session;
-        let total_withdrawal = [...withdrawal_history].reduce((sum, currentObj,) => {
-            sum += currentObj.amount;
-            return sum
-        }, 0);
+        let { filters } = req.session.queried;
+        let total_withdrawal =await getEmployeesSumOfWithdrawn({filters})
         console.log(total_withdrawal);
         res.json({ total_withdrawal });
     } catch (error) {

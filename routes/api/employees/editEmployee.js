@@ -40,9 +40,9 @@ let changedData = {
 
 router.put("/", getAuthAccount, async (req, res, next) => {
   try {
-    let { account } = req.session;
+    let { account: authAccount } = req.session.self;
     let hasRoleRes = await hasRole({
-      accountID: account.accountID,
+      accountID: authAccount.accountID,
       rolename: "editEmployee",
     });
     if (!hasRoleRes) {

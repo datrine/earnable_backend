@@ -161,7 +161,7 @@ let getQueriedEmployeeWithdrawalBankDetailsMW = async (req, res, next) => {
       recipient_code: bank_details.recipient_code,
       bankDetailID: bank_details._id.toString(),
     };
-    req.session.queried = queried;
+    req.session.queried ={...req.session.queried, ...queried};
     next();
   } catch (error) {
     console.log(error);

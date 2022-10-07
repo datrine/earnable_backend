@@ -33,25 +33,73 @@ let createWithdrawal = async ({
 /**
  *
  * @param {object} param0
- * @param {string} param0.accountID
- * @param {number} param0.amount
- * @param {"employee"|"employer"|"shared"} param0.withdrawal_charge_moded
- * @param {number} param0.withdrawal_fee
- * @param {"employee_payment"|"employer_payment"} param0.type
- * @param {"initiated"|"processing"|"success"|"failed"} param0.status
+ * @param {string} param0.transactionID
+ * @param {object} param0.updates
+ * @param {string} param0.updates.accountID
+ * @param {number} param0.updates.amount
+ * @param {"employee"|"employer"|"shared"} param0.updates.flexible_access
+ * @param {number} param0.updates.withdrawal_fee
+ * @param {"employee_payment"|"employer_payment"} param0.updates.type
+ * @param {"initiated"|"processing"|"completed"|"failed"|"cancelled"} param0.updates.status
  * @returns
  */
-let updateWithdrawalByTransactionID = async ({ transactionID, ...updates }) => {
+let updateWithdrawalByTransactionID = async ({
+  transactionID,
+  updates: { status, type, withdrawal_fee, amount, flexible_access },
+}) => {
   let result = await withdrawalsCol.findOneAndUpdate(
-    {
-      transactionID,
-    },
-    {
-      $set: {
-        ...updates,
-        lastModified: new Date(),
+    { transactionID },
+    [
+      {
+        $set: {
+          status: {
+            $cond: {
+              if: {
+                $and: [
+                  status,
+                  { $in: ["$status.name", ["initiated", "processing"]] },
+                ],
+              },
+              then: { name: status, updatedAt: new Date() },
+              else: "$status",
+            },
+          },
+          tempStatus: "$status",
+        },
       },
-    }
+      {
+        $set: {
+          status_history: {
+            $cond: {
+              if: {
+                $and: [status, { $ne: ["$tempStatus.name", status] }],
+              },
+              then: {
+                $cond: {
+                  if: { $and: ["$status_history"] },
+                  then: {
+                    $concatArrays: ["$status_history", ["$tempStatus"], ,],
+                  },
+                  else: ["$tempStatus"],
+                },
+              },
+              else: {
+                $ifNull: ["$status_history", [["$tempStatus"]]],
+              },
+            },
+          },
+        },
+      },
+      {
+        $set: {
+          lastModified: new Date(),
+        },
+      },
+      /* {
+        $unset: "tempStatus",
+      },*/
+    ],
+    { returnDocument: "after" }
   );
   if (!result?.ok) {
     return { err: { msg: "No withdrawal created." } };
@@ -288,5 +336,5 @@ module.exports = {
   createWithdrawal,
   updateWithdrawalByTransactionID,
   getEmployeeWithdrawalHistory,
-  getCompanyEmployeesWithdrawalHistory,
+  getCompanyEmployeesWithdrawalHistory
 };

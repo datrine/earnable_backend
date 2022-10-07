@@ -195,7 +195,7 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
 
 let getEmployeeByAccountID = async ({ accountID }) => {
   try {
-    console.log(accountID)
+    console.log(accountID);
     /**
      * @type {employeeTemplate}
      */
@@ -204,7 +204,9 @@ let getEmployeeByAccountID = async ({ accountID }) => {
       return { err: { msg: "Employee not found" } };
     }
 
-    return { employee: { ...employeeDoc, employeeID: employeeDoc._id.toString() } };
+    return {
+      employee: { ...employeeDoc, employeeID: employeeDoc._id.toString() },
+    };
   } catch (error) {
     console.log({ err: error });
   }
@@ -212,13 +214,14 @@ let getEmployeeByAccountID = async ({ accountID }) => {
 
 let getEmployeeDetailsByAccountID = async ({ accountID }) => {
   try {
-   let prom1=await getEmployeeByAccountID({accountID})
+    let prom1 = await getEmployeeByAccountID({ accountID });
 
     return { employee: { ...employeeDoc, employeeID: employeeDoc._id } };
   } catch (error) {
     console.log({ err: error });
   }
 };
+
 async function checkIfEmployeePropExists({ prop, value }) {
   try {
     /**
@@ -236,6 +239,180 @@ async function checkIfEmployeePropExists({ prop, value }) {
   }
 }
 
+let getFlexibleAccessList = async ({
+  filters: { accountID, employeeID, companyID, deptID },
+}) => {
+  try {
+    let agg = [
+      {
+        $match: {
+          $and: [
+            {
+              $expr: {
+                $eq: [
+                  "$accountID",
+                  {
+                    $ifNull: [accountID, "$accountID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$_id",
+                  {
+                    $ifNull: [ObjectId(employeeID), "$_id"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$companyID",
+                  {
+                    $ifNull: [companyID, "$companyID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$deptID",
+                  {
+                    $ifNull: [deptID, "$deptID"],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $set: {
+          deptIDAsObjectID: {
+            $toObjectId: "$deptID",
+          },
+        },
+      },
+      {
+        $set: {
+          companyIDAsObjectID: {
+            $toObjectId: "$companyID",
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "companies",
+          localField: "companyIDAsObjectID",
+          foreignField: "_id",
+          as: "companies",
+        },
+      },
+      {
+        $lookup: {
+          from: "departments",
+          localField: "deptIDAsObjectID",
+          foreignField: "_id",
+          as: "departments",
+        },
+      },
+      {
+        $set: {
+          companyInfo: {
+            $first: "$companies",
+          },
+        },
+      },
+      {
+        $set: {
+          deptInfo: {
+            $first: "$departments",
+          },
+        },
+      },
+      {
+        $set: {
+          flexible_access: {
+            $ifNull: [
+              {
+                access_mode: {
+                  $ifNull: [
+                    {
+                      $let: {
+                        vars: {
+                          flexible_access_mode: {
+                            $first: {
+                              $let: {
+                                vars: {
+                                  flexible_policy_filter: {
+                                    $filter: {
+                                      cond: {
+                                        $eq: [
+                                          "flexible_access_mode",
+                                          "$$item.name",
+                                        ],
+                                      },
+                                      input: "$deptInfo.dept_policies",
+                                      as: "item",
+                                    },
+                                  },
+                                },
+                                in: "$$flexible_policy_filter",
+                              },
+                            },
+                          },
+                        },
+                        in: "$$flexible_access_mode.value",
+                      },
+                    },
+                    "$companyInfo.flexible_access.access_mode",
+                  ],
+                },
+                access_value: {
+                  $ifNull: [null, "$companyInfo.flexible_access.value"],
+                },
+              },
+              {},
+            ],
+          },
+        },
+      },
+      {
+        $unset: ["companies", "deptIDAsObjectID", "companyIDAsObjectID"],
+      },
+    ];
+    let cursor = await employeesCol.aggregate(agg);
+    let employeesWithFlexibleAccessInfo = await cursor.toArray();
+    return { employeesWithFlexibleAccessInfo };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
+let getEmployeeFlexibleAccess = async ({
+  filters: { accountID, employeeID, companyID, deptID },
+}) => {
+  try {
+    let response = await getFlexibleAccessList({
+      filters: { accountID, employeeID, companyID, deptID },
+    });
+    let { employeesWithFlexibleAccessInfo } = response;
+    let employeeWithFlexibleAccessInfo = employeesWithFlexibleAccessInfo[0];
+    if (!employeeWithFlexibleAccessInfo.flexible_access) {
+      return { err: { msg: "Failed to compute flexible access" } };
+    }
+    return { flexible_access: employeeWithFlexibleAccessInfo.flexible_access };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
 module.exports = {
   addEmployee,
   getEmployeesByCompanyID,
@@ -244,5 +421,7 @@ module.exports = {
   getTotalSalaries,
   getEmployeeByAccountID,
   updateEmployeeInfo,
-  checkIfEmployeePropExists,getEmployeeDetailsByAccountID
+  checkIfEmployeePropExists,
+  getEmployeeDetailsByAccountID,
+  getEmployeeFlexibleAccess,
 };

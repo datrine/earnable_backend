@@ -38,7 +38,7 @@ router.get("/", async (req, res, next) => {
 });
 
 router.get(
-  "/withdrawal_charge_mode",
+  "/flexible_access",
   (req, res, next) => {
     console.log(req.query);
     next();
@@ -48,13 +48,6 @@ router.get(
   async (req, res, next) => {
     try {
       let { company, department } = req.session.queried;
-      let withdrawal_charge_mode =
-        (Array.isArray(department?.policies) &&
-          Array.from(department?.policies)
-            .reverse()
-            .find((policy) => policy.name === "withdrawal_charge_mode")) ||
-        company?.withdrawal_charge_mode ||
-        "employer";
       res.json({ withdrawal_charge_mode });
     } catch (error) {
       console.log(error);

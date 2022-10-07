@@ -2,15 +2,64 @@ const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const db = clientConn.db("waleprj");
 const transactionsCol = db.collection("transactions");
 const { ObjectID } = require("bson");
-const { verifyTransfer } = require("./bank_detail");
-const { transferVerifyResponseObj } = require("./templates/paystack/responses");
-const {
-  createWithdrawal,
-  updateWithdrawalByTransactionID,
-} = require("./withdrawal");
-const { getEmployeeByAccountID } = require("./employee");
-const { registerJob } = require("../jobs");
-const { CronJob } = require("cron");
+
+let getTransactionsByFilters = async ({ status,accountID,transfer_code,type,transfer_code_exists }) => {
+  let aggr = [
+    {
+      $match: {
+        $and: [
+          {
+            $expr: {
+              $eq: [
+                "$accountID",
+                {
+                  $ifNull: [accountID, "$accountID"],
+                },
+              ],
+            },
+          },
+          {
+            $expr: {
+              $eq: [
+                "$status.name",
+                {
+                  $ifNull: [status, "$status.name"],
+                },
+              ],
+            },
+          },
+          {
+            $expr: {
+              $eq: [
+                "$type",
+                {
+                  $ifNull: [type, "$type"],
+                },
+              ],
+            },
+          },
+          {
+            $expr: {
+              $eq: [
+                "$transfer_code",
+                {
+                  $ifNull: [transfer_code, "$transfer_code"],
+                },
+              ],
+            },
+          },
+          { transfer_code:{
+            $exists:transfer_code_exists
+          }
+          },
+        ],
+      },
+    },
+  ];
+  let results = await transactionsCol.aggregate(aggr);
+  let transactions = await results.toArray();
+  return { transactions };
+};
 
 let getTransactionsByCompanyID = async (companyID) => {
   let results = await transactionsCol.find({
@@ -102,13 +151,27 @@ let getTransactionByID = async ({ transactionID }) => {
 
 let updateTransactionByID = async ({
   transactionID,
-  updates: { status, accountIDofUpdater, },
+  updates: { status, accountIDofUpdater, transfer_code },
   update_processing_attempts = true,
 }) => {
   try {
+    console.log({ status });
     const result = await transactionsCol.findOneAndUpdate(
       { _id: ObjectID(transactionID) },
       [
+        {
+          $set: {
+            transfer_code: {
+              $cond: {
+                if: {
+                  $eq: ["$status.name", "processing"],
+                },
+                then: { $ifNull: ["$transfer_code", transfer_code] },
+                else: "$transfer_code",
+              },
+            },
+          },
+        },
         {
           $set: {
             processing_attempts: {
@@ -117,11 +180,13 @@ let updateTransactionByID = async ({
                   $and: [
                     {
                       update_processing_attempts,
+                    },
+                    {
                       $eq: ["$status.name", "processing"],
                     },
                   ],
                 },
-                then: { $add: [{ $ifNull: ["$processing_attempts", 0] }, 1] },
+                then: { $sum: [{ $ifNull: ["$processing_attempts", 0] }, 1] },
                 else: "$processing_attempts",
               },
             },
@@ -133,8 +198,8 @@ let updateTransactionByID = async ({
               $cond: {
                 if: {
                   $and: [
-                    "status.name",
-                    { $in: ["$status.name", ["initiated"]] },
+                    status,
+                    { $in: ["$status.name", ["initiated", "processing"]] },
                   ],
                 },
                 then: {
@@ -157,7 +222,7 @@ let updateTransactionByID = async ({
                 },
                 then: {
                   $cond: {
-                    if: "$status_history",
+                    if: { $and: ["$status_history"] },
                     then: {
                       $concatArrays: ["$status_history", ["$tempStatus"], ,],
                     },
@@ -176,14 +241,12 @@ let updateTransactionByID = async ({
             lastModified: new Date(),
           },
         },
-        {
+        /* {
           $unset: "tempStatus",
-        },
+        },*/
       ],
       { returnDocument: "after" }
     );
-    //console.log(transaction);
-    result.ok;
     return { info: result.ok, value: result.value };
   } catch (error) {
     console.log(error);
@@ -198,5 +261,5 @@ module.exports = {
   updateTransactionByTransactionID,
   updateAndReturnTransactionByTransactionID,
   getTransactionByID,
-  updateTransactionByID,
+  updateTransactionByID,getTransactionsByFilters
 };
