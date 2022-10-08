@@ -10,7 +10,6 @@ const {
 const {
   getAuthAccount,
 } = require("../../../from/utils/middlewares/getAuthAccount");
-const { getToken } = require("../../../utils/encdec");
 const {
   transactionTokenVerMW,
 } = require("../../../utils/mymiddleware/transactionTokenMWs");
@@ -101,7 +100,7 @@ router.post(
         transactionID,
         transactionInfo,
         purpose: "employee_payment",
-        status: "initiated",
+        status:{name: "initiated",updatedAt:new Date()},
       });
       next();
     } catch (error) {
@@ -157,7 +156,6 @@ router.post(
     try {
       let { transaction } = req.session.queried;
       let { amountToWithdraw } = transaction;
-      console.log({ amountToWithdraw });
       req.session.queried.amount = amountToWithdraw;
       next();
     } catch (error) {
@@ -240,7 +238,6 @@ router.post(
         console.log(transactionUpdateRes);
         return;
       }
-      console.log(transactionUpdateRes);
     } catch (error) {
       console.log(error);
     }

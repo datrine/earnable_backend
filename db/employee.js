@@ -3,6 +3,7 @@ const waleprjDB = mongoClient.db("waleprj");
 const employeesCol = waleprjDB.collection("employees");
 const { ObjectId, UUID } = require("bson");
 const { employeeTemplate } = require("./templates");
+const { composeGetEmployeeInfoTableAgg } = require("./pipelines/employer");
 
 let addEmployee = async ({ ...employeeToData }) => {
   try {
@@ -98,6 +99,7 @@ let updateEmployeeInfo = async ({ employeeID, ...employeeUpdateData }) => {
 let getEmployeesByCompanyID = async ({ companyID, filters }) => {
   try {
     let employeesCursor;
+    console.log({ filters });
     let filterBuilder = {};
     if (filters.enrollment_state === "enrolled") {
       filterBuilder["enrollment_state.state"] = { $eq: "enrolled" };
@@ -195,7 +197,6 @@ let getEmployeeByEmployeeID = async ({ employeeID }) => {
 
 let getEmployeeByAccountID = async ({ accountID }) => {
   try {
-    console.log(accountID);
     /**
      * @type {employeeTemplate}
      */
@@ -413,6 +414,179 @@ let getEmployeeFlexibleAccess = async ({
   }
 };
 
+let getEmployeesWithdrawalHistory = async ({ filters = {} }) => {
+  try {
+    let {
+      from,
+      to,
+      year,
+      weekNumber,
+      monthNumber,
+      states,
+      accountID,
+      companyID,
+      deptID,
+      employeeID,
+    } = filters;
+    from = dateIsValid(new Date(from)) ? new Date(from) : new Date(0);
+    to = dateIsValid(new Date(to)) ? new Date(to) : new Date(8640000000000000);
+    year = !!Number(year) ? Number(year) : null;
+    const agg = [
+      {
+        $match: {
+          $and: [
+            {
+              $expr: {
+                $eq: [
+                  "$companyID",
+                  {
+                    $ifNull: [companyID, "$companyID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$_id",
+                  {
+                    $ifNull: [
+                      ObjectID.isValid(employeeID)
+                        ? ObjectID(employeeID)
+                        : null,
+                      "$_id",
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$accountID",
+                  {
+                    $ifNull: [accountID, "$accountID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$deptID",
+                  {
+                    $ifNull: [deptID, "$deptID"],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "withdrawals",
+          localField: "accountID",
+          foreignField: "accountID",
+          as: "withdrawals",
+        },
+      },
+      {
+        $set: {
+          completedWithdrawals: {
+            $filter: {
+              input: "$withdrawals",
+              cond: {
+                $and: [
+                  {
+                    $eq: ["$$withdrawal.status.name", "completed"],
+                  },
+                  {
+                    $eq: [
+                      {
+                        $week: "$$withdrawal.status.updatedAt",
+                      },
+                      {
+                        $ifNull: [
+                          weekNumber,
+                          {
+                            $week: "$$withdrawal.status.updatedAt",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: [
+                      {
+                        $year: "$$withdrawal.status.updatedAt",
+                      },
+                      {
+                        $ifNull: [
+                          year,
+                          {
+                            $year: "$$withdrawal.status.updatedAt",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: [
+                      {
+                        $month: "$$withdrawal.status.updatedAt",
+                      },
+                      {
+                        $ifNull: [
+                          monthNumber,
+                          {
+                            $month: "$$withdrawal.status.updatedAt",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              as: "withdrawal",
+            },
+          },
+        },
+      },
+      {
+        $unwind: {
+          path: "$completedWithdrawals",
+        },
+      },
+    ];
+    const cursor = await employeesCol.aggregate(agg);
+
+    let histories = await cursor.toArray();
+    let withdrawals = [];
+    histories.forEach((hx) => {
+      withdrawals.push(hx.completedWithdrawals);
+    });
+    return { withdrawal_history: histories };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+let getEmployeesTableInfo = async ({ filters }) => {
+  try {
+    
+  let agg = composeGetEmployeeInfoTableAgg(filters);
+  const cursor = await employeesCol.aggregate(agg);
+
+  let employees_table_info = await cursor.toArray();
+  return { employees_table_info,filters };
+  } catch (error) {
+    console.log(error);
+    return {err:error}
+  }
+};
+
 module.exports = {
   addEmployee,
   getEmployeesByCompanyID,
@@ -424,4 +598,5 @@ module.exports = {
   checkIfEmployeePropExists,
   getEmployeeDetailsByAccountID,
   getEmployeeFlexibleAccess,
+   getEmployeesTableInfo,
 };

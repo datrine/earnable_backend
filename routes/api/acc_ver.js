@@ -4,10 +4,8 @@ const router = require("express").Router();
 router.use("/:verSessID", async (req, res, next) => {
     try {
         let { verSessID } = req.params
-        console.log(verSessID)
         let allResponses = await
             retrieveAccountInfoByVerSessID(verSessID);
-        console.log(allResponses)
         let { err, ...rest } = allResponses;
         if (err) {
             res.status = 400

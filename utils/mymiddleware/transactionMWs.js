@@ -1,4 +1,5 @@
 const { DateTime } = require("luxon");
+const { getEmployeeFlexibleAccess } = require("../../db/employee");
 const { getEmployeeWithdrawalHistory } = require("../../db/withdrawal");
 
 /**
@@ -15,19 +16,18 @@ let resolveTransactionMW = async (req, res, next) => {
       employee_details,
       amount: amountRequestedToWithdraw,
     } = req.session.queried;
-    let withdrawal_charge_mode =
-      (Array.isArray(department?.policies) &&
-        Array.from(department?.policies)
-          .reverse()
-          .find((policy) => policy.name === "withdrawal_charge_mode")) ||
-      company?.withdrawal_charge_mode ||
-      "employer";
+    let { flexible_access, err: flexibleAccessErr } =
+      await getEmployeeFlexibleAccess({
+        filters: { employeeID: employee_details.employeeID },
+      });
+    if (flexibleAccessErr) {
+      return res.json({ flexibleAccessErr });
+    }
+
+    let withdrawal_charge_mode = flexible_access.access_mode;
     let employeeID = employee_details?.employeeID;
 
-    let resolvedWithdrawAccess =
-      Number(department.group_salary_withdrawal_limit) ||
-      Number(company.salary_access) ||
-      75;
+    let resolvedWithdrawAccess = flexible_access.access_value;
     let resWiHx = await getEmployeeWithdrawalHistory({
       employeeID,
       filters: {
@@ -35,18 +35,25 @@ let resolveTransactionMW = async (req, res, next) => {
         states: ["initiated", "processing", "completed"],
       },
     });
-    console.log(resWiHx)
+    console.log(resWiHx);
     let totalAmountWithdrawnOrEarmarked = resWiHx.withdrawal_history
-      .filter((obj) =>obj.status === "initiated"|| obj.status === "processing" || obj.status === "success")
-      .reduce(
-        (prev, cur) =>
+      .filter(
+        ({ status }) =>
+          status.name === "initiated" ||
+          status.name === "processing" ||
+          status.name === "completed"
+      )
+      .reduce((prev, cur) => {
+        let sum =
           prev +
           Number(
             cur.transactionInfo?.netAmountToWithdraw +
               cur.transactionInfo?.withdrawal_fee
-          ),
-        0
-      );
+          );
+        console.log({ sum });
+        return sum;
+      }, 0);
+
     console.log({ totalAmountWithdrawnOrEarmarked });
     let grossMaxAmountWithdrawable =
       (Number(employee_details.monthly_salary) *
@@ -81,7 +88,7 @@ let resolveTransactionMW = async (req, res, next) => {
       withdrawal_fee_by_employer = withdrawal_fee;
     }
     let amountDeductible = grossAmountToWithdraw - netAmountToWithdraw;
-    console.log({ netAmountToWithdraw, netMaxAmountWithdrawable });
+    //console.log({ netAmountToWithdraw, netMaxAmountWithdrawable });
     if (netMaxAmountWithdrawable <= 0) {
       return res.json({ err: { msg: "Flexible salary limits reached" } });
     }

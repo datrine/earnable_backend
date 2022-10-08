@@ -1,6 +1,7 @@
 const { ObjectID } = require("bson");
 const { DateTime } = require("luxon");
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
+const { employerPipelines:{composeGetEmployeeInfoTableAgg} } = require("./pipelines");
 const db = clientConn.db("waleprj");
 const employeesCol = db.collection("employees");
 
@@ -289,8 +290,7 @@ let getTotalFlexibleAccess = async ({
     ];
     let cursor = await employeesCol.aggregate(agg);
     let docs = await cursor.toArray();
-    console.log(docs);
-    let { totalFlexibleAccess } = docs[0];
+    let {employeesTotalFlexibleAccess :totalFlexibleAccess } = docs[0];
     return { totalFlexibleAccess };
   } catch (error) {
     console.log(error);
@@ -578,7 +578,6 @@ let getTotalNetPayMethod2 = async ({ filters = {} }) => {
 
     const cursor = await employeesCol.aggregate(agg);
     let preSumList = await cursor.toArray();
-    console.log(preSumList);
     let totalNetPay = preSumList.reduce(
       (prev, obj) => prev + obj.employeeTotalNetPay,
       0
@@ -590,9 +589,24 @@ let getTotalNetPayMethod2 = async ({ filters = {} }) => {
   }
 };
 
+let getEmployeeNetEarning = async ({ filters = {} }) => {
+  try {
+    if (!filters?.employeeID) {
+      
+    }
+   let response=await getTotalNetPayMethod2({filters});
+   console.log(response)
+    return { ...response };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+
 module.exports = {
   getEmployeesSumOfWithdrawn,
   getTotalFlexibleAccess,
   getTotalNetPayMethod1,
-  getTotalNetPay: getTotalNetPayMethod2,
+  getTotalNetPay: getTotalNetPayMethod2,getEmployeeNetEarning
 };

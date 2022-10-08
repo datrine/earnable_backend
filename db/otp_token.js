@@ -20,7 +20,6 @@ async function saveOTPToken({ otp, platforms, accountID, ttl }) {
 
 async function findAndVerifyOTPToken({  otp }) {
     try {
-        console.log("OTP token.... " + otp);
         let findTokenRes=await findOTPToken({  otp });
         if (findTokenRes.err) {
             return findTokenRes

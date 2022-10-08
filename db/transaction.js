@@ -84,39 +84,6 @@ let getTransactionByTransactionID = async ({ transactionID, ...updates }) => {
   }
 };
 
-let updateTransactionByTransactionID = async ({
-  transactionID,
-  ...updates
-}) => {
-  let result = await transactionsCol.findOneAndUpdate(
-    {
-      _id: ObjectID(transactionID),
-    },
-    { $set: { ...updates, lastModified: new Date() } }
-  );
-  if (!result.ok) {
-    return { err: { msg: `Failed to update transaction ${transactionID}` } };
-  }
-  return { info: "Transaction updated" };
-};
-
-let updateAndReturnTransactionByTransactionID = async ({
-  transactionID,
-  ...updates
-}) => {
-  let result = await transactionsCol.findOneAndUpdate(
-    {
-      _id: ObjectID(transactionID),
-    },
-    { $set: { ...updates, lastModified: new Date() } },
-    { returnDocument: "after" }
-  );
-  if (!result.ok) {
-    return { err: { msg: `Failed to update transaction ${transactionID}` } };
-  }
-  return { info: "Transaction updated", transaction: result.value };
-};
-
 let createTransaction = async ({ ...data }) => {
   if (!data.accountID) {
     return { err: { msg: "Account ID not supplied" } };
@@ -155,7 +122,6 @@ let updateTransactionByID = async ({
   update_processing_attempts = true,
 }) => {
   try {
-    console.log({ status });
     const result = await transactionsCol.findOneAndUpdate(
       { _id: ObjectID(transactionID) },
       [
@@ -224,7 +190,7 @@ let updateTransactionByID = async ({
                   $cond: {
                     if: { $and: ["$status_history"] },
                     then: {
-                      $concatArrays: ["$status_history", ["$tempStatus"], ,],
+                      $concatArrays: ["$status_history", ["$tempStatus"],],
                     },
                     else: ["$tempStatus"],
                   },
@@ -258,8 +224,6 @@ module.exports = {
   getTransactionsByCompanyID,
   createTransaction,
   getTransactionByTransactionID,
-  updateTransactionByTransactionID,
-  updateAndReturnTransactionByTransactionID,
   getTransactionByID,
   updateTransactionByID,getTransactionsByFilters
 };

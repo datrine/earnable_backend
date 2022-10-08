@@ -11,7 +11,7 @@ let createWithdrawal = async ({
   transactionInfo,
   transactionID,
   purpose = "employee_payment",
-  status = "processing",
+  status ={name: "processing",updatedAt:new Date()},
 }) => {
   let result = await withdrawalsCol.insertOne({
     accountID,
@@ -111,221 +111,136 @@ function dateIsValid(date) {
   return date instanceof Date && !isNaN(date);
 }
 
-let getEmployeeWithdrawalHistory = async ({ employeeID, filters = {} }) => {
+let getEmployeeWithdrawalHistory = async ({ employeeID, filters}) => {
   try {
-    let { from, to, year, weekNumber, monthNumber, states } = filters;
-    from = dateIsValid(new Date(from)) ? new Date(from) : new Date(0);
-    to = dateIsValid(new Date(to)) ? new Date(to) : new Date(8640000000000000);
-    const agg = [
-      {
-        $match: {
-          $and: [
-            {
-              employeeID: "633235f93ad738e40fe5b59f",
-            },
-            /**
-           month filter e.g lastModified at month 0-12
-           */
-            {
-              $expr: {
-                $eq: [
-                  {
-                    $month: "$lastModified",
-                  },
-                  {
-                    $ifNull: [
-                      monthNumber,
-                      {
-                        $month: "$lastModified",
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-            /**
-           week filter e.g lastModified at week 0-53
-           */
-            {
-              $expr: {
-                $eq: [
-                  {
-                    $week: "$lastModified",
-                  },
-                  {
-                    $ifNull: [
-                      weekNumber,
-                      {
-                        $week: "$lastModified",
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-            /**
-           range filter e.g lastModified between date A and date B
-           */ {
-              $expr: {
-                $and: [
-                  {
-                    $gte: [
-                      "$lastModified",
-                      {
-                        $ifNull: [from, "$lastModified"],
-                      },
-                    ],
-                  },
-                  {
-                    $lte: [
-                      "$lastModified",
-                      {
-                        $ifNull: [to, "$lastModified"],
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-            /**
-           status filter e.g status including [string a, string b]
-           */
-            {
-              $expr: {
-                $eq: [
-                  true,
-                  {
-                    $in: [
-                      "$status",
-                      {
-                        $ifNull: [
-                          states,
-                          ["initiated", "processing", "completed"],
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          ],
-        },
-      },
-    ];
-
-    const cursor = await withdrawalsCol.aggregate(agg);
-
-    let history = await cursor.toArray();
-    return { withdrawal_history: history };
+   let {withdrawal_history}=await getWithdrawalHistory({filters:{...filters,employeeID}})
+    return { withdrawal_history };
   } catch (error) {
     console.log(error);
     return { err: error };
   }
 };
 
-let getCompanyEmployeesWithdrawalHistory = async ({ filters = {} }) => {
+let getWithdrawalHistory = async ({ filters }) => {
   try {
-    let { from, to, year, weekNumber, monthNumber, states } = filters;
-
+    let {
+      from,
+      to,
+      year,
+      weekNumber,
+      monthNumber,
+      states=["completed"],
+      accountID,
+      companyID,
+      deptID,
+      employeeID,
+      withdrawalID,
+    } = filters;
     from = dateIsValid(new Date(from)) ? new Date(from) : new Date(0);
     to = dateIsValid(new Date(to)) ? new Date(to) : new Date(8640000000000000);
+    year = !!Number(year) ? Number(year) : null;
+    weekNumber = !!Number(weekNumber) ? Number(weekNumber) : null;
+    monthNumber = !!Number(monthNumber) ? Number(monthNumber) : null;
     const agg = [
       {
         $match: {
           $and: [
-            /**
-           month filter e.g lastModified at month 0-12
-           */
             {
               $expr: {
                 $eq: [
-                  {
-                    $month: "$lastModified",
-                  },
+                  "$_id",
                   {
                     $ifNull: [
-                      monthNumber,
-                      {
-                        $month: "$lastModified",
-                      },
+                      ObjectID.isValid(withdrawalID)
+                        ? ObjectID(withdrawalID)
+                        : null,
+                      "$_id",
                     ],
                   },
                 ],
               },
             },
-            /**
-           week filter e.g lastModified at week 0-53
-           */
             {
               $expr: {
                 $eq: [
+                  "$companyID",
                   {
-                    $week: "$lastModified",
-                  },
-                  {
-                    $ifNull: [
-                      weekNumber,
-                      {
-                        $week: "$lastModified",
-                      },
-                    ],
+                    $ifNull: [companyID, "$companyID"],
                   },
                 ],
               },
             },
-            /**
-           range filter e.g lastModified between date A and date B
-           */ {
-              $expr: {
-                $and: [
-                  {
-                    $gte: [
-                      "$lastModified",
-                      {
-                        $ifNull: [from, "$lastModified"],
-                      },
-                    ],
-                  },
-                  {
-                    $lte: [
-                      "$lastModified",
-                      {
-                        $ifNull: [to, "$lastModified"],
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-            /**
-           status filter e.g status including [string a, string b]
-           */
             {
               $expr: {
                 $eq: [
-                  true,
+                  "$employeeID",
                   {
-                    $in: [
-                      "$status",
-                      {
-                        $ifNull: [
-                          states,
-                          ["initiated", "processing", "completed"],
-                        ],
-                      },
+                    $ifNull: [employeeID,
+                      "$employeeID",
                     ],
                   },
                 ],
               },
             },
+            {
+              $expr: {
+                $eq: [
+                  "$accountID",
+                  {
+                    $ifNull: [accountID, "$accountID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$deptID",
+                  {
+                    $ifNull: [deptID, "$deptID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                   $and: [{
+                    $in: ['$status.name',states]
+                  }, {
+                    $eq: [{
+                      $week: '$status.updatedAt'
+                    }, {
+                      $ifNull: [weekNumber, {
+                        $week: '$status.updatedAt'
+                      }]
+                    }]
+                  }, {
+                    $eq: [{
+                      $year: '$status.updatedAt'
+                    }, {
+                      $ifNull: [year, {
+                        $year: '$status.updatedAt'
+                      }]
+                    }]
+                  }, {
+                    $eq: [{
+                      $month: '$status.updatedAt'
+                    }, {
+                      $ifNull: [monthNumber, {
+                        $month: '$status.updatedAt'
+                      }]
+                    }]
+                  }]
+              }}
           ],
         },
       },
     ];
     const cursor = await withdrawalsCol.aggregate(agg);
 
-    let history = await cursor.toArray();
-    return { withdrawal_history: history };
+    let withdrawals = await cursor.toArray();
+    //console.log(withdrawals.length)
+    return { withdrawal_history: withdrawals };
   } catch (error) {
     console.log(error);
     throw error;
@@ -335,6 +250,5 @@ let getCompanyEmployeesWithdrawalHistory = async ({ filters = {} }) => {
 module.exports = {
   createWithdrawal,
   updateWithdrawalByTransactionID,
-  getEmployeeWithdrawalHistory,
-  getCompanyEmployeesWithdrawalHistory
+  getEmployeeWithdrawalHistory,getWithdrawalHistory
 };

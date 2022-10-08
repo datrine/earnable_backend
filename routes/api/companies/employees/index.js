@@ -4,7 +4,7 @@ const { getEmployeesByCompanyID } = require("../../../../db/employee");
 
 router.use("/", async (req, res, next) => {
     try {
-        let { companyID } = req.session
+        let { companyID } = req.session.queried
         let filters = req.query
         //console.log(req.query)
         let rolesRes = await getEmployeesByCompanyID({ companyID,filters });

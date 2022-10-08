@@ -22,6 +22,7 @@ const {
 
 const { updateWithdrawalByTransactionID } = require("./withdrawal");
 const { getEmployeesSumOfWithdrawn } = require("./calculations");
+const { DateTime } = require("luxon");
 
 let attemptChangeEnrollmentStatus = async ({
   accountID,
@@ -229,6 +230,108 @@ let attemptReInitiateTransferCronJob = async () => {
   }
 };
 
+let attemptCancelLongTransactionsCronJob = async () => {
+  try {
+    const result =await transactionsCol.updateMany(
+      {
+        $and: [
+          {
+            $expr: {
+              $or: [
+                {
+                  $and: [
+                    {
+                      $in: ["$status.name", ["initiated"]],
+                    },
+                    {
+                      $gte:[
+                        {
+                         $dateDiff: {
+                            startDate: "$status.updatedAt",
+                            endDate: "$$NOW",
+                            unit: "minute",
+                         }
+                        },10]
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+         { transfer_code:{$exists:false}}
+        ],
+      },
+      [
+        {
+          $set: {
+            status: {
+              name: "failed",
+              updatedBy: "$status.updateBy",
+              updatedAt: new Date(),
+            },
+            tempStatus: "$status",
+          },
+        },
+        {
+          $set: {
+            status_history: {
+              $cond: {
+                if: {
+                  $and: [
+                    "failed",
+                    {
+                      $ne: ["$tempStatus.name", "failed"],
+                    },
+                  ],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $and: ["$status_history"],
+                    },
+                    then: {
+                      $concatArrays: ["$status_history", ["$tempStatus"]],
+                    },
+                    else: ["$tempStatus"],
+                  },
+                },
+                else: {
+                  $ifNull: ["$status_history", [["$tempStatus"]]],
+                },
+              },
+            },
+          },
+        },
+      ]
+    ,{});
+    //console.log(result);
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
+let attemptCancelLongWithdrawalCronJob = async () => {
+  try {
+    let getTransactionsByFiltersRes = await getTransactionsByFilters({
+      status: "failed",
+    });
+    let { transactions: listOfFailedTransactions } = getTransactionsByFiltersRes;
+    let promises = listOfFailedTransactions.map((obj) =>
+      updateWithdrawalByTransactionID({
+        transactionID: obj._id.toString(),
+        updates: { status: "failed" },
+      })
+    );
+    let settledPromises = await Promise.allSettled([...promises]);
+    for await (const settledPromise of settledPromises) {
+    }
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
 let createRecipientCodeCronJob = async () => {
   try {
     const agg = [
@@ -286,7 +389,6 @@ let transactionWork = async () => {
     });
     let listOfProcessingTransactions =
       await listOfProcessingTransactionsCursor.toArray();
-    //console.log(listOfProcessingTransactions)
     for await (const transaction of listOfProcessingTransactions) {
       let transactionID = transaction._id.toString();
       let accountIDofUpdater = transaction.status.updatedBy;
@@ -295,7 +397,6 @@ let transactionWork = async () => {
         continue;
       }
       let { data } = await verifyTransfer({ transfer_code });
-      console.log(data);
       if (data) {
         if (data.status === "success") {
           let updateRes = await updateTransactionByID({
@@ -328,7 +429,6 @@ let attemptUpdateWithdrawal = async () => {
       status: "completed",
       transfer_code_exists: true,
     });
-    // console.log(getTransactionsByFiltersRes)
     let { transactions: listOfCompletedTransactions } =
       getTransactionsByFiltersRes;
     let promises = listOfCompletedTransactions.map((obj) =>
@@ -365,10 +465,19 @@ let job5 = new CronJob("*/10 * * * * *", async function (params) {
   attemptUpdateWithdrawal();
 });
 
+let job6 = new CronJob("*/10 * * * * *", async function (params) {
+  attemptCancelLongWithdrawalCronJob();
+});
+let job7 = new CronJob("*/10 * * * * *", async function (params) {
+  attemptCancelLongTransactionsCronJob();
+});
 registerJob("attemptChangeEnrollmentStatusCronJob", job);
 registerJob("createRecipientCodeCronJob", job2);
 registerJob("transactionWork", job3);
 registerJob("attemptReInitiateTransferCronJob", job4);
 registerJob("attemptUpdateWithdrawal", job5);
-
-module.exports = { attemptChangeEnrollmentStatus ,getEmployeesSumOfWithdrawn};
+registerJob("attemptCancelLongWithdrawalCronJob", job6);
+registerJob("attemptCancelLongTransactionsCronJob", job7);
+attemptCancelLongWithdrawalCronJob
+attemptCancelLongTransactionsCronJob
+module.exports = { attemptChangeEnrollmentStatus, getEmployeesSumOfWithdrawn };
