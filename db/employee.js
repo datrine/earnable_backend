@@ -3,7 +3,7 @@ const waleprjDB = mongoClient.db("waleprj");
 const employeesCol = waleprjDB.collection("employees");
 const { ObjectId, UUID } = require("bson");
 const { employeeTemplate } = require("./templates");
-const { composeGetEmployeeInfoTableAgg } = require("./pipelines/employer");
+const { composeGetEmployeeInfoTableAgg, composeGetEmployeesFlexibleAccessInfoTableAgg } = require("./pipelines/employer");
 
 let addEmployee = async ({ ...employeeToData }) => {
   try {
@@ -587,6 +587,19 @@ let getEmployeesTableInfo = async ({ filters }) => {
   }
 };
 
+let getEmployeesFlexibleAccessTableInfo = async ({ filters }) => {
+  try {
+    
+  let agg = composeGetEmployeesFlexibleAccessInfoTableAgg(filters);
+  const cursor = await employeesCol.aggregate(agg);
+
+  let employeesFlexibleAccessTableInfo = await cursor.toArray();
+  return { employeesFlexibleAccessTableInfo,filters };
+  } catch (error) {
+    console.log(error);
+    return {err:error}
+  }
+};
 module.exports = {
   addEmployee,
   getEmployeesByCompanyID,
@@ -598,5 +611,5 @@ module.exports = {
   checkIfEmployeePropExists,
   getEmployeeDetailsByAccountID,
   getEmployeeFlexibleAccess,
-   getEmployeesTableInfo,
+   getEmployeesTableInfo,getEmployeesFlexibleAccessTableInfo
 };

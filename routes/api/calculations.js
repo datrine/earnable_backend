@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { getEmployeesSumOfWithdrawn } = require("../../db");
 const { getTotalFlexibleAccess, getTotalNetPay,getEmployeeNetEarning } = require("../../db/calculations");
-const { getTotalSalaries } = require("../../db/employee");
+const { getTotalSalaries, } = require("../../db/employee");
 
 //user id, email or username
 
@@ -69,6 +69,17 @@ router.get("/total_salaries", async (req, res, next) => {
 });
 
 router.get("/employee_net_earnings", async (req, res, next) => {
+    let { employeeID,} = req.session.queried;
+
+    if (!employeeID) {
+        return res.json({err:{msg:"Employee ID not supplied..."}})
+    }
+    let filters = req.query
+    let totalSalaries = await getEmployeeNetEarning({ filters:{...filters,employeeID} });
+    return res.json(totalSalaries)
+});
+
+router.get("/employees_flexible_access_list", async (req, res, next) => {
     let { employeeID,} = req.session.queried;
 
     if (!employeeID) {

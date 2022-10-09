@@ -5,8 +5,10 @@ const {
   getDepartmentsByCompanyID,
   getDepartmentByDepartmentID,
   editDepartment,
+  getDeptsTableInfo,
 } = require("../../../../db/department");
 const { getEmployeesByCompanyID } = require("../../../../db/employee");
+const { composeGetDeptInfoTableAgg } = require("../../../../db/pipelines/employer");
 const departmentEmployeesRouter = require("./employees");
 const departmentPoliciesRouter = require("./policies");
 
@@ -23,6 +25,30 @@ router.post("/", async (req, res, next) => {
     console.log(error);
   }
 });
+
+router.get("/depts_table_info",async(req,res,next)=>{
+  try {
+    let companyID=req.session.queried.companyID
+   let getDeptsTableInfoRes=await getDeptsTableInfo({companyID});
+   res.json(getDeptsTableInfoRes)
+  } catch (error) {
+    console.log(error);
+    res.json({err:error})
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 router.put("/:departmentID", async (req, res, next) => {
   try {
@@ -84,7 +110,7 @@ router.get("/:departmentID", async (req, res, next) => {
 
 router.use("/", async (req, res, next) => {
   try {
-    let { companyID } = req.session;
+    let { companyID } = req.session.queried;
     let filters = req.query;
     let departmentsRes = await getDepartmentsByCompanyID({
       companyID,

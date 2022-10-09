@@ -6,7 +6,7 @@ let composeGetEmployeeInfoTableAgg = ({
   deptID,
   employeeID,
   from,
-  to,
+  to,enrollment_state,
   year = DateTime.now().year,
   weekNumber,
   accountID,
@@ -232,14 +232,18 @@ let composeGetEmployeeInfoTableAgg = ({
           $concat: ["$userInfo.f_name", " ", "$userInfo.l_name"],
         },
         department: "$deptInfo.dept_name",
-        phone_num: "$accountInfo.phone_num",
+        phonenum: "$accountInfo.phonenum",
         monthly_salary: {
           $toInt: "$monthly_salary",
         },
         enrollment_state: "$enrollment_state.state",
         account_state: "$accountInfo.activity.current.name",
       },
-    },
+    },{$match:{
+      $expr:{
+        $eq:["$enrollment_state",{$ifNull:[enrollment_state,"$enrollment_state"]}]
+      }
+    }},
     {
       $set: {
         sumWithdrawal: {

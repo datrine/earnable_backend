@@ -1,12 +1,13 @@
 const router = require("express").Router()
 const companyRolesRouter = require("./roles");
-const companyEmployeesRouter = require("./employees");
+const companyEmployeesRouter = require("../employees");
 const companyDepartmentsRouter = require("./departments");
 const companyAdminsRouter = require("./admins");
 const companyTransactionsRouter = require("./transactions");
 const calculationsRouter = require("../calculations");
 const companyWithdrawalHistoryRouter = require("./withdrawal_history");
 const companyWalletRouter = require("./wallets");
+const { getEmployeesByCompanyID } = require("../../../db/employee");
 
 router.use("/", async(req,res,next)=>{
     next()
@@ -14,7 +15,21 @@ router.use("/", async(req,res,next)=>{
 
 router.use("/roles", companyRolesRouter);
 
-router.use("/employees", companyEmployeesRouter);
+router.use("/employees", async (req, res, next) => {
+    try {
+        let { companyID } = req.session.queried
+        let filters = req.query
+        filters.companyID=companyID;
+        let rolesRes = await getEmployeesByCompanyID({ companyID,filters });
+        if (rolesRes.err) {
+            return res.json(rolesRes)
+        }
+        req.session.queried.employees = rolesRes.employees;
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+  }, companyEmployeesRouter);
 
 router.use("/departments", companyDepartmentsRouter);
 
@@ -32,6 +47,7 @@ router.use("/calculations",async(req,res,next)=>{
     req.session.queried.filters=filters
     next()
 },calculationsRouter);
+
 
 router.get("/", async (req, res, next) => {
     let { company } = req.session.queried;

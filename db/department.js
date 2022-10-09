@@ -3,6 +3,7 @@ const waleprjDB = mongoClient.db("waleprj");
 const departmentsCol = waleprjDB.collection("departments");
 const { ObjectId, UUID } = require("bson");
 const { nanoid } = require("nanoid");
+const { composeGetDeptInfoTableAgg } = require("./pipelines/employer");
 
 let createDepartment = async ({ companyID, ...deptToData }) => {
   try {
@@ -80,7 +81,6 @@ let getDepartmentByDepartmentID = async ({ departmentID }) => {
     throw error;
   }
 };
-
 
 let editDepartment = async ({
   companyID,
@@ -186,9 +186,20 @@ let getDeptPolicies = async ({
     }
   };
 
+  let getDeptsTableInfo=async({companyID})=>{
+    try {
+     let agg= composeGetDeptInfoTableAgg({companyID});
+   let cursor=  departmentsCol.aggregate(agg);
+   let depts_table_info=await cursor.toArray();
+   console.log()
+   return {depts_table_info}
+    } catch (error) {
+      console.log(error)
+    }
+  }
 module.exports = {
   createDepartment,
   editDepartment,
   getDepartmentByDepartmentID,
-  getDepartmentsByCompanyID,
+  getDepartmentsByCompanyID,getDeptsTableInfo
 };
