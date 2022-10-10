@@ -89,6 +89,100 @@ let editDepartment = async ({
   ...deptToData
 }) => {
   try {
+    let policiesSet = [];
+    for (const policy of dept_policies) {
+      let policy_set = [
+        {
+          $set: {
+            tempPolicy: {
+              $first: {
+                $filter: {
+                  input: "$dept_policies",
+                  cond: { $and: [{ $eq: ["$$policy.name", policy.name] }] },
+                  as: "policy",
+                },
+              },
+            },
+          },
+        },
+        {
+          $set: {
+            policy_history: {
+              $cond: {
+                if: {
+                  $and: [
+                    { $ne: ["", "$tempPolicy"] },
+                    { $ne: [[], "$tempPolicy"] },
+                    { $ne: [null, "$tempPolicy"] },
+                  ],
+                },
+                then: {
+                  $concatArrays: [{ $ifNull: ["$policy_history", []] }, ["$tempPolicy"]],
+                },
+                else: "$policy_history",
+              },
+            },
+          },
+        },
+        {
+          $set: { tempPolicy: null },
+        },
+        {
+          $set: {
+            dept_policies: {
+              $concatArrays: [
+                {
+                  $filter: {
+                    cond: { $ne: ["$$policy.name", policy.name] },
+                    input: "$dept_policies",
+                    as: "policy",
+                  },
+                },
+                [policy],
+              ],
+            },
+          },
+        },
+      ];
+      policiesSet.push(...policy_set);
+    }
+    console.log(policiesSet);
+    let result1 = await departmentsCol.findOneAndUpdate(
+      { _id: ObjectId(departmentID) },
+      [
+        ...policiesSet,
+        {
+          $set: {
+            ...deptToData,
+            lastModified: {
+              $cond: {
+                if: deptToData,
+                then: new Date(),
+                else: "$lastModified",
+              },
+            },
+          },
+        },
+      ],
+      { returnDocument: "after" }
+    );
+    if (!result1.ok) {
+      return { err: { msg: "Unable to edit department..." } };
+    }
+    return { saved: true, editLabel: nanoid() };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
+let getDeptPolicies = async ({
+  companyID,
+  departmentID,
+  filters,
+  ...deptToData
+}) => {
+  try {
     console.log(dept_policies);
     let result1 = await departmentsCol.findOneAndUpdate(
       { _id: ObjectId(departmentID) },
@@ -134,72 +228,21 @@ let editDepartment = async ({
   }
 };
 
-let getDeptPolicies = async ({
-    companyID,
-    departmentID,
-    filters,
-    ...deptToData
-  }) => {
-    try {
-      console.log(dept_policies);
-      let result1 = await departmentsCol.findOneAndUpdate(
-        { _id: ObjectId(departmentID) },
-        [
-          {
-            $set: {
-              ...deptToData,
-              dept_policies: {
-                $cond: {
-                  if: { $isArray: [dept_policies] },
-                  then: {
-                    $concatArrays: [
-                      {
-                        $ifNull: ["$dept_policies", []],
-                      },
-                      dept_policies,
-                    ],
-                  },
-                  //then: 60,
-                  else: { $ifNull: ["$dept_policies", []] },
-                  //else:80
-                },
-              },
-              lastModified: {
-                $cond: {
-                  if: deptToData,
-                  then: new Date(),
-                  else: "$lastModified",
-                },
-              },
-            },
-          },
-        ],
-        { returnDocument: "after" }
-      );
-      if (!result1.ok) {
-        return { err: { msg: "Unable to edit department..." } };
-      }
-      return { saved: true, editLabel: nanoid() };
-    } catch (error) {
-      console.log(error);
-      return { err: error };
-    }
-  };
-
-  let getDeptsTableInfo=async({companyID})=>{
-    try {
-     let agg= composeGetDeptInfoTableAgg({companyID});
-   let cursor=  departmentsCol.aggregate(agg);
-   let depts_table_info=await cursor.toArray();
-   console.log()
-   return {depts_table_info}
-    } catch (error) {
-      console.log(error)
-    }
+let getDeptsTableInfo = async ({ companyID }) => {
+  try {
+    let agg = composeGetDeptInfoTableAgg({ companyID });
+    let cursor = departmentsCol.aggregate(agg);
+    let depts_table_info = await cursor.toArray();
+    console.log();
+    return { depts_table_info };
+  } catch (error) {
+    console.log(error);
   }
+};
 module.exports = {
   createDepartment,
   editDepartment,
   getDepartmentByDepartmentID,
-  getDepartmentsByCompanyID,getDeptsTableInfo
+  getDepartmentsByCompanyID,
+  getDeptsTableInfo,
 };

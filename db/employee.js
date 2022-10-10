@@ -3,7 +3,11 @@ const waleprjDB = mongoClient.db("waleprj");
 const employeesCol = waleprjDB.collection("employees");
 const { ObjectId, UUID } = require("bson");
 const { employeeTemplate } = require("./templates");
-const { composeGetEmployeeInfoTableAgg, composeGetEmployeesFlexibleAccessInfoTableAgg } = require("./pipelines/employer");
+const {
+  composeGetEmployeeInfoTableAgg,
+  composeGetEmployeesFlexibleAccessInfoTableAgg,
+  composeGetEmployeesDetailsAgg,
+} = require("./pipelines/employer");
 
 let addEmployee = async ({ ...employeeToData }) => {
   try {
@@ -213,13 +217,47 @@ let getEmployeeByAccountID = async ({ accountID }) => {
   }
 };
 
-let getEmployeeDetailsByAccountID = async ({ accountID }) => {
+let getEmployeesDetails = async ({ filters= {} }) => {
   try {
-    let prom1 = await getEmployeeByAccountID({ accountID });
-
-    return { employee: { ...employeeDoc, employeeID: employeeDoc._id } };
+    let agg = composeGetEmployeesDetailsAgg(filters);
+    let cursor = employeesCol.aggregate(agg);
+    let employees = await cursor.toArray();
+    return { employees };
   } catch (error) {
     console.log({ err: error });
+    return { err: error };
+  }
+};
+
+let getEmployeeDetailsByEmployeeID = async ({ employeeID, ...rest }) => {
+  try {
+    let { employees, err } = await getEmployeesDetails({
+      filters: { ...rest, employeeID },
+    });
+    if (err) {
+      return { err };
+    }
+    let employee = employees.find((obj) => obj.employeeID === employeeID);
+    return { employee };
+  } catch (error) {
+    console.log({ err: error });
+    return { err: error };
+  }
+};
+
+let getEmployeeDetailsByAccountID = async ({ accountID }) => {
+  try {
+    let { employees, err } = await getEmployeesDetails({
+      filters: { accountID },
+    });
+    if (err) {
+      return { err };
+    }
+    let employee = employees.find((obj) => obj.accountID === accountID);
+    return { employee };
+  } catch (error) {
+    console.log({ err: error });
+    return { err: error };
   }
 };
 
@@ -575,29 +613,27 @@ let getEmployeesWithdrawalHistory = async ({ filters = {} }) => {
 
 let getEmployeesTableInfo = async ({ filters }) => {
   try {
-    
-  let agg = composeGetEmployeeInfoTableAgg(filters);
-  const cursor = await employeesCol.aggregate(agg);
+    let agg = composeGetEmployeeInfoTableAgg(filters);
+    const cursor = await employeesCol.aggregate(agg);
 
-  let employees_table_info = await cursor.toArray();
-  return { employees_table_info,filters };
+    let employees_table_info = await cursor.toArray();
+    return { employees_table_info, filters };
   } catch (error) {
     console.log(error);
-    return {err:error}
+    return { err: error };
   }
 };
 
 let getEmployeesFlexibleAccessTableInfo = async ({ filters }) => {
   try {
-    
-  let agg = composeGetEmployeesFlexibleAccessInfoTableAgg(filters);
-  const cursor = await employeesCol.aggregate(agg);
+    let agg = composeGetEmployeesFlexibleAccessInfoTableAgg(filters);
+    const cursor = await employeesCol.aggregate(agg);
 
-  let employeesFlexibleAccessTableInfo = await cursor.toArray();
-  return { employeesFlexibleAccessTableInfo,filters };
+    let employeesFlexibleAccessTableInfo = await cursor.toArray();
+    return { employeesFlexibleAccessTableInfo, filters };
   } catch (error) {
     console.log(error);
-    return {err:error}
+    return { err: error };
   }
 };
 module.exports = {
@@ -611,5 +647,8 @@ module.exports = {
   checkIfEmployeePropExists,
   getEmployeeDetailsByAccountID,
   getEmployeeFlexibleAccess,
-   getEmployeesTableInfo,getEmployeesFlexibleAccessTableInfo
+  getEmployeesTableInfo,
+  getEmployeesFlexibleAccessTableInfo,
+  getEmployeeDetailsByEmployeeID,
+  getEmployeesDetails,
 };

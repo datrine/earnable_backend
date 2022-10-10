@@ -10,6 +10,7 @@ let composeGetEmployeeInfoTableAgg = ({
   year = DateTime.now().year,
   weekNumber,
   accountID,
+  withdrawal_states,
   monthNumber = DateTime.now().month,
 }) => {
   let agg = [
@@ -176,7 +177,7 @@ let composeGetEmployeeInfoTableAgg = ({
             cond: {
               $and: [
                 {
-                  $eq: ["$$withdrawal.status.name", "completed"],
+                  $in: ["$$withdrawal.status.name",{$ifNull:[withdrawal_states,["completed"]] }],
                 },
                 {
                   $eq: [

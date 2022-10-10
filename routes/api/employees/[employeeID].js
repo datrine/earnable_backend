@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { getEmployeeFlexibleAccess, getEmployeesTableInfo } = require("../../../db/employee");
+const { getEmployeeFlexibleAccess, getEmployeesTableInfo, getEmployeeDetailsByEmployeeID } = require("../../../db/employee");
 const changePhonepinEmployeeRouter = require("./changePhone");
 const editEmployeeRouter = require("./editEmployee");
 const calculationsRouter = require("../calculations");
@@ -16,6 +16,16 @@ router.get("/flexible_access", async (req, res, next) => {
   }
 });
 
+router.get("/employee_details", async (req, res, next) => {
+  try {
+    let { employeeID } = req.session.queried;
+    let getEmployeeDetailsByEmployeeIDRes = await getEmployeeDetailsByEmployeeID({employeeID});
+    console.log(getEmployeeDetailsByEmployeeIDRes)
+    res.json(getEmployeeDetailsByEmployeeIDRes);
+  } catch (error) {
+    res.json({ err: error });
+  }
+});
 router.use("/calculations",async (req, res, next) => {
   try {
     let { employeeID } = req.session.queried;

@@ -230,7 +230,7 @@ let attemptReInitiateTransferCronJob = async () => {
   }
 };
 
-let attemptCancelLongTransactionsCronJob = async () => {
+let attemptAutoFailLongTransactionsCronJob = async () => {
   try {
     const result =await transactionsCol.updateMany(
       {
@@ -311,7 +311,7 @@ let attemptCancelLongTransactionsCronJob = async () => {
   }
 };
 
-let attemptCancelLongWithdrawalCronJob = async () => {
+let attemptAutoFailLongWithdrawalCronJob = async () => {
   try {
     let getTransactionsByFiltersRes = await getTransactionsByFilters({
       status: "failed",
@@ -321,6 +321,28 @@ let attemptCancelLongWithdrawalCronJob = async () => {
       updateWithdrawalByTransactionID({
         transactionID: obj._id.toString(),
         updates: { status: "failed" },
+      })
+    );
+    let settledPromises = await Promise.allSettled([...promises]);
+    for await (const settledPromise of settledPromises) {
+    }
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
+
+let attemptUpdateCancelledWithdrawalCronJob = async () => {
+  try {
+    let getTransactionsByFiltersRes = await getTransactionsByFilters({
+      status: "cancelled",
+    });
+    let { transactions: listOfCancelledTransactions } = getTransactionsByFiltersRes;
+    let promises = listOfCancelledTransactions.map((obj) =>
+      updateWithdrawalByTransactionID({
+        transactionID: obj._id.toString(),
+        updates: { status: "cancelled" },
       })
     );
     let settledPromises = await Promise.allSettled([...promises]);
@@ -466,10 +488,13 @@ let job5 = new CronJob("*/10 * * * * *", async function (params) {
 });
 
 let job6 = new CronJob("*/10 * * * * *", async function (params) {
-  attemptCancelLongWithdrawalCronJob();
+  attemptAutoFailLongWithdrawalCronJob();
 });
 let job7 = new CronJob("*/10 * * * * *", async function (params) {
-  attemptCancelLongTransactionsCronJob();
+  attemptAutoFailLongTransactionsCronJob();
+});
+let job8 = new CronJob("*/10 * * * * *", async function (params) {
+  attemptUpdateCancelledWithdrawalCronJob();
 });
 registerJob("attemptChangeEnrollmentStatusCronJob", job);
 registerJob("createRecipientCodeCronJob", job2);
@@ -478,6 +503,6 @@ registerJob("attemptReInitiateTransferCronJob", job4);
 registerJob("attemptUpdateWithdrawal", job5);
 registerJob("attemptCancelLongWithdrawalCronJob", job6);
 registerJob("attemptCancelLongTransactionsCronJob", job7);
-attemptCancelLongWithdrawalCronJob
-attemptCancelLongTransactionsCronJob
+registerJob("attemptUpdateCancelledWithdrawalCronJob", job8);
+
 module.exports = { attemptChangeEnrollmentStatus, getEmployeesSumOfWithdrawn };

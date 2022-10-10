@@ -48,7 +48,7 @@ let resolveTransactionMW = async (req, res, next) => {
           prev +
           Number(
             cur.transactionInfo?.netAmountToWithdraw +
-              cur.transactionInfo?.withdrawal_fee
+              cur.transactionInfo?.withdrawal_fee_by_employer
           );
         console.log({ sum });
         return sum;

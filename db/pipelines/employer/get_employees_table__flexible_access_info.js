@@ -8,11 +8,23 @@ let composeGetEmployeesFlexibleAccessInfoTableAgg = ({
   from,
   to,
   enrollment_state,
+  withdrawal_states,
   year = DateTime.now().year,
   weekNumber,
   accountID,
   monthNumber = DateTime.now().month,
 }) => {
+  withdrawal_states=(Array.isArray(withdrawal_states)&&withdrawal_states.length>0)?withdrawal_states:null,
+  from = !!from
+    ? DateTime.isDateTime(DateTime.fromISO(from))
+      ? new Date(from)
+      : null
+    : null;
+  to = !!to
+    ? DateTime.isDateTime(DateTime.fromISO(to))
+      ? new Date(to)
+      : null
+    : null;
   let agg = [
     {
       $match: {
@@ -83,7 +95,7 @@ let composeGetEmployeesFlexibleAccessInfoTableAgg = ({
     },
     {
       $set: {
-        employeeID:{$toString:"$_id"},
+        employeeID: { $toString: "$_id" },
         userInfo: { $first: "$users" },
         filteredWithdrawals: {
           $filter: {
@@ -91,7 +103,7 @@ let composeGetEmployeesFlexibleAccessInfoTableAgg = ({
             cond: {
               $and: [
                 {
-                  $eq: ["$$withdrawal.status.name", "completed"],
+                  $in: ["$$withdrawal.status.name",{$ifNull:[withdrawal_states,["completed"]] }],
                 },
                 {
                   $eq: [
@@ -180,6 +192,7 @@ let composeGetEmployeesFlexibleAccessInfoTableAgg = ({
         full_name: { $concat: ["$userInfo.f_name", " ", "$userInfo.l_name"] },
         time: "$filteredWithdrawal.status.updatedAt",
         date: "$filteredWithdrawal.status.updatedAt",
+        withdrawal_status: "$filteredWithdrawal.status.name",
         withdrawal_fee_by_employer:
           "$filteredWithdrawal.transactionInfo.withdrawal_fee_by_employer",
         withdrawal_fee_by_employee:

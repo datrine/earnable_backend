@@ -12,7 +12,6 @@ let jobList = new Map();
  * @returns
  */
 let registerJob = (title, cronJob) => {
-    console.log("Adding a new job")
         jobList.set(title, cronJob);
         if (!cronJob.running) {
             cronJob.start()
