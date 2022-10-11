@@ -7,7 +7,9 @@ const {
   composeGetEmployeeInfoTableAgg,
   composeGetEmployeesFlexibleAccessInfoTableAgg,
   composeGetEmployeesDetailsAgg,
+  composeGetCalculatedListAgg,
 } = require("./pipelines/employer");
+const { getCalculatedAccumulations } = require("./calculations");
 
 let addEmployee = async ({ ...employeeToData }) => {
   try {
@@ -125,9 +127,9 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
   }
 };
 
-let getTotalSalaries = async ({ companyID }) => {
+let getTotalSalaries = async ({ filters={} }) => {
   try {
-    let cursor = employeesCol.aggregate([
+    /*let cursor = employeesCol.aggregate([
       {
         $match: {
           companyID: companyID,
@@ -143,9 +145,10 @@ let getTotalSalaries = async ({ companyID }) => {
           },
         },
       },
-    ]);
-    let results = await cursor.toArray();
-    let total_monthly_salaries = results[0]?.total_monthly_salaries || 0;
+    ]); */
+   let {err,accumulationObj}=await getCalculatedAccumulations({filters});
+   console.log({accumulationObj})
+    let total_monthly_salaries = accumulationObj.accumulatedTotalSalaries || 0;
     return { total_monthly_salaries };
   } catch (error) {
     console.log(error);

@@ -1,6 +1,6 @@
 const router = require("express").Router();
-const { getEmployeesSumOfWithdrawn } = require("../../db");
-const { getTotalFlexibleAccess, getTotalNetPay,getEmployeeNetEarning } = require("../../db/calculations");
+//const { getEmployeesSumOfWithdrawn } = require("../../db");
+const { getTotalFlexibleAccess, getTotalNetPay,getEmployeeNetEarning, getAvailableFlexibleAccess,getEmployeesSumOfWithdrawn, getReconciliationReport } = require("../../db/calculations");
 const { getTotalSalaries, } = require("../../db/employee");
 
 //user id, email or username
@@ -16,8 +16,8 @@ router.use("/", async (req, res, next) => {
 router.get("/total_withdrawal", async (req, res, next) => {
     try {
         let { filters } = req.session.queried;
-        let total_withdrawal =await getEmployeesSumOfWithdrawn({filters})
-        res.json( total_withdrawal);
+        let getEmployeesSumOfWithdrawnRes =await getEmployeesSumOfWithdrawn({filters})
+        res.json( getEmployeesSumOfWithdrawnRes);
     } catch (error) {
         console.log(error)
     }
@@ -28,6 +28,17 @@ router.get("/total_flexible_access", async (req, res, next) => {
         let { filters } = req.session.queried;
         let totalFlexibleAccess =await getTotalFlexibleAccess({filters})
         res.json( totalFlexibleAccess);
+    } catch (error) {
+        console.log(error)
+    }
+});
+
+router.get("/available_flexible_access", async (req, res, next) => {
+    try {
+        let { filters } = req.session.queried;
+        let availableFlexibleAccessRes =await getAvailableFlexibleAccess({filters})
+        console.log({filters,availableFlexibleAccessRes})
+        res.json( availableFlexibleAccessRes);
     } catch (error) {
         console.log(error)
     }
@@ -54,7 +65,7 @@ router.get("/count", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
     try {
-        let { withdrawal_history } = req.session;
+        let { withdrawal_history } = req.session.queried;
         res.json({ withdrawal_history });
     } catch (error) {
         console.log(error)
@@ -62,8 +73,9 @@ router.get("/", async (req, res, next) => {
 });
 
 router.get("/total_salaries", async (req, res, next) => {
-    let { companyID } = req.session
-    let filters = req.query
+    let { filters, companyID} = req.session.queried;
+    filters.companyID=companyID;
+    filters = req.query
     let totalSalaries = await getTotalSalaries({ companyID, filters });
     return res.json(totalSalaries)
 });
@@ -88,6 +100,16 @@ router.get("/employees_flexible_access_list", async (req, res, next) => {
     let filters = req.query
     let totalSalaries = await getEmployeeNetEarning({ filters:{...filters,employeeID} });
     return res.json(totalSalaries)
+});
+
+router.get("/reconciliation_report", async (req, res, next) => {
+    try {
+        let { filters } = req.session.queried;
+        let getReconciliationReportRes =await getReconciliationReport({filters})
+        res.json( getReconciliationReportRes);
+    } catch (error) {
+        console.log(error)
+    }
 });
 
 module.exports = router;
