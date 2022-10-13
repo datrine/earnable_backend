@@ -4,20 +4,22 @@ const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
 const {
   composeGetCalculatedListAgg,
   composeGetAccumulationsAgg,
+  composeGetDebtListAgg,
 } = require("./pipelines/employer");
 const {
   calculationItemTemplate,
   accumulationsTemplate,
 } = require("./templates");
+const { debtListTemplate } = require("./templates/calculations");
 const db = clientConn.db("waleprj");
 const employeesCol = db.collection("employees");
+const companiesCol = db.collection("companies");
 
 function dateIsValid(date) {
   return date instanceof Date && !isNaN(date);
 }
 
 let getEmployeesSumOfWithdrawn = async ({ filters = {} }) => {
-  try {
     try {
       let { err, accumulationObj } = await getCalculatedAccumulations({
         filters,
@@ -28,24 +30,34 @@ let getEmployeesSumOfWithdrawn = async ({ filters = {} }) => {
       };
     } catch (error) {
       console.log(error);
-      throw error;
+      return {err:error};
     }
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
 };
 
 let getCalculatedAccumulations = async ({ filters }) => {
   try {
     let agg = composeGetAccumulationsAgg(filters);
     let cursor = await employeesCol.aggregate(agg);
-    accumulationsTemplate;
     /**
      * @type {[accumulationsTemplate]}
      */
     let docs = await cursor.toArray();
     return { accumulationObj: docs[0],filters };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
+let getDebtList = async ({ filters }) => {
+  try {
+    let agg = composeGetDebtListAgg(filters);
+    let cursor = companiesCol.aggregate(agg);
+    /**
+     * @type {[debtListTemplate]}
+     */
+    let docs = await cursor.toArray();
+    return { debt_list: docs };
   } catch (error) {
     console.log(error);
     return { err: error };
@@ -127,267 +139,6 @@ let getTotalNetPayMethod1 = async ({ filters }) => {
   }
 };
 
-let getTotalNetPayMethod2 = async ({ filters = {} }) => {
-  try {
-    let {
-      from,
-      to,
-      year = DateTime.now().year,
-      weekNumber,
-      accountID,
-      monthNumber = DateTime.now().month,
-      companyID,
-      employeeID,
-      deptID,
-    } = filters;
-
-    from = dateIsValid(new Date(from)) ? new Date(from) : new Date(0);
-    to = dateIsValid(new Date(to)) ? new Date(to) : new Date(8640000000000000);
-    const agg = [
-      {
-        $match: {
-          $and: [
-            {
-              $expr: {
-                $eq: [
-                  "$companyID",
-                  {
-                    $ifNull: [companyID, "$companyID"],
-                  },
-                ],
-              },
-            },
-            {
-              $expr: {
-                $eq: [
-                  "$_id",
-                  {
-                    $ifNull: [
-                      ObjectID.isValid(employeeID)
-                        ? ObjectID(employeeID)
-                        : employeeID,
-                      "$_id",
-                    ],
-                  },
-                ],
-              },
-            },
-            {
-              $expr: {
-                $eq: [
-                  "$accountID",
-                  {
-                    $ifNull: [accountID, "$accountID"],
-                  },
-                ],
-              },
-            },
-            {
-              $expr: {
-                $eq: [
-                  "$deptID",
-                  {
-                    $ifNull: [deptID, "$deptID"],
-                  },
-                ],
-              },
-            },
-          ],
-        },
-      },
-      {
-        $set: {
-          deptIDAsObjectID: {
-            $toObjectId: "$deptID",
-          },
-          companyIDAsObjectID: {
-            $toObjectId: "$companyID",
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "withdrawals",
-          localField: "accountID",
-          foreignField: "accountID",
-          as: "withdrawals",
-        },
-      },
-      {
-        $lookup: {
-          from: "companies",
-          localField: "companyIDAsObjectID",
-          foreignField: "_id",
-          as: "companies",
-        },
-      },
-      {
-        $lookup: {
-          from: "departments",
-          localField: "deptIDAsObjectID",
-          foreignField: "_id",
-          as: "departments",
-        },
-      },
-      {
-        $set: {
-          companyInfo: {
-            $first: "$companies",
-          },
-          deptInfo: {
-            $first: "$departments",
-          },
-        },
-      },
-      {
-        $set: {
-          flexible_access: {
-            $ifNull: [
-              {
-                access_mode: {
-                  $ifNull: [
-                    {
-                      $let: {
-                        vars: {
-                          flexible_access_mode: {
-                            $first: {
-                              $let: {
-                                vars: {
-                                  flexible_policy_filter: {
-                                    $filter: {
-                                      cond: {
-                                        $eq: [
-                                          "flexible_access_mode",
-                                          "$$item.name",
-                                        ],
-                                      },
-                                      input: "$deptInfo.dept_policies",
-                                      as: "item",
-                                    },
-                                  },
-                                },
-                                in: "$$flexible_policy_filter",
-                              },
-                            },
-                          },
-                        },
-                        in: "$$flexible_access_mode.value",
-                      },
-                    },
-                    "$companyInfo.flexible_access.access_mode",
-                  ],
-                },
-                access_value: {
-                  $ifNull: [null, "$companyInfo.flexible_access.value"],
-                },
-              },
-              {},
-            ],
-          },
-          filteredWithdrawals: {
-            $filter: {
-              input: "$withdrawals",
-              cond: {
-                $and: [
-                  {
-                    $eq: ["$$withdrawal.status.name", "completed"],
-                  },
-                  {
-                    $eq: [
-                      {
-                        $week: "$$withdrawal.status.updatedAt",
-                      },
-                      {
-                        $ifNull: [
-                          weekNumber,
-                          {
-                            $week: "$$withdrawal.status.updatedAt",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    $eq: [
-                      {
-                        $year: "$$withdrawal.status.updatedAt",
-                      },
-                      {
-                        $ifNull: [
-                          year,
-                          {
-                            $year: "$$withdrawal.status.updatedAt",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    $eq: [
-                      {
-                        $month: "$$withdrawal.status.updatedAt",
-                      },
-                      {
-                        $ifNull: [
-                          monthNumber,
-                          {
-                            $month: "$$withdrawal.status.updatedAt",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-              as: "withdrawal",
-            },
-          },
-        },
-      },
-      {
-        $set: {
-          sumWithdrawal: {
-            $reduce: {
-              input: "$filteredWithdrawals",
-              initialValue: 0,
-              in: {
-                $sum: ["$$value", "$$this.transactionInfo.netAmountToWithdraw"],
-              },
-            },
-          },
-          employeeTotalFlexibleAccess: {
-            $multiply: [
-              {
-                $toInt: "$monthly_salary",
-              },
-              {
-                $divide: ["$flexible_access.access_value", 100],
-              },
-            ],
-          },
-        },
-      },
-      {
-        $set: {
-          employeeTotalNetPay: {
-            $subtract: ["$employeeTotalFlexibleAccess", "$sumWithdrawal"],
-          },
-        },
-      },
-    ];
-
-    const cursor = await employeesCol.aggregate(agg);
-    let preSumList = await cursor.toArray();
-    let totalNetPay = preSumList.reduce(
-      (prev, obj) => prev + obj.employeeTotalNetPay,
-      0
-    );
-    return { totalNetPay, filters };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
 
 let getEmployeeNetEarning = async ({ filters = {} }) => {
   try {
@@ -436,5 +187,5 @@ module.exports = {
   getTotalNetPay: getEmployeeNetEarning,
   getEmployeeNetEarning,
   getCalculatedAccumulations,
-  getAvailableFlexibleAccess,getTotalNetPay,getReconciliationReport
+  getAvailableFlexibleAccess,getTotalNetPay,getReconciliationReport,getDebtList
 };

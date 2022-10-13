@@ -1,5 +1,6 @@
 const composeGetAccumulationsAgg = require("./get_accumulations");
 const composeGetCalculatedListAgg = require("./get_calculated_list");
+const composeGetDebtListAgg = require("./get_debt_list");
 const composeGetDeptInfoTableAgg = require("./get_depts_table_info");
 const composeGetEmployeesDetailsAgg = require("./get_employees_details");
 const composeGetEmployeesReconciliationTableAgg = require("./get_employees_reconciliation_table");
@@ -11,5 +12,5 @@ module.exports = {
   composeGetDeptInfoTableAgg,
   composeGetEmployeesFlexibleAccessInfoTableAgg,
   composeGetEmployeesDetailsAgg,
-  composeGetEmployeesReconciliationTableAgg,composeGetCalculatedListAgg,composeGetAccumulationsAgg
+  composeGetEmployeesReconciliationTableAgg,composeGetCalculatedListAgg,composeGetAccumulationsAgg,composeGetDebtListAgg
 };

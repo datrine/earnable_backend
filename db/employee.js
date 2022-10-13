@@ -105,7 +105,6 @@ let updateEmployeeInfo = async ({ employeeID, ...employeeUpdateData }) => {
 let getEmployeesByCompanyID = async ({ companyID, filters }) => {
   try {
     let employeesCursor;
-    console.log({ filters });
     let filterBuilder = {};
     if (filters.enrollment_state === "enrolled") {
       filterBuilder["enrollment_state.state"] = { $eq: "enrolled" };
@@ -127,29 +126,26 @@ let getEmployeesByCompanyID = async ({ companyID, filters }) => {
   }
 };
 
-let getTotalSalaries = async ({ filters={} }) => {
+let getTotalSalaries = async ({ filters = {} }) => {
   try {
-    /*let cursor = employeesCol.aggregate([
-      {
-        $match: {
-          companyID: companyID,
-        },
-      },
-      {
-        $group: {
-          _id: "$companyID",
-          total_monthly_salaries: {
-            $sum: {
-              $toInt: "$monthly_salary",
-            },
-          },
-        },
-      },
-    ]); */
-   let {err,accumulationObj}=await getCalculatedAccumulations({filters});
-   console.log({accumulationObj})
+    let { err, accumulationObj } = await getCalculatedAccumulations({
+      filters,
+    });
     let total_monthly_salaries = accumulationObj.accumulatedTotalSalaries || 0;
     return { total_monthly_salaries };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+let getAmountToRefund = async ({ filters = {} }) => {
+  try {
+    let { err, accumulationObj } = await getCalculatedAccumulations({
+      filters,
+    });
+    let accumulatedReconciledDebts = accumulationObj.accumulatedReconciledDebts;
+    let amountToRefund=accumulatedReconciledDebts
+    return { amountToRefund };
   } catch (error) {
     console.log(error);
   }
@@ -220,7 +216,7 @@ let getEmployeeByAccountID = async ({ accountID }) => {
   }
 };
 
-let getEmployeesDetails = async ({ filters= {} }) => {
+let getEmployeesDetails = async ({ filters = {} }) => {
   try {
     let agg = composeGetEmployeesDetailsAgg(filters);
     let cursor = employeesCol.aggregate(agg);
@@ -278,6 +274,7 @@ async function checkIfEmployeePropExists({ prop, value }) {
     return { exists: true };
   } catch (error) {
     console.log(error);
+    return { err: error };
   }
 }
 
@@ -653,5 +650,5 @@ module.exports = {
   getEmployeesTableInfo,
   getEmployeesFlexibleAccessTableInfo,
   getEmployeeDetailsByEmployeeID,
-  getEmployeesDetails,
+  getEmployeesDetails,getAmountToRefund
 };

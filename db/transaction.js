@@ -220,10 +220,103 @@ let updateTransactionByID = async ({
   }
 };
 
+let updateTransactionByTransactionReference = async ({
+  transaction_reference,
+  updates: { status, accountIDofUpdater, },
+  update_processing_attempts = true,
+}) => {
+  try {
+    const result = await transactionsCol.findOneAndUpdate(
+      { transaction_reference },
+      [
+        {
+          $set: {
+            processing_attempts: {
+              $cond: {
+                if: {
+                  $and: [
+                    {
+                      update_processing_attempts,
+                    },
+                    {
+                      $eq: ["$status.name", "processing"],
+                    },
+                  ],
+                },
+                then: { $sum: [{ $ifNull: ["$processing_attempts", 0] }, 1] },
+                else: "$processing_attempts",
+              },
+            },
+          },
+        },
+        {
+          $set: {
+            status: {
+              $cond: {
+                if: {
+                  $and: [
+                    status,
+                    { $in: ["$status.name", ["initiated", "processing"]] },
+                  ],
+                },
+                then: {
+                  name: status,
+                  updatedBy: accountIDofUpdater,
+                  updatedAt: new Date(),
+                },
+                else: "$status",
+              },
+            },
+            tempStatus: "$status",
+          },
+        },
+        {
+          $set: {
+            status_history: {
+              $cond: {
+                if: {
+                  $and: [status, { $ne: ["$tempStatus.name", status] }],
+                },
+                then: {
+                  $cond: {
+                    if: { $and: ["$status_history"] },
+                    then: {
+                      $concatArrays: ["$status_history", ["$tempStatus"],],
+                    },
+                    else: ["$tempStatus"],
+                  },
+                },
+                else: {
+                  $ifNull: ["$status_history", [["$tempStatus"]]],
+                },
+              },
+            },
+          },
+        },
+        {
+          $set: {
+            lastModified: new Date(),
+          },
+        },
+        /* {
+          $unset: "tempStatus",
+        },*/
+      ],
+      { returnDocument: "after" }
+    );
+    if (!result.ok) {
+      return {err:{msg:"Failed to update transaction."}}
+    }
+    return { info: "Updated", value: result.value };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
 module.exports = {
   getTransactionsByCompanyID,
   createTransaction,
   getTransactionByTransactionID,
   getTransactionByID,
-  updateTransactionByID,getTransactionsByFilters
+  updateTransactionByID,getTransactionsByFilters,updateTransactionByTransactionReference
 };

@@ -23,6 +23,7 @@ const {
 const { updateWithdrawalByTransactionID } = require("./withdrawal");
 const { getEmployeesSumOfWithdrawn } = require("./calculations");
 const { DateTime } = require("luxon");
+const { autoVerifyRefunds } = require("./jobs/auto_verify_refunds");
 
 let attemptChangeEnrollmentStatus = async ({
   accountID,
@@ -129,13 +130,21 @@ let attemptChangeEnrollmentStatusCronJob = async () => {
   }
 };
 
-let attemptReInitiateTransferCronJob = async () => {
+let attemptReInitiateWithdrawalTransferCronJob = async () => {
   try {
     const agg = [
       {
         $match: {
           "status.name": "processing",
           "status.transfer_code": { $exists: false },
+          $and:
+            [{
+              $expr: {
+                $eq: [
+                  "$type","withdrawal",
+                ],
+              },
+            }],
           $or: [
             {
               processing_attempts: {
@@ -258,6 +267,16 @@ let attemptAutoFailLongTransactionsCronJob = async () => {
               ],
             },
           },
+         /* {
+            $expr: {
+              $eq: [
+                "$type",
+                {
+                  $ifNull: [type, "$type"],
+                },
+              ],
+            },
+          },*/
          { transfer_code:{$exists:false}}
         ],
       },
@@ -304,7 +323,6 @@ let attemptAutoFailLongTransactionsCronJob = async () => {
         },
       ]
     ,{});
-    //console.log(result);
   } catch (error) {
     console.log(error);
     return { err: error };
@@ -313,10 +331,10 @@ let attemptAutoFailLongTransactionsCronJob = async () => {
 
 let attemptAutoFailLongWithdrawalCronJob = async () => {
   try {
-    let getTransactionsByFiltersRes = await getTransactionsByFilters({
-      status: "failed",
+    let getWithdrawalTransactionsByFiltersRes = await getTransactionsByFilters({
+      status: "failed",type:"withdrawal"
     });
-    let { transactions: listOfFailedTransactions } = getTransactionsByFiltersRes;
+    let { transactions: listOfFailedTransactions } = getWithdrawalTransactionsByFiltersRes;
     let promises = listOfFailedTransactions.map((obj) =>
       updateWithdrawalByTransactionID({
         transactionID: obj._id.toString(),
@@ -332,11 +350,10 @@ let attemptAutoFailLongWithdrawalCronJob = async () => {
   }
 };
 
-
 let attemptUpdateCancelledWithdrawalCronJob = async () => {
   try {
     let getTransactionsByFiltersRes = await getTransactionsByFilters({
-      status: "cancelled",
+      status: "cancelled",type:"withdrawal"
     });
     let { transactions: listOfCancelledTransactions } = getTransactionsByFiltersRes;
     let promises = listOfCancelledTransactions.map((obj) =>
@@ -404,10 +421,10 @@ let createRecipientCodeCronJob = async () => {
   }
 };
 
-let transactionWork = async () => {
+let withdrawalTransactionWork = async () => {
   try {
     let listOfProcessingTransactionsCursor = await transactionsCol.find({
-      "status.name": "processing",
+      "status.name": "processing",type:"withdrawal"
     });
     let listOfProcessingTransactions =
       await listOfProcessingTransactionsCursor.toArray();
@@ -434,7 +451,7 @@ let transactionWork = async () => {
           if (updateRes.transaction) {
             let withdrawalUpdateRes = await updateWithdrawalByTransactionID({
               transactionID,
-              status: "success",
+             updates:{ status: "completed"},
             });
           }
         }
@@ -476,11 +493,11 @@ let job2 = new CronJob("0 * * * * *", async function (params) {
 });
 
 let job3 = new CronJob("*/10 * * * * *", async function (params) {
-  transactionWork();
+  withdrawalTransactionWork();
 });
 
 let job4 = new CronJob("*/10 * * * * *", async function (params) {
-  attemptReInitiateTransferCronJob();
+  attemptReInitiateWithdrawalTransferCronJob();
 });
 
 let job5 = new CronJob("*/10 * * * * *", async function (params) {
@@ -496,13 +513,18 @@ let job7 = new CronJob("*/10 * * * * *", async function (params) {
 let job8 = new CronJob("*/10 * * * * *", async function (params) {
   attemptUpdateCancelledWithdrawalCronJob();
 });
+let job9 = new CronJob("*/10 * * * * *", async function (params) {
+  autoVerifyRefunds();
+});
+
 registerJob("attemptChangeEnrollmentStatusCronJob", job);
 registerJob("createRecipientCodeCronJob", job2);
 registerJob("transactionWork", job3);
-registerJob("attemptReInitiateTransferCronJob", job4);
+registerJob("attemptReInitiateWithdrawalTransferCronJob", job4);
 registerJob("attemptUpdateWithdrawal", job5);
 registerJob("attemptCancelLongWithdrawalCronJob", job6);
 registerJob("attemptCancelLongTransactionsCronJob", job7);
 registerJob("attemptUpdateCancelledWithdrawalCronJob", job8);
+registerJob("autoVerifyRefunds", job9);
 
 module.exports = { attemptChangeEnrollmentStatus, getEmployeesSumOfWithdrawn };

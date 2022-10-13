@@ -20,9 +20,12 @@ router.use(
       if (companyRes?.err) {
         return res.json(companyRes);
       }
+      let filters=req.query;
+      filters.companyID=companyID
       req.session.queried = { ...req.session.queried };
       req.session.queried.company = companyRes.company;
       req.session.queried.companyID = companyID;
+      req.session.queried.filters=filters
       next();
     } catch (error) {
       console.log(error);

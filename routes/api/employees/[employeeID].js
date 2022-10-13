@@ -20,7 +20,6 @@ router.get("/employee_details", async (req, res, next) => {
   try {
     let { employeeID } = req.session.queried;
     let getEmployeeDetailsByEmployeeIDRes = await getEmployeeDetailsByEmployeeID({employeeID});
-    console.log(getEmployeeDetailsByEmployeeIDRes)
     res.json(getEmployeeDetailsByEmployeeIDRes);
   } catch (error) {
     res.json({ err: error });

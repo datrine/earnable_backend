@@ -21,10 +21,6 @@ const tokenVerifyMW = require("../../utils/mymiddleware/tokenVerifyMW");
 const { getAuthAccount } = require("../../from/utils/middlewares/getAuthAccount");
 const { getAccount } = require("../../from/utils/middlewares/getAccount");
 
-router.use((req, res, next) => {
-    next();
-});
-
 router.use("/email", emailRouter);
 
 router.use("/users", usersRouter);
