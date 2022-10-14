@@ -578,7 +578,7 @@ let job9 = new CronJob("*/10 * * * * *", async function (params) {
   autoVerifyRefunds();
 });
 let job10 = new CronJob("*/10 * * * * *", async function (params) {
-  setSalaryDatesOfCompany();
+  //setSalaryDatesOfCompany();
 });
 //
 registerJob("attemptChangeEnrollmentStatusCronJob", job);
