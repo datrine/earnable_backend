@@ -65,7 +65,7 @@ router.post(
   async (req, res, next) => {
     try {
       let {
-        company: { companyID },
+        company: { companyID,salaryMonthID,salaryYearID },
         department: { departmentID },
         employee_details: { employeeID },
         transactionInfo,
@@ -86,6 +86,7 @@ router.post(
         departmentID,
         transactionID,
         transactionInfo,
+        salaryMonthID,salaryYearID ,
         purpose: "employee_payment",
         status:{name: "initiated",updatedAt:new Date()},
       });

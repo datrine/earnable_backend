@@ -13,6 +13,7 @@ const { createInitialCompanyRoles } = require("../../../db/role");
 const { createResource } = require("../../../db/resource");
 const { getOrCreateCompanyWallet } = require("../../../db/wallet");
 const { company: companyTemplate } = require("../../../utils/templates");
+const { DateTime } = require("luxon");
 
 router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
   try {
@@ -42,8 +43,18 @@ router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     if (!preCompanyData.rc_number) {
       return res.json({ err: { msg: "No company rc number supplied" } });
     }
+    let dateOf = DateTime.fromObject({ day: salary_date });
+    let next_salary_date = DateTime.fromObject({ day: salary_date });
+    if (DateTime.now() > dateOf) {
+      next_salary_date = next_salary_date.plus({ month: 1 });
+    }
+    let salaryMonthID=next_salary_date.month;
+    let salaryYearID=next_salary_date.year;
+preCompanyData.next_salary_date=next_salary_date
+preCompanyData.salaryMonthID=salaryMonthID;
+preCompanyData.salaryYearID=salaryYearID;
 
-    preCompanyData.creatorMeta = {
+preCompanyData.creatorMeta = {
       _id: ObjectId(account._id),
       accountID: account.accountID,
     };

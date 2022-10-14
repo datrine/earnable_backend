@@ -636,6 +636,7 @@ let getEmployeesFlexibleAccessTableInfo = async ({ filters }) => {
     return { err: error };
   }
 };
+
 module.exports = {
   addEmployee,
   getEmployeesByCompanyID,

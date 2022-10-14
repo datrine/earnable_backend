@@ -11,6 +11,18 @@ const {
 } = require("../../db/calculations");
 const { getTotalSalaries, getAmountToRefund } = require("../../db/employee");
 
+router.get("/reconciliated_salary_list", async (req, res, next) => {
+    try {
+      let { filters } = req.session.queried;
+      let getEmployeesSumOfWithdrawnRes = await getEmployeesSumOfWithdrawn({
+        filters,
+      });
+      res.json(getEmployeesSumOfWithdrawnRes);
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
 router.get("/total_withdrawal", async (req, res, next) => {
   try {
     let { filters } = req.session.queried;
@@ -39,13 +51,11 @@ router.get("/available_flexible_access", async (req, res, next) => {
     let availableFlexibleAccessRes = await getAvailableFlexibleAccess({
       filters,
     });
-    console.log({availableFlexibleAccessRes})
     res.json({...availableFlexibleAccessRes,filters});
   } catch (error) {
     console.log(error);
   }
 });
-
 
 router.get("/debt_list", async (req, res, next) => {
     try {
@@ -53,7 +63,6 @@ router.get("/debt_list", async (req, res, next) => {
       let getDebtListRes = await getDebtList({
         filters,
       });
-      console.log({getDebtListRes})
       res.json({...getDebtListRes,filters});
     } catch (error) {
       console.log(error);

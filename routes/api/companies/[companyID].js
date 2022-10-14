@@ -5,9 +5,11 @@ const companyDepartmentsRouter = require("./departments");
 const companyAdminsRouter = require("./admins");
 const companyTransactionsRouter = require("../transactions");
 const calculationsRouter = require("../calculations");
+const settingsRouter = require("./settings");
 const companyWithdrawalHistoryRouter = require("./withdrawal_history");
-const companyWalletRouter = require("./wallets");
+const companyWalletRouter = require("../wallets");
 const { getEmployeesByCompanyID } = require("../../../db/employee");
+const { setCompanySalaryDate } = require("../../../db/company");
 
 router.use("/roles", companyRolesRouter);
 
@@ -39,9 +41,19 @@ router.use("/admins", companyAdminsRouter);
 
 router.use("/calculations",calculationsRouter);
 
+router.use("/settings",settingsRouter);
+
+router.put("/change_salary_date", async (req, res, next) => {
+    let { companyID } = req.session.queried;
+    let { salary_date } = req.body;
+   let setCompanySalaryDateRes=await setCompanySalaryDate({companyID,salary_date});
+   console.log(setCompanySalaryDateRes)
+    return res.json(setCompanySalaryDateRes)
+});
 
 router.get("/", async (req, res, next) => {
     let { company } = req.session.queried;
     return res.json({ company })
 });
+
 module.exports = router;

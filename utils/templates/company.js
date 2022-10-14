@@ -16,6 +16,12 @@ let company = {
      */
     flexible_access_mode:"",
     lastModified:"",
+    /**
+     * @type {Date}
+     */
+    next_salary_date:undefined,
+    salaryMonthID:0,
+    salaryYearID:0,
     createdOn: "2022-07-07T23:26:51.692Z",
     updatedOn: "2022-07-07T23:26:51.692Z"
 }

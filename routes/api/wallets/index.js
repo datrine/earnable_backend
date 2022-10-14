@@ -97,12 +97,13 @@ router.post("/", async(req, res, next) => {
 });
 
 
-router.get("/:companyID", async(req, res, next) => {
+router.get("/balance", async(req, res, next) => {
     try {
-    let { companyID,walletID } = req.params
+    let { companyID,walletID } = req.session.queried
+    console.log({companyID});
     if (companyID) {
-       let walletRes=await getWalletByCompanyID();
-       console.log(walletRes);
+       let walletRes=await getWalletByCompanyID(companyID);
+       console.log({walletRes});
        return res.json(walletRes)
     }
     } catch (error) {

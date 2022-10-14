@@ -9,7 +9,7 @@ let createWithdrawal = async ({
   employeeID,
   companyID,
   transactionInfo,
-  transactionID,
+  transactionID,salaryMonthID,salaryYearID ,
   purpose = "employee_payment",
   status ={name: "processing",updatedAt:new Date()},
 }) => {
@@ -18,7 +18,7 @@ let createWithdrawal = async ({
     employeeID,
     companyID,
     transactionID,
-    status,
+    status,salaryMonthID,salaryYearID ,
     transactionInfo,
     type: purpose,
     lastModified: new Date(),
