@@ -20,18 +20,18 @@ function dateIsValid(date) {
 }
 
 let getEmployeesSumOfWithdrawn = async ({ filters = {} }) => {
-    try {
-      let { err, accumulationObj } = await getCalculatedAccumulations({
-        filters,
-      });
-      return {
-        totalFlexibleWithdrawal: accumulationObj.accumulatedTotalWithdrawals,
-        filters,
-      };
-    } catch (error) {
-      console.log(error);
-      return {err:error};
-    }
+  try {
+    let { err, accumulationObj } = await getCalculatedAccumulations({
+      filters,
+    });
+    return {
+      totalFlexibleWithdrawal: accumulationObj.accumulatedTotalWithdrawals,
+      filters,
+    };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
 };
 
 let getCalculatedAccumulations = async ({ filters }) => {
@@ -42,7 +42,7 @@ let getCalculatedAccumulations = async ({ filters }) => {
      * @type {[accumulationsTemplate]}
      */
     let docs = await cursor.toArray();
-    return { accumulationObj: docs[0],filters };
+    return { accumulationObj: docs[0], filters };
   } catch (error) {
     console.log(error);
     return { err: error };
@@ -103,7 +103,7 @@ let getReconciliationReport = async ({
     let { err, list } = await getCalculatedList({
       filters,
     });
-    return { reconciliation_report:list };
+    return { reconciliation_report: list };
   } catch (error) {
     console.log(error);
     return { err: error };
@@ -139,7 +139,6 @@ let getTotalNetPayMethod1 = async ({ filters }) => {
   }
 };
 
-
 let getEmployeeNetEarning = async ({ filters = {} }) => {
   try {
     if (!filters?.employeeID) {
@@ -165,6 +164,20 @@ let getTotalNetPay = async ({ filters = {} }) => {
   }
 };
 
+let getTotalWithdrawalCount = async ({ filters = {} }) => {
+  try {
+    let { err, accumulationObj } = await getCalculatedAccumulations({
+      filters,
+    });
+    let { totalFilteredWithdrawals: withdrawal_count } = accumulationObj;
+    //console.log({ accumulationObj, filters });
+    return { withdrawal_count ,filters};
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 let getAvailableFlexibleAccess = async ({ filters = {} }) => {
   try {
     let { err, accumulationObj } = await getCalculatedAccumulations({
@@ -172,7 +185,8 @@ let getAvailableFlexibleAccess = async ({ filters = {} }) => {
     });
     return {
       availableFlexibleAccess:
-        accumulationObj.accumulatedAvailableFlexibleAccess,filters
+        accumulationObj.accumulatedAvailableFlexibleAccess,
+      filters,
     };
   } catch (error) {
     console.log(error);
@@ -187,5 +201,9 @@ module.exports = {
   getTotalNetPay: getEmployeeNetEarning,
   getEmployeeNetEarning,
   getCalculatedAccumulations,
-  getAvailableFlexibleAccess,getTotalNetPay,getReconciliationReport,getDebtList
+  getAvailableFlexibleAccess,
+  getTotalNetPay,
+  getReconciliationReport,
+  getDebtList,
+  getTotalWithdrawalCount,
 };

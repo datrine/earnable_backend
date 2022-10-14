@@ -12,23 +12,32 @@ let composeGetCalculatedListAgg = (filters) => {
     year = DateTime.now().year,
     weekNumber,
     accountID,
+    salaryMonthID,
+    salaryYearID,
     monthNumber = DateTime.now().month,
   } = filters;
-  (withdrawal_states =
+  withdrawal_states =
     Array.isArray(withdrawal_states) && withdrawal_states.length > 0
       ? withdrawal_states
-      : null),
-    (from = !!from
-      ? DateTime.isDateTime(DateTime.fromISO(from))
-        ? new Date(from)
-        : null
-      : null);
+      : null;
+  from = !!from
+    ? DateTime.isDateTime(DateTime.fromISO(from))
+      ? new Date(from)
+      : null
+    : null;
   to = !!to
     ? DateTime.isDateTime(DateTime.fromISO(to))
       ? new Date(to)
       : null
     : null;
-  console.log({ to, from });
+  salaryMonthID = Number.isInteger(Number(salaryMonthID))
+    ? Number(salaryMonthID)
+    : null;
+  salaryYearID = Number.isInteger(Number(salaryYearID))
+    ? Number(salaryYearID)
+    : null;
+  //to = null;
+  //from = null;
   let agg = [
     {
       $match: {
@@ -43,7 +52,7 @@ let composeGetCalculatedListAgg = (filters) => {
               ],
             },
           },
-          {
+          /**/ {
             $expr: {
               $eq: [
                 "$_id",
@@ -272,15 +281,27 @@ let composeGetCalculatedListAgg = (filters) => {
                   ],
                 },
                 {
-                  $lte: [
-                    { $ifNull: [from, "$$withdrawal.status.updatedAt"] },
-                    "$$withdrawal.status.updatedAt",
+                  $eq: [
+                    { $ifNull: [salaryMonthID, "$$withdrawal.salaryMonthID"] },
+                    "$$withdrawal.salaryMonthID",
+                  ],
+                },
+                {
+                  $eq: [
+                    { $ifNull: [salaryYearID, "$$withdrawal.salaryYearID"] },
+                    "$$withdrawal.salaryYearID",
                   ],
                 },
                 {
                   $gte: [
-                    { $ifNull: [to, "$$withdrawal.status.updatedAt"] },
-                    "$$withdrawal.status.updatedAt",
+                    "$$withdrawal.createdOn",
+                    { $ifNull: [from, "$$withdrawal.createdOn"] },
+                  ],
+                },
+                {
+                  $lte: [
+                    "$$withdrawal.createdOn",
+                    { $ifNull: [to, "$$withdrawal.createdOn"] },
                   ],
                 },
               ],

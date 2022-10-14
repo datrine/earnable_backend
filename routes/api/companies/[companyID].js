@@ -4,7 +4,7 @@ const companyEmployeesRouter = require("../employees");
 const companyDepartmentsRouter = require("./departments");
 const companyAdminsRouter = require("./admins");
 const companyTransactionsRouter = require("../transactions");
-const calculationsRouter = require("../calculations");
+const companyCalculationsRouter = require("../calculations");
 const settingsRouter = require("./settings");
 const companyWithdrawalHistoryRouter = require("./withdrawal_history");
 const companyWalletRouter = require("../wallets");
@@ -39,7 +39,7 @@ router.use("/withdrawal_history", companyWithdrawalHistoryRouter);
 
 router.use("/admins", companyAdminsRouter);
 
-router.use("/calculations",calculationsRouter);
+router.use("/calculations",companyCalculationsRouter);
 
 router.use("/settings",settingsRouter);
 

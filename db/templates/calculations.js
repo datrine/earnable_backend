@@ -578,7 +578,7 @@ let debtListTemplate = {
   ],
   "totalFilteredWithdrawalRefunds": 32220,
   "totalFilteredWithdrawalFeeByEmployer": 409.425,
-  "totalFilteredDebtToPay": 32629.425
+  "totalFilteredDebtToPay": 32629.425,
 };
 
 module.exports = {

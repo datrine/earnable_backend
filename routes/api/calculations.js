@@ -8,6 +8,7 @@ const {
   getEmployeesSumOfWithdrawn,
   getReconciliationReport,
   getDebtList,
+  getTotalWithdrawalCount,
 } = require("../../db/calculations");
 const { getTotalSalaries, getAmountToRefund } = require("../../db/employee");
 
@@ -64,6 +65,17 @@ router.get("/debt_list", async (req, res, next) => {
         filters,
       });
       res.json({...getDebtListRes,filters});
+    } catch (error) {
+      console.log(error);
+    }
+  });
+  
+  
+router.get("/total_withdrawal_count", async (req, res, next) => {
+    try {
+      let { filters } = req.session.queried;
+      let total_withdrawal = await getTotalWithdrawalCount({ filters });
+      res.json(total_withdrawal);
     } catch (error) {
       console.log(error);
     }
