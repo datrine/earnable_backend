@@ -25,6 +25,8 @@ const { updateWithdrawalByTransactionID } = require("./withdrawal");
 const { getEmployeesSumOfWithdrawn } = require("./calculations");
 const { DateTime } = require("luxon");
 const { autoVerifyRefunds } = require("./jobs/auto_verify_refunds");
+const { autoPreparePayrolls } = require("./jobs/auto_prepare_payroll");
+const { autoPaySalaries, autoPrepareSalaryTransactions } = require("./jobs/auto_pay_salaries");
 
 let setSalaryDatesOfCompany = async () => {
   try {
@@ -37,7 +39,7 @@ let setSalaryDatesOfCompany = async () => {
               {
                 $ifNull: [
                   "$next_salary_date",
-                  {
+                  /* */ {
                     $dateFromParts: {
                       year: { $year: "$$NOW" },
                       month: { $month: "$$NOW" },
@@ -54,21 +56,56 @@ let setSalaryDatesOfCompany = async () => {
       [
         {
           $set: {
+            prev_salary_date: "$next_salary_date",
             next_salary_date: {
-              $dateAdd: {
-                startDate: "$next_salary_date",
-                unit: "month",
-                amount: 1,
+              $cond: {
+                if: {
+                  $lt: [
+                    "$$NOW",
+                    {
+                      $dateFromParts: {
+                        year: { $year: "$next_salary_date" },
+                        month: { $month: "$next_salary_date" },
+                        day: { $toInt: "$salary_date" },
+                      },
+                    },
+                  ],
+                },
+                then: {
+                  $dateFromParts: {
+                    year: { $year: "$next_salary_date" },
+                    month: { $month: "$next_salary_date" },
+                    day: { $toInt: "$salary_date" },
+                  },
+                },
+                else: {
+                  $let: {
+                    vars: {
+                      incDate: {
+                        $dateAdd: {
+                          startDate: "$next_salary_date",
+                          unit: "month",
+                          amount: 1,
+                        },
+                      },
+                    },
+                    in: {
+                      $dateFromParts: {
+                        year: { $year: "$$incDate" },
+                        month: { $month: "$$incDate" },
+                        day: { $toInt: "$salary_date" },
+                      },
+                    },
+                  },
+                },
               },
             },
           },
         },
         {
           $set: {
-            salaryMonthID: {$month:"$next_salary_date"
-            },
-            salaryYearID: {$year:"$next_salary_date"
-            },
+            salaryMonthID: { $month: "$next_salary_date" },
+            salaryYearID: { $year: "$next_salary_date" },
             lastModified: new Date(),
           },
         },
@@ -545,6 +582,131 @@ let attemptUpdateWithdrawal = async () => {
   }
 };
 
+
+
+let attemptProcessPayrollTransactionsCronJob = async () => {
+  try {
+    const agg = [
+      {
+        $match: {
+          "status.name": "initiated",
+          "status.transfer_code": { $exists: false },
+          $and: [
+            {
+              $expr: {
+                $eq: ["$type", "payroll_payment"],
+              },
+            },
+          ],
+          $or: [
+            {
+              processing_attempts: {
+                $lt: 4,
+              },
+            },
+            {
+              processing_attempts: {
+                $exists: false,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "bank_details",
+          localField: "accountID",
+          foreignField: "accountID",
+          as: "uuu",
+        },
+      },
+      {
+        $addFields: {
+          recipient_code: {
+            $arrayElemAt: ["$uuu", 0],
+          },
+        },
+      },
+      {
+        $addFields: {
+          recipient_code: "$recipient_code.recipient_code",
+        },
+      },
+      {
+        $unset: "uuu",
+      },
+    ];
+    const cursor = transactionsCol.aggregate(agg);
+
+    /**
+     * @type {[transactionTemplate]}
+     */
+    const result = await cursor.toArray();
+    let toGoArray = result.map((obj) => ({
+      reason: "Earnable payment",
+      amount: obj.amountToWithdraw * 100,
+      recipient: obj.recipient_code,
+      transactionID: obj._id.toString(),
+      accountID: obj.status.updatedBy,
+    }));
+    let promises = await Promise.allSettled([
+      ...toGoArray.map(async (obj) => ({
+        ...(await initiateTransfer(obj)),
+        transactionID: obj.transactionID,
+        accountID: obj.accountID,
+      })),
+    ]);
+    for (const promise of promises) {
+      if (promise.status === "rejected") {
+        continue;
+      }
+
+      if (promise.value?.err) {
+        let err = promise.value.err;
+        if (err?.type === "failed_transfer") {
+          let updates = {};
+          let transactionUpdateRes = await updateTransactionByID({
+            transactionID: promise.value.transactionID,
+            update_processing_attempts: true,
+          });
+        }
+        continue;
+      }
+      let transferCode = promise.value.transfer_code;
+      let transactionUpdateRes = await updateTransactionByID({
+        transactionID: promise.value.transactionID,
+        updates: {
+          transfer_code: transferCode,
+          accountIDofUpdater: promise.value.accountID,
+          status: "completed",
+        },
+      });
+      if (transactionUpdateRes.err) {
+        console.log(transactionUpdateRes);
+        return;
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let job = new CronJob("0 * * * * *", async function (params) {
   attemptChangeEnrollmentStatusCronJob();
 });
@@ -578,8 +740,24 @@ let job9 = new CronJob("*/10 * * * * *", async function (params) {
   autoVerifyRefunds();
 });
 let job10 = new CronJob("*/10 * * * * *", async function (params) {
-  //setSalaryDatesOfCompany();
+  try {
+    let results = await autoPreparePayrolls();
+    if (results) {
+      await setSalaryDatesOfCompany();
+    }
+  } catch (error) {
+    console.log(error);
+  }
 });
+
+let job11 = new CronJob("*/10 * * * * *", async function (params) {
+  try {
+   //await autoPrepareSalaryTransactions()
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 //
 registerJob("attemptChangeEnrollmentStatusCronJob", job);
 registerJob("createRecipientCodeCronJob", job2);
@@ -591,5 +769,6 @@ registerJob("attemptCancelLongTransactionsCronJob", job7);
 registerJob("attemptUpdateCancelledWithdrawalCronJob", job8);
 registerJob("autoVerifyRefunds", job9);
 registerJob("setSalaryDatesOfCompany", job10);
+registerJob("autoPaySalaries", job11);
 
 module.exports = { attemptChangeEnrollmentStatus, getEmployeesSumOfWithdrawn };

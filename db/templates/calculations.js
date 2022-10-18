@@ -581,8 +581,88 @@ let debtListTemplate = {
   "totalFilteredDebtToPay": 32629.425,
 };
 
+
+let payrollTemplate={
+  _id: new ObjectId("634bc5360a16d271d8055a60"),
+  companyID: '630f2a2387b40d7834830e0e',
+  salaryMonthID: 10,
+  salaryYearID: 2022,
+  auto_make_payroll_payment: true,
+  companyName: 'Datrisoft Initiative',
+  /**
+   * @type {{name:"fully_paid"|"unpaid"|"failed",updatedAt:Date}}
+   */
+  totalSalaryPaymentStatus:undefined,
+  employeePayrollInfo: {
+    _id: [Object],
+    employeeTotalWithdrawal: 37182.5,
+    employeeGrossSalary: 60000,
+    companyID: '630f2a2387b40d7834830e0e',
+    companyName: 'Datrisoft Initiative',
+    auto_make_payroll_payment: true,
+    employeeID: '633235f93ad738e40fe5b59f',
+    employeeAccountID:"",
+    employeeBankCode: '044',
+    employeeBankName: 'ACCESS BANK',
+    employeeAccNumber: '0781077095',
+    employeeAccRecipientCode: 'RCP_yoc9c5yfuzvwr2w',
+    employeeAccName: 'Alabi Olutomi',
+    salaryMonthID: 10,
+    salaryYearID: 2022,
+    /**
+     * @type {{name:"initiated"|"completed"|"failed",updatedAt:Date}}
+     */
+    salary_payment_status:undefined,
+    employeeFirstName: 'Olutomi',
+    employeeLastName: 'Alabi',
+    employeeEmail: 'topeomoalabi@gmail.com',
+    employeePhoneNum: '+2348052573344',
+    /**
+     * @type {[]|string}
+     */
+    employeeJobTitle: undefined,
+    employeeDeptID: '631e0b43df217865eba479c4',
+    employeeDepartment: 'Security',
+    /**
+     * @type {Date}
+     */
+    prev_salary_date: null,
+    /**
+     * @type {Date}
+     */
+    next_salary_date:undefined,
+    employeeNetSalary: 22817.5,
+    /**
+     * @type {Date}
+     */
+    lastModified:undefined,
+    /**
+     * @type {Date}
+     */
+    createdModified:undefined,
+  },
+  employeesTotalGrossSalaries: 60000,
+  employeesTotalNetSalaries: 22817.5,
+  /**
+   * @type {Date}
+   */
+  next_salary_date: undefined,
+  /**
+   * @type {Date}
+   */
+  prev_salary_date: null,
+  /**
+   * @type {Date}
+   */
+  lastModified:undefined,
+  /**
+   * @type {Date}
+   */
+  createdModified:undefined,
+}
+
 module.exports = {
   calculationItemTemplate,
   accumulationsTemplate,
-  debtListTemplate,
+  debtListTemplate,payrollTemplate
 };

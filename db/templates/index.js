@@ -2,7 +2,7 @@ const accTemplate = require("./account");
 const bankDetailsTemplate = require("./bankDetails");
 const {
   calculationItemTemplate,
-  accumulationsTemplate,
+  accumulationsTemplate,payrollTemplate
 } = require("./calculations");
 const contactsTemplate = require("./contacts");
 const employeeTemplate = require("./employee");
@@ -15,5 +15,5 @@ module.exports = {
   employeeTemplate,
   bankDetailsTemplate,
   calculationItemTemplate,
-  accumulationsTemplate,
+  accumulationsTemplate,payrollTemplate
 };

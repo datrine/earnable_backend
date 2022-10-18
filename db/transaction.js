@@ -3,7 +3,13 @@ const db = clientConn.db("waleprj");
 const transactionsCol = db.collection("transactions");
 const { ObjectID } = require("bson");
 
-let getTransactionsByFilters = async ({ status,accountID,transfer_code,type,transfer_code_exists }) => {
+let getTransactionsByFilters = async ({
+  status,
+  accountID,
+  transfer_code,
+  type,
+  transfer_code_exists,
+}) => {
   let aggr = [
     {
       $match: {
@@ -48,9 +54,10 @@ let getTransactionsByFilters = async ({ status,accountID,transfer_code,type,tran
               ],
             },
           },
-          { transfer_code:{
-            $exists:transfer_code_exists
-          }
+          {
+            transfer_code: {
+              $exists: transfer_code_exists,
+            },
           },
         ],
       },
@@ -81,6 +88,62 @@ let getTransactionByTransactionID = async ({ transactionID, ...updates }) => {
   } catch (error) {
     console.log(error);
     return { err: error };
+  }
+};
+
+let createPayrollTransactionFromWallet = async ({
+  employeeID,
+  salaryMonthID,
+  salaryYearID,
+  companyID,
+  accountID,
+  recipient_code,
+  amountToPay,
+  type = "payroll_payment",
+  session,
+}) => {
+  try {
+    let result = await transactionsCol.insertOne(
+      {
+        employeeID,
+        salaryMonthID,
+        salaryYearID,
+        companyID,
+        accountID,
+        recipient_code,
+        amountToPay,
+        type,
+        status: {
+          name: "initiated",
+          updatedBy: accountID,
+          updatedAt: new Date(),
+        },
+        processing_attempts: 1,
+        status_history: [],
+        lastModified: new Date(),
+        createdOn: new Date(),
+      },
+      { session }
+    );
+    if (!result?.insertedId) {
+      return { err: { msg: "No trasanction created." } };
+    }
+    return {
+      transactionID: result.insertedId.toString(),
+      salaryMonthID,
+      companyID,
+      salaryYearID,
+      status: "initiated",
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      err: error,
+      salaryMonthID,
+      companyID,
+      salaryYearID,
+      status: "failed",
+    };
   }
 };
 
@@ -190,7 +253,7 @@ let updateTransactionByID = async ({
                   $cond: {
                     if: { $and: ["$status_history"] },
                     then: {
-                      $concatArrays: ["$status_history", ["$tempStatus"],],
+                      $concatArrays: ["$status_history", ["$tempStatus"]],
                     },
                     else: ["$tempStatus"],
                   },
@@ -222,7 +285,7 @@ let updateTransactionByID = async ({
 
 let updateTransactionByTransactionReference = async ({
   transaction_reference,
-  updates: { status, accountIDofUpdater, },
+  updates: { status, accountIDofUpdater },
   update_processing_attempts = true,
 }) => {
   try {
@@ -281,7 +344,7 @@ let updateTransactionByTransactionReference = async ({
                   $cond: {
                     if: { $and: ["$status_history"] },
                     then: {
-                      $concatArrays: ["$status_history", ["$tempStatus"],],
+                      $concatArrays: ["$status_history", ["$tempStatus"]],
                     },
                     else: ["$tempStatus"],
                   },
@@ -305,7 +368,7 @@ let updateTransactionByTransactionReference = async ({
       { returnDocument: "after" }
     );
     if (!result.ok) {
-      return {err:{msg:"Failed to update transaction."}}
+      return { err: { msg: "Failed to update transaction." } };
     }
     return { info: "Updated", value: result.value };
   } catch (error) {
@@ -313,10 +376,14 @@ let updateTransactionByTransactionReference = async ({
     return { err: error };
   }
 };
+
 module.exports = {
   getTransactionsByCompanyID,
   createTransaction,
   getTransactionByTransactionID,
   getTransactionByID,
-  updateTransactionByID,getTransactionsByFilters,updateTransactionByTransactionReference
+  updateTransactionByID,
+  getTransactionsByFilters,
+  updateTransactionByTransactionReference,
+  createPayrollTransactionFromWallet,
 };
