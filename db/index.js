@@ -741,10 +741,10 @@ let job9 = new CronJob("*/10 * * * * *", async function (params) {
 });
 let job10 = new CronJob("*/10 * * * * *", async function (params) {
   try {
-    //let results = await autoPreparePayrolls();
+    /*let results = await autoPreparePayrolls();
     if (results) {
-     // await setSalaryDatesOfCompany();
-    }
+      await setSalaryDatesOfCompany();
+    }*/
   } catch (error) {
     console.log(error);
   }
