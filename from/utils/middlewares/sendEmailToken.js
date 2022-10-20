@@ -11,16 +11,16 @@ const SERVER_URL =
 
 let sendEmailToken = async (req, res, next) => {
     try {
-        let emailToSendToken = req.session.email;
+        let emailToSendToken = req.session.queried.email;
 
         if (!emailToSendToken) {
             console.log("No Email to send token...");
             return next()
         }
-        req.session.factor = "email";
-        req.session.type = "token_ver";
-        req.session.factorValue = emailToSendToken;
-        req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
+        req.session.queried.factor = "email";
+        req.session.queried.type = "token_ver";
+        req.session.queried.factorValue = emailToSendToken;
+        req.session.queried.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
         await saveToken({ ...req.session })
         let msg = `Thanks for registering at Earnable.
         Please verify Your email address. 
@@ -38,7 +38,6 @@ let sendEmailToken = async (req, res, next) => {
         next()
     } catch (error) {
         console.log(error);
-
         throw error
     }
 };

@@ -20,7 +20,10 @@ router.post("/direct", async (req, res, next) => {
         if (!account) {
             return res.json({ state });
         }
+        req.session.self={...req.session.self}
+        req.session.self.state = state
         req.session.account = account;
+        req.session.self.account = account;
         return res.json({ state, account });
     } catch (error) {
         console.log(error);

@@ -6,7 +6,7 @@ const { getEmployeeWithdrawalHistory } = require("../../../../db/withdrawal");
 
 router.use("/", async (req, res, next) => {
     try {
-        let { companyID, account } = req.session;
+        let { companyID, account } = req.session.queried;
         let { accountID } = account
         let employeeRes = await getEmployeeByAccountID({ accountID })
 
@@ -20,7 +20,7 @@ router.use("/", async (req, res, next) => {
 
         }
         let withdrawal_history = withdrawalHistoryRes.withdrawal_history;
-        req.session.withdrawal_history = withdrawal_history
+        req.session.queried.withdrawal_history = withdrawal_history
         next()
     } catch (error) {
         console.log(error)
@@ -29,7 +29,7 @@ router.use("/", async (req, res, next) => {
 
 router.get("/total_withdrawal", async (req, res, next) => {
     try {
-        let { withdrawal_history } = req.session;
+        let { withdrawal_history } = req.session.queried;
         let total_withdrawal=[...withdrawal_history].reduce((sum,currentObj,)=>{
             sum+=currentObj.amount;
             return sum
@@ -43,7 +43,7 @@ router.get("/total_withdrawal", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
     try {
-        let { withdrawal_history } = req.session;
+        let { withdrawal_history } = req.session.queried;
         res.json({withdrawal_history});
     } catch (error) {
         console.log(error)

@@ -64,7 +64,9 @@ router.use("/", async (req, res, next) => {
                 }
             })
         }
+        req.session.self={}
         req.session.sessID = sessID
+        req.session.self.sessID = sessID
         next()
     } catch (error) {
         console.log(error);
@@ -73,7 +75,5 @@ router.use("/", async (req, res, next) => {
 }, getAuthAccount);
 
 router.use("/me", selfRouter);
-
-walletRouter
 
 module.exports = router;

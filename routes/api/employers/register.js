@@ -9,9 +9,7 @@ router.post("/local", async (req, res, next) => {
     try {
         let prof_pic = req.files && req.files.prof_pic
         let data = req.body;
-        console.log(data)
         let allResponses = await registerFunc({ ...data, prof_pic });
-        console.log(allResponses)
         let { err, ...rest } = allResponses;
         if (err) {
             res.status = 400
@@ -31,7 +29,9 @@ router.post("/local", async (req, res, next) => {
                 }).catch(console.log)
         }
         res.json({ ...rest })
+        req.session.queried={...req.session.queried}
         req.session.email = req.body.email
+        req.session.queried.email = req.body.email
         next()
         /*let responseFromServer = await axios.post(`${AUTH_SERVER}/api/register/local`, { ...req.body });
         let data = responseFromServer.data

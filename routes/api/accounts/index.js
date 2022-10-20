@@ -27,32 +27,16 @@ router.use("/", getAuthAccount,);
 router.use("/subscriptions", subscriptionsRouter);
 
 router.use("/:accountID", async (req, res, next) => {
+    req.session.queried={...req.session.queried}
     req.session.paramAccountID = req.params.accountID
+    req.session.queried.paramAccountID = req.params.accountID
     console.log(req.session.paramAccountID)
     next()
 }, accountIDRouter);
 
-router.get("/", async (req, res, next) => {
-    try {
-        let { companyID, account } = req.session;
-        let { accountID } = account
-        getEmployeeByAccountID({ accountID })
-        let filters = req.query;
-        let withdrawalHistoryRes = await getEmployeeWithdrawalHistory({ employeeID, filters });
-        res.json(withdrawalHistoryRes);
-    } catch (error) {
-        console.log(error)
-    }
-});
-
-router.get("/", (req, res, next) => {
-
-    return res.json([])
-});
-
 router.use("/logout", getAuthAccount, async (req, res, next) => {
     try {
-        let { sessID } = req.session
+        let { sessID } = req.session.self
         let resLogOut = await accountLogOut({ sessID });
         console.log(resLogOut)
         res.json(resLogOut)

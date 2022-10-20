@@ -20,7 +20,7 @@ router.use("/bank_details", bankDetailsHistoryRouter);
 
 router.get("/employee_details", async (req, res, next) => {
     try {
-        let { paramAccountID } = req.session
+        let { paramAccountID } = req.session.queried
         let employeeRes = await getEmployeeByAccountID({ accountID: paramAccountID });
         return res.json({ ...employeeRes })
     } catch (error) {
