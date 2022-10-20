@@ -5,6 +5,8 @@ const {
   composeGetCalculatedListAgg,
   composeGetAccumulationsAgg,
   composeGetDebtListAgg,
+  calculateRefundAgg,
+  getPaymentListAgg,
 } = require("./pipelines/employer");
 const {
   calculationItemTemplate,
@@ -194,6 +196,20 @@ let getAvailableFlexibleAccess = async ({ filters = {} }) => {
   }
 };
 
+let getPaymentListForCompany = async ({ filters = {} }) => {
+  try {
+    let agg= getPaymentListAgg(filters);
+   let cursor= companiesCol.aggregate(agg);
+   let list=await cursor.toArray();
+
+    return {
+      companyPaymentList:list
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 module.exports = {
   getEmployeesSumOfWithdrawn,
   getTotalFlexibleAccess,
@@ -205,5 +221,5 @@ module.exports = {
   getTotalNetPay,
   getReconciliationReport,
   getDebtList,
-  getTotalWithdrawalCount,
+  getTotalWithdrawalCount,getPaymentListForCompany
 };

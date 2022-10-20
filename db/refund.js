@@ -1,4 +1,5 @@
 const { mongoClient } = require("../utils/conn/mongoConn");
+const { calculateRefundAgg } = require("./pipelines/employer");
 const waleprjDB = mongoClient.db("waleprj");
 const refundsCol = waleprjDB.collection("refunds");
 
@@ -266,6 +267,19 @@ let getRefundHistory = async ({ filters }) => {
     throw error;
   }
 };
+
+let getCalculatedRefund = async ({ companyID }) => {
+  try {
+    
+    let cursor = refundsCol.aggregate(calculateRefundAgg({companyID}));
+    let results=await cursor.toArray();
+    let amountToRefundObj = results[0]
+    return {  ...amountToRefundObj};
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
 module.exports = {
-  createRefund,updateRefundByTransactionID,getCompanyRefundHistory
+  createRefund,updateRefundByTransactionID,getCompanyRefundHistory,getCalculatedRefund
 };

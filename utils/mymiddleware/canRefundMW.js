@@ -19,13 +19,14 @@ const { retrieveAccountInfoByAccountID } = require("../../db/account");
 let canRefundMW = async (req, res, next) => {
   try {
     let { amount, companyID } = req.session.queried;
+    console.log({amount})
     if (!amount) {
       return res.json({ err: { msg: "Amount to refund must be included." } });
     }
     if (!companyID) {
       return res.json({ err: { msg: "companyID must be included." } });
     }
-    amount = Number(amount) && Number(amount);
+    amount = Number(amount) && Number(Number( amount).toFixed(2));
     if (Number.isNaN(amount)) {
       return res.json({
         err: {

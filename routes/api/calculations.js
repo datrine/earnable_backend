@@ -9,20 +9,22 @@ const {
   getReconciliationReport,
   getDebtList,
   getTotalWithdrawalCount,
+  getPaymentListForCompany,
 } = require("../../db/calculations");
 const { getTotalSalaries, getAmountToRefund } = require("../../db/employee");
+const { getCalculatedRefund } = require("../../db/refund");
 
 router.get("/reconciliated_salary_list", async (req, res, next) => {
-    try {
-      let { filters } = req.session.queried;
-      let getEmployeesSumOfWithdrawnRes = await getEmployeesSumOfWithdrawn({
-        filters,
-      });
-      res.json(getEmployeesSumOfWithdrawnRes);
-    } catch (error) {
-      console.log(error);
-    }
-  });
+  try {
+    let { filters } = req.session.queried;
+    let getEmployeesSumOfWithdrawnRes = await getEmployeesSumOfWithdrawn({
+      filters,
+    });
+    res.json(getEmployeesSumOfWithdrawnRes);
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 router.get("/total_withdrawal", async (req, res, next) => {
   try {
@@ -52,34 +54,33 @@ router.get("/available_flexible_access", async (req, res, next) => {
     let availableFlexibleAccessRes = await getAvailableFlexibleAccess({
       filters,
     });
-    res.json({...availableFlexibleAccessRes,filters});
+    res.json({ ...availableFlexibleAccessRes, filters });
   } catch (error) {
     console.log(error);
   }
 });
 
 router.get("/debt_list", async (req, res, next) => {
-    try {
-      let { filters } = req.session.queried;
-      let getDebtListRes = await getDebtList({
-        filters,
-      });
-      res.json({...getDebtListRes,filters});
-    } catch (error) {
-      console.log(error);
-    }
-  });
-  
-  
+  try {
+    let { filters } = req.session.queried;
+    let getDebtListRes = await getDebtList({
+      filters,
+    });
+    res.json({ ...getDebtListRes, filters });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 router.get("/total_withdrawal_count", async (req, res, next) => {
-    try {
-      let { filters } = req.session.queried;
-      let total_withdrawal = await getTotalWithdrawalCount({ filters });
-      res.json(total_withdrawal);
-    } catch (error) {
-      console.log(error);
-    }
-  });
+  try {
+    let { filters } = req.session.queried;
+    let total_withdrawal = await getTotalWithdrawalCount({ filters });
+    res.json(total_withdrawal);
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 router.get("/total_net_pay", async (req, res, next) => {
   try {
@@ -153,13 +154,22 @@ router.get("/reconciliation_report", async (req, res, next) => {
   }
 });
 
-
 router.get("/amount_to_refund", async (req, res, next) => {
-    let { filters, companyID } = req.session.queried;
-    filters.companyID = companyID;
-    filters = req.query;
-    let getAmountToRefundRes = await getAmountToRefund({ companyID, filters });
-    return res.json(getAmountToRefundRes);
-  });
+  let { filters, companyID } = req.session.queried;
+  filters.companyID = companyID;
+  filters = req.query;
+  let getAmountToRefundRes = await getCalculatedRefund({ companyID, filters });
+  return res.json(getAmountToRefundRes);
+});
+
+router.get("/company_payment_list", async (req, res, next) => {
+  let { filters, companyID } = req.session.queried;
+  filters.companyID = companyID;
+  filters = req.query;
+  let getAmountToRefundRes = await getPaymentListForCompany({ filters });
+  return res.json(getAmountToRefundRes);
+});
+
+
 //
 module.exports = router;

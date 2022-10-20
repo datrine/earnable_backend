@@ -582,8 +582,6 @@ let attemptUpdateWithdrawal = async () => {
   }
 };
 
-
-
 let attemptProcessPayrollTransactionsCronJob = async () => {
   try {
     const agg = [

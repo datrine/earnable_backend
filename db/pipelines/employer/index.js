@@ -1,3 +1,4 @@
+const calculateRefundAgg = require("./calculate_refund");
 const composeGetAccumulationsAgg = require("./get_accumulations");
 const composeGetCalculatedListAgg = require("./get_calculated_list");
 const composeGetDebtListAgg = require("./get_debt_list");
@@ -6,6 +7,7 @@ const composeGetEmployeesDetailsAgg = require("./get_employees_details");
 const composeGetEmployeesReconciliationTableAgg = require("./get_employees_reconciliation_table");
 const composeGetEmployeeInfoTableAgg = require("./get_employees_table_info");
 const composeGetEmployeesFlexibleAccessInfoTableAgg = require("./get_employees_table__flexible_access_info");
+const getPaymentListAgg = require("./get_payment_list");
 const persistPayrollAgg = require("./persist_payroll_agg");
 const {
   prepareAllPayrollAgg,
@@ -24,5 +26,8 @@ module.exports = {
   composeGetDebtListAgg,
   prepareAllPayrollAgg,
   prepareCompanyPayrollAgg,
-  preparePayrollAgg,persistPayrollAgg
+  preparePayrollAgg,
+  persistPayrollAgg,
+  calculateRefundAgg,
+  getPaymentListAgg,
 };

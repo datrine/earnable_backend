@@ -41,7 +41,13 @@ router.post(
   "/new/initiate",
   async (req, res, next) => {
     let queried = { accountID: req.query.accountID };
-    queried = { ...queried, amount: req.body.amount };
+    queried = {
+      ...queried,
+      amount: req.body.amount,
+      salaryMonthID: req.body.salaryMonthID,
+      salaryYearID: req.body.salaryYearID,
+      payment_mode:"resolve_all"
+    };
     req.session.queried = { ...req.session.queried, ...queried };
     next();
   },
@@ -57,7 +63,7 @@ router.post(
       let payment_reference = nanoid();
       let paystackInitiateRes = await paystackInitiate({
         email: payment_email,
-        amount:amount*100,
+        amount: amount * 100,
         reference: payment_reference,
       });
       if (paystackInitiateRes.err) {
@@ -86,7 +92,7 @@ router.post(
         purpose: "refund",
         status: { name: "initiated", updatedAt: new Date() },
       });
-      res.json(paystackInitiateData);
+      res.json({ ...paystackInitiateData, transactionID });
     } catch (error) {
       console.log(error);
     }
@@ -190,7 +196,7 @@ router.post(
   }
 );
 
-// get path: /:transactionID/withdrawals/status
+// get path: /:transactionID/refunds/status
 router.get("/status", async (req, res, next) => {
   try {
     let { transaction } = req.session.queried;
