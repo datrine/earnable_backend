@@ -15,11 +15,22 @@ let sendMobileSMSToken = async (req, res, next) => {
             console.log("No phone number to send token...");
             return next()
         }
-        req.session.factor = "mobile";
-        req.session.type = "token_ver";
-        req.session.factorValue = phonenumToSendToken;
-        req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
-        await saveToken({ ...req.session })
+
+        let factor = "mobile";
+        let type = "token_ver";
+        let factorValue = phonenumToSendToken;
+        let ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
+
+        req.session.factor =factor
+        req.session.type = type
+        req.session.factorValue =factorValue
+        req.session.ttl =ttl
+
+        req.session.factor =factor
+        req.session.type = type
+        req.session.factorValue = factorValue;
+        req.session.ttl = ttl
+        await saveToken({ ...req.session.queried })
         let msg = `Please verify Your phone number. 
         Token to input: ${req.session.token}.`;
         let mobileRes = await sendPhoneText({

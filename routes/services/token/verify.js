@@ -21,11 +21,11 @@ router.post("/email/verification/", async (req, res, next) => {
         if (retrieveAccRes.err) {
             return res.json(retrieveAccRes)
         }
-        req.session.account = retrieveAccRes.account
-        req.session.email = retrieveAccRes.account.email
-        req.session.verSessID = retrieveAccRes.account.verInfo.verSessID
+        req.session.queried.account = retrieveAccRes.account
+        req.session.queried.email = retrieveAccRes.account.email
+        req.session.queried.verSessID = retrieveAccRes.account.verInfo.verSessID
         let updateAccVerRes = await updateAccVer({
-            verSessID: req.session.verSessID,
+            verSessID: req.session.queried.verSessID,
             factor: "email", tokenSent: true,
             isVerified: true, mode: "update"
         });
@@ -56,11 +56,11 @@ router.post("/mobile/verification/", async (req, res, next) => {
         if (retrieveAccRes.err) {
             return res.json(retrieveAccRes)
         }
-        req.session.account = retrieveAccRes.account
-        req.session.phonenum = retrieveAccRes.account.phonenum
-        req.session.verSessID = retrieveAccRes.account.verInfo.verSessID
+        req.session.queried.account = retrieveAccRes.account
+        req.session.queried.phonenum = retrieveAccRes.account.phonenum
+        req.session.queried.verSessID = retrieveAccRes.account.verInfo.verSessID
         let updateAccVerRes = await updateAccVer({
-            verSessID: req.session.verSessID,
+            verSessID: req.session.queried.verSessID,
             factor: "mobile", tokenSent: true,
             isVerified: true, mode: "update"
         });
@@ -89,19 +89,19 @@ router.post("/phone_pin/verification/", async (req, res, next) => {
         if (retrieveAccRes.err) {
             return res.json(retrieveAccRes)
         }
-        req.session.account = retrieveAccRes?.account
-        req.session.phonenum = retrieveAccRes?.account?.phonenum
-        req.session.verSessID = retrieveAccRes?.account.verInfo.verSessID
+        req.session.queried.account = retrieveAccRes?.account
+        req.session.queried.phonenum = retrieveAccRes?.account?.phonenum
+        req.session.queried.verSessID = retrieveAccRes?.account.verInfo.verSessID
         let updateAccVerRes = await updateAccVer({
-            verSessID: req.session.verSessID,
+            verSessID: req.session.queried.verSessID,
             factor: "phone_pin", tokenSent: true,
             isVerified: true, mode: "update"
         });
         let phonePin = getRandomToken({ minLength: 4 });
-        let defaultRes = await setDefaultPhonePin({ phonenum: req.session.phonenum, phonePin });
+        let defaultRes = await setDefaultPhonePin({ phonenum: req.session.queried.phonenum, phonePin });
         //getCurrentAccountActivity({})
         //activateEmployeeAccount()
-        sendPhoneText({ to: req.session.phonenum, text: `Your default password: ${phonePin}` }).
+        sendPhoneText({ to: req.session.queried.phonenum, text: `Your default password: ${phonePin}` }).
         then(res => {
             console.log(res.info)
         });
@@ -123,7 +123,7 @@ router.post("/mobile", async (req, res, next) => {
         res.json({ verified })
     } catch (error) {
         console.log(error);
-        return res.json({ error })
+        return res.json({err: error })
     }
 });
 
@@ -137,7 +137,7 @@ router.post("/email", async (req, res, next) => {
         res.json({ verified })
     } catch (error) {
         console.log(error);
-        return res.json({ error })
+        return res.json({err: error })
     }
 });
 

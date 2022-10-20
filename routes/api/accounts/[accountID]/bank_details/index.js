@@ -6,9 +6,8 @@ const { getBankDetailsByAccountID, updateBankDetailsByAccountID } = require("../
 
 router.put("/upsert", async (req, res, next) => {
     try {
-        let {paramAccountID  } = req.session
+        let {paramAccountID  } = req.session.queried
         let updates = req.body
-        console.log(updates)
         let employeeRes = await updateBankDetailsByAccountID({ accountID: paramAccountID,...updates });
         return res.json({ ...employeeRes })
     } catch (error) {
@@ -17,10 +16,9 @@ router.put("/upsert", async (req, res, next) => {
     }
 });
 
-
 router.get("/", async (req, res, next) => {
     try {
-        let { paramAccountID } = req.session
+        let { paramAccountID } = req.session.queried
 
         let bankDetailsRes = await getBankDetailsByAccountID({ accountID: paramAccountID });
         return res.json({ ...bankDetailsRes })
@@ -28,21 +26,4 @@ router.get("/", async (req, res, next) => {
         console.log(error)
     }
 });
-
-router.get("/", (req, res, next) => {
-
-    return res.json([])
-});
-
-router.use("/logout", getAuthAccount, async (req, res, next) => {
-    try {
-        let { sessID } = req.session
-        let resLogOut = await accountLogOut({ sessID });
-        console.log(resLogOut)
-        res.json(resLogOut)
-    } catch (error) {
-
-    }
-});
-
 module.exports = router;

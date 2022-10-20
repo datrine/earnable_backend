@@ -29,38 +29,11 @@ router.get("/employee_details", async (req, res, next) => {
     }
 });
 
-router.put("/update", async (req, res, next) => {
-    try {
-       /* let {accountID}=req.session
-        let {}=req.query;
-       let updateRes= await updateAccInfo({accountID,prop,propValue});
-       console.log(updateRes); */
-    } catch (error) {
-        
-    }
-});
-
 router.get("/userinfo", async (req, res, next) => {
     try {
-        let { paramAccountID } = req.session
+        let { paramAccountID } = req.session.queried
         let employeeRes = await getUserInfo({ accountID: paramAccountID });
         return res.json({ ...employeeRes })
-    } catch (error) {
-
-    }
-});
-
-router.get("/", (req, res, next) => {
-
-    return res.json([])
-});
-
-router.use("/logout", getAuthAccount, async (req, res, next) => {
-    try {
-        let { sessID } = req.session
-        let resLogOut = await accountLogOut({ sessID });
-        console.log(resLogOut)
-        res.json(resLogOut)
     } catch (error) {
 
     }

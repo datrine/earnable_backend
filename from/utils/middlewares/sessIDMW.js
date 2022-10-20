@@ -18,6 +18,10 @@ let sessConfirmMW = async (req, res, next) => {
         }
         req.session.account = retrieveAccBySessIDRes.account
         req.session.sessID = sessID
+        
+        req.session.self ={...req.session.self}
+        req.session.self.account = retrieveAccBySessIDRes.account
+        req.session.self.sessID = sessID
         next()
     } catch (error) {
         console.log(error);
