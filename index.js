@@ -31,9 +31,7 @@ app.use(fileUpload());
 
 (async () => {
     try {
-        await conn.startConn()
-        const { startAllStreams } = require("./admin/db_actions/monitors");
-        startAllStreams();
+        await conn.startConn();
        // const { jobFindAllSubscriptions } = require("./admin/bills/prepareBills");
         const apiRouter = require("./routes/api/");
         const serviceAPIRouter = require("./routes/services");

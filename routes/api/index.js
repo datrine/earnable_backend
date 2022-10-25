@@ -3,25 +3,20 @@ const companiesRouter = require("./companies");
 const usersRouter = require("./users");
 const sessionRouter = require("./session");
 const selfRouter = require("./me");
-const paymentRouter = require("./payments");
 const verStatusRouter = require("./acc_ver");
 const registerRouter = require("./users/register");
-const walletRouter = require("./wallets");
+const pageViewsRouter = require("./page_views");
 const loginRouter = require("./users/login");
 //const selfRouter = require("./users/me");
 const transactionsRouter=require("./transactions")
 const withdrawalsRouter=require("./withdrawals")
-const emailRouter = require("./email");
 const accountRouter = require("./accounts");
 const employeesRouter = require("./employees");
 const employersRouter = require("./employers");
-const ordersRouter = require("./orders");
 const webhooksRouter = require("./webhooks");
 const tokenVerifyMW = require("../../utils/mymiddleware/tokenVerifyMW");
 const { getAuthAccount } = require("../../from/utils/middlewares/getAuthAccount");
 const { getAccount } = require("../../from/utils/middlewares/getAccount");
-
-router.use("/email", emailRouter);
 
 router.use("/users", usersRouter);
 
@@ -32,8 +27,6 @@ router.use("/login", loginRouter);
 router.use("/accounts", accountRouter);
 
 router.use("/session", sessionRouter);
-
-router.use("/payments", paymentRouter);
 
 router.use("/ver_status", verStatusRouter);
 
@@ -47,11 +40,9 @@ router.use("/webhooks", webhooksRouter);
 
 router.use("/employees", employeesRouter);
 
+router.use("/page_views", pageViewsRouter);
+
 router.use("/employers", employersRouter);
-
-router.use("/my_orders",tokenVerifyMW, ordersRouter);
-
-router.use("/orders", ordersRouter);
 
 router.use("/", async (req, res, next) => {
     try {

@@ -1,6 +1,7 @@
 const { ObjectID } = require("bson");
 const { DateTime } = require("luxon");
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
+const { dashboardInfoAgg } = require("./pipelines/employee");
 const {
   composeGetCalculatedListAgg,
   composeGetAccumulationsAgg,
@@ -15,6 +16,7 @@ const {
 const { debtListTemplate } = require("./templates/calculations");
 const db = clientConn.db("waleprj");
 const employeesCol = db.collection("employees");
+const accountsCol = db.collection("accounts");
 const companiesCol = db.collection("companies");
 
 function dateIsValid(date) {
@@ -210,6 +212,21 @@ let getPaymentListForCompany = async ({ filters = {} }) => {
     throw error;
   }
 };
+
+let getDashboardInfoForEmployee = async ({ filters = {} }) => {
+  try {
+    let agg= dashboardInfoAgg(filters);
+   let cursor= accountsCol.aggregate(agg);
+   let result=await cursor.toArray();
+let employeeDashboardInfo=result[0]
+    return {
+      employeeDashboardInfo
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 module.exports = {
   getEmployeesSumOfWithdrawn,
   getTotalFlexibleAccess,
@@ -221,5 +238,5 @@ module.exports = {
   getTotalNetPay,
   getReconciliationReport,
   getDebtList,
-  getTotalWithdrawalCount,getPaymentListForCompany
+  getTotalWithdrawalCount,getPaymentListForCompany,getDashboardInfoForEmployee
 };

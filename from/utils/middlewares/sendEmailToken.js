@@ -21,7 +21,7 @@ let sendEmailToken = async (req, res, next) => {
         req.session.queried.type = "token_ver";
         req.session.queried.factorValue = emailToSendToken;
         req.session.queried.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
-        await saveToken({ ...req.session })
+        await saveToken({ ...req.session.queried })
         let msg = `Thanks for registering at Earnable.
         Please verify Your email address. 
         Token to input: ${req.session.token}.`

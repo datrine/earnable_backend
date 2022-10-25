@@ -1,8 +1,6 @@
 const router = require("express").Router();
 const tokenVerifyMW = require("../../../../utils/mymiddleware/tokenVerifyMW");
 const subscriptionsRouter = require("../subscriptions");
-const { getAccountMW } = require("../../../../utils/mymiddleware/accounts");
-const { createAccount } = require("../../../../utils/dbmethods/account_methods");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
 const { accountLogOut,  getCurrentAccountActivity } = require("../../../../db/account");
 

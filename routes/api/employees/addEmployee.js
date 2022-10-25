@@ -1,13 +1,11 @@
 const router = require("express").Router()
-const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
-const { getAccountMW } = require("../../../utils/mymiddleware/accounts");
 const { canAddEmployeeMW } = require("../../../utils/mymiddleware/products/canCreateProductMW");
 const { ObjectId } = require("bson");
 const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
 const { registerEmployeeFunc } = require("../../../db/register");
 const { sendEmail } = require("../../../from/utils/email_mgt");
 const { sendPhoneText } = require("../../../from/utils/phone_mgt");
-const { generateMobileToken, generateToken, generatePhonePinToken } = require("../../../from/utils/middlewares/generateTokenMW");
+const { generateToken, generatePhonePinToken } = require("../../../from/utils/middlewares/generateTokenMW");
 const sendEmailToken = require("../../../from/utils/middlewares/sendEmailToken");
 const { sendPhonePinSMSToken } = require("../../../from/utils/middlewares/sendMobileSMSToken");
 const { getRandomToken } = require("../../../from/utils/token_mgt");
@@ -74,11 +72,6 @@ router.put("/", sessIDVerifyMW, canAddEmployeeMW, async (req, res, next) => {
         console.log(error);
         next("Server error")
     }
-});
-
-router.get("/my_products", tokenVerifyMW, getAccountMW, (req, res, next) => {
-
-    return res.json()
 });
 
 module.exports = router;

@@ -11,10 +11,8 @@ const { getEmployeeWithdrawalHistory } = require("../../db/withdrawal");
 let resolveTransactionMW = async (req, res, next) => {
   try {
     let {
-      company,
-      department,
       employee_details,
-      amount: amountRequestedToWithdraw,
+      amount: amountRequestedToWithdraw,bank_details,company:{salaryMonthID,salaryYearID}
     } = req.session.queried;
     let { flexible_access, err: flexibleAccessErr } =
       await getEmployeeFlexibleAccess({
@@ -31,11 +29,10 @@ let resolveTransactionMW = async (req, res, next) => {
     let resWiHx = await getEmployeeWithdrawalHistory({
       employeeID,
       filters: {
-        monthNumber: DateTime.now().month,
+        salaryMonthID,salaryYearID,
         states: ["initiated", "processing", "completed"],
       },
     });
-    console.log(resWiHx);
     let totalAmountWithdrawnOrEarmarked = resWiHx.withdrawal_history
       .filter(
         ({ status }) =>
@@ -54,7 +51,6 @@ let resolveTransactionMW = async (req, res, next) => {
         return sum;
       }, 0);
 
-    console.log({ totalAmountWithdrawnOrEarmarked });
     let grossMaxAmountWithdrawable =
       (Number(employee_details.monthly_salary) *
         Number(resolvedWithdrawAccess)) /
@@ -64,7 +60,6 @@ let resolveTransactionMW = async (req, res, next) => {
       0,
       grossMaxAmountWithdrawable - totalAmountWithdrawnOrEarmarked
     );
-    console.log({ grossMaxAmountWithdrawable });
     let grossAmountToWithdraw = Math.min(
       netMaxAmountWithdrawable,
       amountRequestedToWithdraw
@@ -88,11 +83,10 @@ let resolveTransactionMW = async (req, res, next) => {
       withdrawal_fee_by_employer = withdrawal_fee;
     }
     let amountDeductible = grossAmountToWithdraw - netAmountToWithdraw;
-    //console.log({ netAmountToWithdraw, netMaxAmountWithdrawable });
     if (netMaxAmountWithdrawable <= 0) {
       return res.json({ err: { msg: "Flexible salary limits reached" } });
     }
-
+    
     let transactionInfo = {
       amountRequestedToWithdraw,
       resolvedWithdrawAccess,
@@ -106,7 +100,9 @@ let resolveTransactionMW = async (req, res, next) => {
       netMaxAmountWithdrawable,
       grossAmountToWithdraw,
       netAmountToWithdraw,
+      ...bank_details
     };
+    console.log({bank_details})
     req.session.queried = { ...req.session.queried, transactionInfo };
     next();
   } catch (error) {

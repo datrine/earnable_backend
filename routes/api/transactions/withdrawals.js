@@ -54,6 +54,7 @@ router.get(
 router.post(
   "/new/initiate",
   async (req, res, next) => {
+    console.log({accountID:req.query})
     let queried = { accountID: req.query.accountID };
     queried = { ...queried, amount: req.body.amount };
     req.session.queried = { ...req.session.queried, ...queried };
@@ -65,7 +66,7 @@ router.post(
   async (req, res, next) => {
     try {
       let {
-        company: { companyID,salaryMonthID,salaryYearID },
+        company: { companyID, salaryMonthID, salaryYearID },
         department: { departmentID },
         employee_details: { employeeID },
         transactionInfo,
@@ -86,9 +87,10 @@ router.post(
         departmentID,
         transactionID,
         transactionInfo,
-        salaryMonthID,salaryYearID ,
+        salaryMonthID,
+        salaryYearID,
         purpose: "employee_payment",
-        status:{name: "initiated",updatedAt:new Date()},
+        status: { name: "initiated", updatedAt: new Date() },
       });
       next();
     } catch (error) {

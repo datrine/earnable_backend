@@ -5,27 +5,23 @@ const walletsRouter = require("../wallets");
 const transactionIDRouter = require("./[transactionID]");
 
 // /withdrawals paths
-router.use(
-  "/withdrawals",withdrawalsRouter
-);
+router.use("/withdrawals", withdrawalsRouter);
 
 // /refunds paths
-router.use(
-  "/refunds",refundsRouter
-);
+router.use("/refunds", refundsRouter);
 
 // /refunds paths
-router.use(
-  "/wallets",walletsRouter
-);
+router.use("/wallets", walletsRouter);
 
 // /withdrawals paths
 router.use(
-  "/:transactionID",async(req,res,next)=>{
+  "/:transactionID",
+  async (req, res, next) => {
     let { transactionID } = req.params;
-    req.session.queried={... req.session.queried, transactionID}
-    next()
-  },transactionIDRouter
+    req.session.queried = { ...req.session.queried, transactionID };
+    next();
+  },
+  transactionIDRouter
 );
 
 module.exports = router;

@@ -27,7 +27,6 @@ let canWithdrawVerMW = async (req, res, next) => {
       return res.json({ err: { msg: "Amount to withdraw must be a valid amount in naira.kobo." } });
     }
     req.session.queried.amount=amount
-    console.log(amount)
     /**
      * @type {{account:accTemplate}}
      */
@@ -106,6 +105,8 @@ let canWithdrawVerMW = async (req, res, next) => {
     queried.company = company;
     queried.department = department;
     queried.bank_details = {
+      bank_code: bank_details.bank_code,
+      bank_name: bank_details.bank_name,
       acc_number: bank_details.acc_number,
       acc_name: bank_details.acc_name,
       recipient_code: bank_details.recipient_code,

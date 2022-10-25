@@ -2,14 +2,15 @@ const { MongoClient, ObjectID, ObjectId } = require("mongodb");
 
 // Connection URI
 const uri =
+"mongodb://localhost:27017";
   //"mongodb://localhost:27017/?poolSize=20&writeConcern=majority&replicaSet=rs";
-  "mongodb+srv://datrine:TeMi4ToPe@cluster0.qnpau.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+ // "mongodb+srv://datrine:TeMi4ToPe@cluster0.qnpau.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 // Create a new MongoClient
-const mongoClient = new MongoClient(uri, {
+const mongoClient = new MongoClient(uri, /*{
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
+}*/);
 
 async function startConn() {
   try {

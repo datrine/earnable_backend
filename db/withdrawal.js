@@ -129,6 +129,7 @@ let getWithdrawalHistory = async ({ filters }) => {
       year,
       weekNumber,
       monthNumber,
+      salaryMonthID,salaryYearID,
       states=["completed"],
       accountID,
       companyID,
@@ -145,6 +146,18 @@ let getWithdrawalHistory = async ({ filters }) => {
       {
         $match: {
           $and: [
+            {
+              $expr: {
+                $eq: [
+                  "$salaryMonthID",
+                  {
+                    $ifNull: [salaryMonthID,
+                      "$salaryMonthID",
+                    ],
+                  },
+                ],
+              },
+            },
             {
               $expr: {
                 $eq: [
