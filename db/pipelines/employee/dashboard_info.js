@@ -1,8 +1,7 @@
 const { DateTime } = require("luxon");
 const { ObjectId } = require("mongodb");
 
-let dashboardInfoAgg = ({accountID}) => { 
-   console.log({accountID})
+let dashboardInfoAgg = ({accountID}) => {
    let agg = [{
       $match: {
        accountID
@@ -240,17 +239,12 @@ let dashboardInfoAgg = ({accountID}) => {
       }
      }, {
       $set: {
-       employeeEarning: {
-        $add: [
-         {
-          $subtract: [
-           '$monthly_salary',
-           '$sumWithdrawal'
-          ]
-         },
-         '$employeeAvailableFlexibleAccess'
-        ]
-       }
+         employeeNetAmountToEarn:{
+           $subtract:[
+             "$monthly_salary",
+             "$sumWithdrawal"
+         ]
+         }
       }
      }, {
       $unset: [

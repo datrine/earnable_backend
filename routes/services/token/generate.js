@@ -50,7 +50,7 @@ router.get(
         return res.json({ err: { msg: "Token was already verified..." } });
       }
       if (verFactorObj.tokenSent) {
-        return res.json({ err: { msg: "Token was already sent..." } });
+        //return res.json({ err: { msg: "Token was already sent..." } });
       }
 
       req.session.account = retrieveAccByVerSessIDRes.account;
@@ -88,7 +88,10 @@ router.get(
 router.get(
   "/email/authentication",
   sessConfirmMW,
-  generateToken,
+  generateToken,async(req,res,next)=>{
+    req.session.queried={ ...req.session.queried, ...req.session.self };
+    next()
+  },
   async (req, res, next) => {
     try {
       let emailToSendToken = req.session.queried.account.email;
@@ -148,8 +151,8 @@ router.get(
           err: { msg: "Phone number was already verified......" },
         });
       }
-      if (verFactorObj.tokenSent && new Date(verFactorObj.ttl) > new Date()) {
-        return res.json({ err: { msg: "Token was already sent......" } });
+      if (verFactorObj.tokenSent) {
+       // return res.json({ err: { msg: "Token was already sent......" } });
       }
       req.session.account = retrieveAccByVerSessIDRes.account;
       req.session.phonenum = retrieveAccByVerSessIDRes.account.phonenum;
@@ -189,6 +192,10 @@ router.get(
   "/mobile/authentication",
   sessConfirmMW,
   generateToken,
+  generateToken,async(req,res,next)=>{
+    req.session.queried={ ...req.session.queried, ...req.session.self };
+    next()
+  },
   async (req, res, next) => {
     try {
       let phonenumToSendToken = req.session.self.account.phonenum;
@@ -245,8 +252,8 @@ router.get(
       if (verFactorObj.isVerified) {
         return res.json({ err: { msg: "Phone pin was already verified..." } });
       }
-      if (verFactorObj.tokenSent && new Date(verFactorObj.ttl) > new Date()) {
-        return res.json({ err: { msg: "Token was already sent......" } });
+      if (verFactorObj.tokenSent) {
+        //return res.json({ err: { msg: "Token was already sent......" } });
       }
       req.session.account = retrieveAccByVerSessIDRes.account;
       req.session.phonenum = retrieveAccByVerSessIDRes.account.phonenum;

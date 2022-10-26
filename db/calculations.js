@@ -29,7 +29,7 @@ let getEmployeesSumOfWithdrawn = async ({ filters = {} }) => {
       filters,
     });
     return {
-      totalFlexibleWithdrawal: accumulationObj.accumulatedTotalWithdrawals,
+      totalFlexibleWithdrawal: accumulationObj?.accumulatedTotalWithdrawals,
       filters,
     };
   } catch (error) {
@@ -133,7 +133,7 @@ let getTotalNetPayMethod1 = async ({ filters }) => {
           promResult.value.employeesTotalFlexibleAccess;
       }
       if (promResult.value.totalFlexibleWithdrawal) {
-        totalFlexibleWithdrawal = promResult.value.totalFlexibleWithdrawal;
+        totalFlexibleWithdrawal = promResult?.value?.totalFlexibleWithdrawal;
       }
     }
     let totalNetPay = employeesTotalFlexibleAccess - totalFlexibleWithdrawal;
@@ -150,7 +150,7 @@ let getEmployeeNetEarning = async ({ filters = {} }) => {
     }
     let { err, list } = await getCalculatedList({ filters });
     let firstDoc = list[0];
-    return { totalNetPay: firstDoc.employeeTotalNetPay };
+    return { totalNetPay: firstDoc?.employeeTotalNetPay };
   } catch (error) {
     console.log(error);
     throw error;
@@ -161,7 +161,7 @@ let getTotalNetPay = async ({ filters = {} }) => {
   try {
     let { err, list } = await getCalculatedList({ filters });
     let firstDoc = list[0];
-    return { totalNetPay: firstDoc.employeeTotalNetPay };
+    return { totalNetPay: firstDoc?.employeeTotalNetPay };
   } catch (error) {
     console.log(error);
     throw error;
@@ -170,7 +170,7 @@ let getTotalNetPay = async ({ filters = {} }) => {
 
 let getTotalWithdrawalCount = async ({ filters = {} }) => {
   try {
-    let { err, accumulationObj } = await getCalculatedAccumulations({
+    let { err, accumulationObj={} } = await getCalculatedAccumulations({
       filters,
     });
     let { totalFilteredWithdrawals: withdrawal_count } = accumulationObj;

@@ -77,7 +77,7 @@ router.post(
         amountToWithdraw: transactionInfo.netAmountToWithdraw,
         type: "withdrawal",
       });
-      res.json(transRes);
+      res.json({...transRes,...transactionInfo});
       req.session.transactionID = transRes.transactionID;
       let { transactionID } = transRes;
       await createWithdrawal({
@@ -128,6 +128,7 @@ router.post(
         account: queriedAccount,
         transaction: queriedTransaction,
       } = req.session.queried;
+      
       let transRes = await updateTransactionByID({
         transactionID: queriedTransactionID,
         updates: {
@@ -183,6 +184,7 @@ router.post(
         console.log("No transfer code");
         return;
       }
+
       let transactionUpdateRes = await updateTransactionByID({
         transactionID: queriedTransactionID,
         updates: {
@@ -191,10 +193,12 @@ router.post(
           status: "completed",
         },
       });
+
       if (transactionUpdateRes.err) {
         console.log(transactionUpdateRes);
         return;
       }
+
     } catch (error) {
       console.log(error);
     }

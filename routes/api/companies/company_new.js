@@ -27,14 +27,13 @@ router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     if (!preCompanyData.company_name) {
       return res.json({ err: { msg: "No company name supplied" } });
     }
-
-    if (!preCompanyData.flexible_access_mode) {
+    if (!preCompanyData?.flexible_access?.access_mode) {
       return res.json({
         err: { msg: "No company flexible access mode supplied" },
       });
     }
 
-    if (!preCompanyData.flexible_access_value) {
+    if (!preCompanyData.flexible_access?.value) {
       return res.json({
         err: { msg: "No company flexible access value supplied" },
       });
@@ -43,6 +42,7 @@ router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     if (!preCompanyData.rc_number) {
       return res.json({ err: { msg: "No company rc number supplied" } });
     }
+    let salary_date=preCompanyData.salary_date
     let dateOf = DateTime.fromObject({ day: salary_date });
     let next_salary_date = DateTime.fromObject({ day: salary_date });
     if (DateTime.now() > dateOf) {

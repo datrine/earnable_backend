@@ -1,16 +1,15 @@
 const { MongoClient, ObjectID, ObjectId } = require("mongodb");
 
 // Connection URI
-const uri =process.env.MONGODB_URL;
-//"mongodb://localhost:27017";
-  //"mongodb://localhost:27017/?poolSize=20&writeConcern=majority&replicaSet=rs";
-  //"mongodb+srv://datrine:TeMi4ToPe@cluster0.qnpau.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+const uri = process.env.MONGODB_URL //|| "mongodb://localhost:27017";
 
 // Create a new MongoClient
-const mongoClient = new MongoClient(uri, /*{
+const mongoClient = new MongoClient(
+  uri /*{
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}*/);
+}*/
+);
 
 async function startConn() {
   try {
@@ -20,7 +19,6 @@ async function startConn() {
     return mongoClient;
   } catch (err) {
     console.log(err);
-   
   } finally {
     // Ensures that the client will close when you finish/error
     //await client.close();
@@ -28,4 +26,4 @@ async function startConn() {
 }
 //startConn();
 
-module.exports = { mongoClient, ObjectID, startConn }
+module.exports = { mongoClient, ObjectID, startConn };

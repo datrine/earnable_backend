@@ -850,8 +850,6 @@ async function activateEmployeeAccount({ identifier, verSessID, phonePin }) {
     account.activity.history.push(current_activity);
     account.activity.current = { name: "active", from: new Date() };
     account.updatedOn = new Date();
-    console.log("Activating account...")
-    console.log(account.activity)
     let result = await accountsCol.findOneAndUpdate(
       { $or: [{ phonenum: identifier }, { username: identifier }] },
       { $set: { ...account } },
@@ -906,13 +904,16 @@ async function checkIfAccountPropExists({ prop, value }) {
 
 async function retrieveAccountInfoByVerSessID(verSessID) {
   try {
+    console.log(verSessID)
     /**
      * @type {accTemplate}
      */
     let account = await accountsCol.findOne({
       "verInfo.verSessID": verSessID,
     });
+    console.log({account})
     if (!account) {
+      console.log(verSessID)
       return { err: { msg: "verSessID does not exist in record..." } };
     }
     return { account };

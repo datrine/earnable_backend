@@ -131,7 +131,7 @@ let getTotalSalaries = async ({ filters = {} }) => {
     let { err, accumulationObj } = await getCalculatedAccumulations({
       filters,
     });
-    let total_monthly_salaries = accumulationObj.accumulatedTotalSalaries || 0;
+    let total_monthly_salaries = accumulationObj?.accumulatedTotalSalaries || 0;
     return { total_monthly_salaries };
   } catch (error) {
     console.log(error);
