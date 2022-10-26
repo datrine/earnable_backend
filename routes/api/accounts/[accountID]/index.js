@@ -6,6 +6,7 @@ const pageViewsRouter = require("../../page_views");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
 const { accountLogOut, getUserInfo,updateAccInfo } = require("../../../../db/account");
 const { getEmployeeByAccountID } = require("../../../../db/employee");
+const { getEmployeeEarningsAndWithdrawals } = require("../../../../db/calculations");
 
 //user id, email or username
 router.use("/", async (req, res, next) => {
@@ -41,5 +42,13 @@ router.get("/userinfo", async (req, res, next) => {
 
     }
 });
+
+router.get("/employee_withdrawals_earnings", async (req, res, next) => {
+    let {accountID } = req.session.queried;
+    let filters=req.query;
+    filters.accountID = accountID;
+    let getAmountToRefundRes = await getEmployeeEarningsAndWithdrawals({ filters });
+    return res.json(getAmountToRefundRes);
+  });
 
 module.exports = router;

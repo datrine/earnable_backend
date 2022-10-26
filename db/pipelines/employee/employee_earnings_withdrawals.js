@@ -1,7 +1,16 @@
 const { DateTime } = require("luxon");
-const { ObjectId } = require("mongodb");
 
-let dashboardInfoAgg = ({accountID}) => {
+let employeeEarningsWithdrawalsAgg = ({accountID,from,to}) => {
+   from = !!from
+     ? DateTime.isDateTime(DateTime.fromISO(from))
+       ? new Date(from)
+       : null
+     : null;
+   to = !!to
+     ? DateTime.isDateTime(DateTime.fromISO(to))
+       ? new Date(to)
+       : null
+     : null;
    let agg = [{
       $match: {
        $expr: {
@@ -59,7 +68,7 @@ let dashboardInfoAgg = ({accountID}) => {
             $gte: [
              {
               $ifNull: [
-               null,
+               from,
                '$$withdrawal.status.updated'
               ]
              },
@@ -70,7 +79,7 @@ let dashboardInfoAgg = ({accountID}) => {
             $lte: [
              {
               $ifNull: [
-               null,
+               to,
                '$$withdrawal.status.updated'
               ]
              },
@@ -97,8 +106,8 @@ let dashboardInfoAgg = ({accountID}) => {
         }
        }
       }
-     }]
+     },{$unset:["filteredWithdrawals","withdrawals"]}]
    return agg;
 }
 
-module.exports = dashboardInfoAgg;
+module.exports = employeeEarningsWithdrawalsAgg;

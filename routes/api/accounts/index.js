@@ -30,6 +30,7 @@ router.use("/:accountID", async (req, res, next) => {
     req.session.queried={...req.session.queried}
     req.session.paramAccountID = req.params.accountID
     req.session.queried.paramAccountID = req.params.accountID
+    req.session.queried.accountID = req.params.accountID
     console.log(req.session.paramAccountID)
     next()
 }, accountIDRouter);

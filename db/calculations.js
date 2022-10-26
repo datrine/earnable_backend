@@ -1,7 +1,10 @@
 const { ObjectID } = require("bson");
 const { DateTime } = require("luxon");
 const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
-const { dashboardInfoAgg } = require("./pipelines/employee");
+const {
+  dashboardInfoAgg,
+  employeeEarningsWithdrawalsAgg,
+} = require("./pipelines/employee");
 const {
   composeGetCalculatedListAgg,
   composeGetAccumulationsAgg,
@@ -170,12 +173,12 @@ let getTotalNetPay = async ({ filters = {} }) => {
 
 let getTotalWithdrawalCount = async ({ filters = {} }) => {
   try {
-    let { err, accumulationObj={} } = await getCalculatedAccumulations({
+    let { err, accumulationObj = {} } = await getCalculatedAccumulations({
       filters,
     });
     let { totalFilteredWithdrawals: withdrawal_count } = accumulationObj;
     //console.log({ accumulationObj, filters });
-    return { withdrawal_count ,filters};
+    return { withdrawal_count, filters };
   } catch (error) {
     console.log(error);
     throw error;
@@ -200,12 +203,12 @@ let getAvailableFlexibleAccess = async ({ filters = {} }) => {
 
 let getPaymentListForCompany = async ({ filters = {} }) => {
   try {
-    let agg= getPaymentListAgg(filters);
-   let cursor= companiesCol.aggregate(agg);
-   let list=await cursor.toArray();
+    let agg = getPaymentListAgg(filters);
+    let cursor = companiesCol.aggregate(agg);
+    let list = await cursor.toArray();
 
     return {
-      companyPaymentList:list
+      companyPaymentList: list,
     };
   } catch (error) {
     console.log(error);
@@ -215,18 +218,34 @@ let getPaymentListForCompany = async ({ filters = {} }) => {
 
 let getDashboardInfoForEmployee = async ({ filters = {} }) => {
   try {
-    let agg= dashboardInfoAgg(filters);
-   let cursor= accountsCol.aggregate(agg);
-   let result=await cursor.toArray();
-let employeeDashboardInfo=result[0]
+    let agg = dashboardInfoAgg(filters);
+    let cursor = accountsCol.aggregate(agg);
+    let result = await cursor.toArray();
+    let employeeDashboardInfo = result[0];
     return {
-      employeeDashboardInfo
+      employeeDashboardInfo,
     };
   } catch (error) {
     console.log(error);
     throw error;
   }
 };
+
+let getEmployeeEarningsAndWithdrawals = async ({ filters = {} }) => {
+  try {
+    let agg = employeeEarningsWithdrawalsAgg(filters);
+    let cursor = employeesCol.aggregate(agg);
+    let result = await cursor.toArray();
+    let employeeEarningsAndWithdrawals = result[0];
+    return {
+      employeeEarningsAndWithdrawals,
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 module.exports = {
   getEmployeesSumOfWithdrawn,
   getTotalFlexibleAccess,
@@ -238,5 +257,8 @@ module.exports = {
   getTotalNetPay,
   getReconciliationReport,
   getDebtList,
-  getTotalWithdrawalCount,getPaymentListForCompany,getDashboardInfoForEmployee
+  getTotalWithdrawalCount,
+  getPaymentListForCompany,
+  getDashboardInfoForEmployee,
+  getEmployeeEarningsAndWithdrawals,
 };

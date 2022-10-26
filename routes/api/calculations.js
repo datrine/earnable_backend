@@ -10,6 +10,7 @@ const {
   getDebtList,
   getTotalWithdrawalCount,
   getPaymentListForCompany,
+  getEmployeeEarningsAndWithdrawals,
 } = require("../../db/calculations");
 const { getTotalSalaries, getAmountToRefund } = require("../../db/employee");
 const { getCalculatedRefund } = require("../../db/refund");
@@ -157,7 +158,7 @@ router.get("/reconciliation_report", async (req, res, next) => {
 router.get("/amount_to_refund", async (req, res, next) => {
   let { filters, companyID } = req.session.queried;
   filters.companyID = companyID;
-  filters = req.query;
+  filters ={...req.query,...filters} ;
   let getAmountToRefundRes = await getCalculatedRefund({ companyID, filters });
   return res.json(getAmountToRefundRes);
 });
@@ -165,10 +166,11 @@ router.get("/amount_to_refund", async (req, res, next) => {
 router.get("/company_payment_list", async (req, res, next) => {
   let { filters, companyID } = req.session.queried;
   filters.companyID = companyID;
-  filters = req.query;
+  filters ={...req.query,...filters} ;
   let getAmountToRefundRes = await getPaymentListForCompany({ filters });
   return res.json(getAmountToRefundRes);
 });
+
 
 //
 module.exports = router;
