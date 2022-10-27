@@ -190,9 +190,12 @@ let getAvailableFlexibleAccess = async ({ filters = {} }) => {
     let { err, accumulationObj } = await getCalculatedAccumulations({
       filters,
     });
+    if (err) {
+      return {err}
+    }
     return {
       availableFlexibleAccess:
-        accumulationObj.accumulatedAvailableFlexibleAccess,
+        accumulationObj?.accumulatedAvailableFlexibleAccess,
       filters,
     };
   } catch (error) {

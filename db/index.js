@@ -26,7 +26,10 @@ const { getEmployeesSumOfWithdrawn } = require("./calculations");
 const { DateTime } = require("luxon");
 const { autoVerifyRefunds } = require("./jobs/auto_verify_refunds");
 const { autoPreparePayrolls } = require("./jobs/auto_prepare_payroll");
-const { autoPaySalaries, autoPrepareSalaryTransactions } = require("./jobs/auto_pay_salaries");
+const {
+  autoPaySalaries,
+  autoPrepareSalaryTransactions,
+} = require("./jobs/auto_pay_salaries");
 
 let setSalaryDatesOfCompany = async () => {
   try {
@@ -301,9 +304,12 @@ let attemptReInitiateWithdrawalTransferCronJob = async () => {
       if (promise.value?.err) {
         let err = promise.value.err;
         if (err?.type === "failed_transfer") {
-          let updates = {};
           let transactionUpdateRes = await updateTransactionByID({
             transactionID: promise.value.transactionID,
+            updates: {
+              status: "failed",
+              accountIDofUpdater: promise.value.accountID,
+            },
             update_processing_attempts: true,
           });
         }
@@ -690,21 +696,6 @@ let attemptProcessPayrollTransactionsCronJob = async () => {
   }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let job = new CronJob("0 * * * * *", async function (params) {
   attemptChangeEnrollmentStatusCronJob();
 });
@@ -742,7 +733,7 @@ let job10 = new CronJob("*/10 * * * * *", async function (params) {
     /*let results = await autoPreparePayrolls();
     if (results) {
     }*/
-      await setSalaryDatesOfCompany();
+    await setSalaryDatesOfCompany();
   } catch (error) {
     console.log(error);
   }
@@ -750,7 +741,7 @@ let job10 = new CronJob("*/10 * * * * *", async function (params) {
 
 let job11 = new CronJob("*/10 * * * * *", async function (params) {
   try {
-   //await autoPrepareSalaryTransactions()
+    //await autoPrepareSalaryTransactions()
   } catch (error) {
     console.log(error);
   }

@@ -99,7 +99,7 @@ let employeeEarningsWithdrawalsAgg = ({accountID,from,to}) => {
          input: '$filteredWithdrawals',
          as: 'item',
          'in': {
-          title: 'Earning',
+          title: 'Withdrawal',
           amount: '$$item.transactionInfo.netAmountToWithdraw',
           date: '$$item.createdOn'
          }
