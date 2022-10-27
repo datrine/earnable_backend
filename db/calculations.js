@@ -90,12 +90,14 @@ let getTotalFlexibleAccess = async ({
   filters = { accountID, employeeID, companyID, deptID },
 }) => {
   try {
-    //let cursor = await employeesCol.aggregate(agg);calculationItemTemplate
     let { err, accumulationObj } = await getCalculatedAccumulations({
       filters,
     });
+    if (err) {
+      return {err}
+    }
     let totalFlexibleAccess =
-      accumulationObj.accumulatedTotalFlexibleAccess || 0;
+      accumulationObj?.accumulatedTotalFlexibleAccess || 0;
     return { totalFlexibleAccess };
   } catch (error) {
     console.log(error);

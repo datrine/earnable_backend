@@ -75,6 +75,7 @@ let canAddEmployeeMW = async (req, res, next) => {
         }
         req.session.employeeToSave = refinedData
         req.session.company=company
+        
         req.session.queried={...req.session.queried}
         req.session.queried.employeeToSave = refinedData
         req.session.queried.company=company
