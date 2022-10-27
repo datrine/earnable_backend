@@ -80,9 +80,11 @@ router.put(
       }
       res.statusCode = 201;
       res.json({ ...rest });
-      req.session.queried={...req.session.queried,...req.body}
-      req.session.email = req.body.email;
-      req.session.phonenum = req.body.phonenum;
+      let { email, phonenum } = employeeToSave;
+      console.log({ email, phonenum });
+      req.session.queried = { ...req.session.queried, email, phonenum };
+      req.session.email = email;
+      req.session.phonenum = phonenum;
       next();
     } catch (error) {
       res.status(500);

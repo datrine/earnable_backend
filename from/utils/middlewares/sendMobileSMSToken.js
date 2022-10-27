@@ -48,7 +48,7 @@ let sendMobileSMSToken = async (req, res, next) => {
 
 let sendPhonePinSMSToken = async (req, res, next) => {
     try {
-        let phonenumToSendToken = req.session.phonenum.queried;
+        let phonenumToSendToken = req.session.queried.phonenum;
 
         req.session.factor = "phone_pin";
         req.session.type = "token_ver";
