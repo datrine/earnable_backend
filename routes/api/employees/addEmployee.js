@@ -27,7 +27,7 @@ router.put(
   async (req, res, next) => {
     try {
       res.status(400);
-      let { employeeToSave, account, company } = req.session;
+      let { employeeToSave, account, company } = req.session.queried;
       let data = employeeToSave;
       employeeToSave.companyID = employeeToSave.companyID;
       employeeToSave.creatorMeta = {
@@ -62,7 +62,7 @@ router.put(
           to: data.email,
           html: `<h3>Welcome to Earnable</h3>.
             <p>Your employer, ${company_name}, has registered you at Earnable. We hope you enjoy your time here. You can activate your account 
-            <a href='${frontend_url}/employee/register?verSessID=${employeeVerSessID}'>here</a>. Your verification session ID, verSessID=${employeeVerSessID}. Your Mobile OTP is ${token}.</p>`,
+           <strong> <a href='${frontend_url}/employee/register?verSessID=${employeeVerSessID}'>here</a></strong>. Your verification session ID, verSessID, is <strong> ${employeeVerSessID}</strong>. Your Mobile OTP is ${token}.</p>`,
         }).catch((err) => {
           console.log(err);
         });

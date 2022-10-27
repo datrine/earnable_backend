@@ -19,8 +19,7 @@ router.post("/local", async (req, res, next) => {
             subject: "Welcome To Earnable",
             to: data.email,
             html:
-                `<p>Welcome to Earnable.
-             We hope you enjoy your time here</p>`
+                `<p>Welcome to Earnable. We hope you enjoy your time here</p>`
         }).catch(err => { console.log(err) });
         if (data.phonenum) {
             sendPhoneText({ to: data.phonenum, text: `Welcome to Earnable` }).
@@ -29,13 +28,10 @@ router.post("/local", async (req, res, next) => {
                 }).catch(console.log)
         }
         res.json({ ...rest })
-        req.session.queried={...req.session.queried}
+        req.session.queried={...req.session.queried,...req.body}
         req.session.email = req.body.email
         req.session.queried.email = req.body.email
         next()
-        /*let responseFromServer = await axios.post(`${AUTH_SERVER}/api/register/local`, { ...req.body });
-        let data = responseFromServer.data
-        return res.json(data)*/
     } catch (error) {
         console.log(error);
         next("Server error")

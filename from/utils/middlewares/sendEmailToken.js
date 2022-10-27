@@ -24,7 +24,7 @@ let sendEmailToken = async (req, res, next) => {
         await saveToken({ ...req.session.queried })
         let msg = `Thanks for registering at Earnable.
         Please verify Your email address. 
-        Token to input: ${req.session.token}.`
+        Token to input: ${req.session.queried.token}.`
 
         let emailRes = await sendEmail({
             to: emailToSendToken,
@@ -34,7 +34,6 @@ let sendEmailToken = async (req, res, next) => {
         if (!emailRes) {
             throw "Error sending..."
         }
-        //res.json({ info: emailRes });
         next()
     } catch (error) {
         console.log(error);

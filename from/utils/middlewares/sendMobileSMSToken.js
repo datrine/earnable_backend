@@ -51,10 +51,12 @@ let sendMobileSMSToken = async (req, res, next) => {
 let sendPhonePinSMSToken = async (req, res, next) => {
     try {
         let phonenumToSendToken = req.session.phonenum.queried;
+
         req.session.factor = "phone_pin";
         req.session.type = "token_ver";
         req.session.factorValue = phonenumToSendToken;
         req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
+        
         req.session.queried.factor = "phone_pin";
         req.session.queried.type = "token_ver";
         req.session.queried.factorValue = phonenumToSendToken;

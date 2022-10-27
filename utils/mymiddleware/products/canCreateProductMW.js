@@ -19,7 +19,6 @@ let canAddEmployeeMW = async (req, res, next) => {
         let account = req.session.account;
         let { accountID } = account;
         let data = req.body;
-        console.log(data)
         if (!data) {
             console.log("No employee details to save");
             return res.json({ err: "No employee detail to save" });
@@ -54,7 +53,6 @@ let canAddEmployeeMW = async (req, res, next) => {
         }
 
         let resourceRes = await getResourceByResourceID({ resourceDocID: company._id.toString() });
-        console.log(resourceRes)
         if (!resourceRes?.resource) {
             return res.json({ err: "Resource not found..." });
         }
@@ -77,6 +75,9 @@ let canAddEmployeeMW = async (req, res, next) => {
         }
         req.session.employeeToSave = refinedData
         req.session.company=company
+        req.session.queried={...req.session.queried}
+        req.session.queried.employeeToSave = refinedData
+        req.session.queried.company=company
         res.status(200)
         return next()
     } catch (error) {
