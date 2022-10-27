@@ -10,7 +10,7 @@ const SERVER_URL =
 
 let sendMobileSMSToken = async (req, res, next) => {
     try {
-        let phonenumToSendToken = req.session.phonenum;
+        let phonenumToSendToken = req.session.queried.phonenum;
         if (!phonenumToSendToken) {
             console.log("No phone number to send token...");
             return next()
@@ -26,13 +26,13 @@ let sendMobileSMSToken = async (req, res, next) => {
         req.session.factorValue =factorValue
         req.session.ttl =ttl
 
-        req.session.factor =factor
-        req.session.type = type
-        req.session.factorValue = factorValue;
-        req.session.ttl = ttl
+        req.session.queried.factor =factor
+        req.session.queried.type = type
+        req.session.queried.factorValue = factorValue;
+        req.session.queried.ttl = ttl
         await saveToken({ ...req.session.queried })
         let msg = `Please verify Your phone number. 
-        Token to input: ${req.session.token}.`;
+        Token to input: ${req.session.queried.token}.`;
         let mobileRes = await sendPhoneText({
             to: phonenumToSendToken,
             text: msg
@@ -50,13 +50,17 @@ let sendMobileSMSToken = async (req, res, next) => {
 
 let sendPhonePinSMSToken = async (req, res, next) => {
     try {
-        let phonenumToSendToken = req.session.phonenum;
+        let phonenumToSendToken = req.session.phonenum.queried;
         req.session.factor = "phone_pin";
         req.session.type = "token_ver";
         req.session.factorValue = phonenumToSendToken;
         req.session.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
-        await saveToken({ ...req.session });
-        let msg = `Thanks for registering at Earnable. Please verify Your phone number. Token to input: ${req.session.token}.`;
+        req.session.queried.factor = "phone_pin";
+        req.session.queried.type = "token_ver";
+        req.session.queried.factorValue = phonenumToSendToken;
+        req.session.queried.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
+        await saveToken({ ...req.session.queried });
+        let msg = `Thanks for registering at Earnable. Please verify Your phone number. Token to input: ${req.session.queried.token}.`;
         let emailRes = await sendPhoneText({
             to: phonenumToSendToken,
             text: msg
@@ -67,7 +71,6 @@ let sendPhonePinSMSToken = async (req, res, next) => {
         next()
     } catch (error) {
         console.log(error);
-
         throw error
     }
 };
