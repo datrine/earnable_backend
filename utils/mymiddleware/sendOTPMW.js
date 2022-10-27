@@ -7,7 +7,6 @@ let sendOTPMW = async (req, res, next) => {
   try {
     let { email: emailToSendToken, phonenum: phonenumToSendToken } =
       req.session?.queried?.account;
-    //req.session.queried.accountID=req.session?.queried?.account||req.session.account.accountID
     req.session.queried.platforms = ["email", "mobile"];
     req.session.queried.type = "otp";
     req.session.queried.ttl = DateTime.now().plus({ minute: 10 }).toJSDate();

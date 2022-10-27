@@ -1,7 +1,5 @@
-let nodemailer = require("nodemailer");
 const { DateTime } = require("luxon");
 const { saveToken } = require("../../../db/token");
-const { updateAccVer } = require("../../../db/account");
 const { sendPhoneText } = require("../phone_mgt");
 
 const SERVER_URL =

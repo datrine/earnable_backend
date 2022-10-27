@@ -59,7 +59,6 @@ router.get(
 
       req.session.queried.account = retrieveAccByVerSessIDRes.account;
       req.session.queried.email = retrieveAccByVerSessIDRes.account.email;
-      console.log(verSessID);
       req.session.queried.verSessID = verSessID;
       next();
     } catch (error) {

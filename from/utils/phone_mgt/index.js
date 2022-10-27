@@ -17,13 +17,6 @@ async function sendPhoneText(data) {
         }
         
         let res=await TERMII.sendSMS({to:data.to,sms:data.text});
-       /* let res = await client.messages
-            .create({
-                body: data.text,
-                from: '+16072845454',
-                to: data.to
-            }) */
-        //.then(message => console.log(message.sid));
         console.log(res)
 
         return { info: "SMS sent" }
