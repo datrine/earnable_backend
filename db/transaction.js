@@ -10,12 +10,6 @@ let getTransactionsByFilters = async ({
   type,
   transfer_code_exists,
 }) => {
-  
-  let filterTransferCode={
-    transfer_code: {
-      $exists: transfer_code_exists,
-    },
-  }
   let aggr = [
     {
       $match: {
