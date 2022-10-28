@@ -436,7 +436,6 @@ let attemptAutoFailLongWithdrawalCronJob = async () => {
     });
     let { transactions: listOfFailedTransactions } =
       getWithdrawalTransactionsByFiltersRes;
-    console.log({count_of_failed:listOfFailedTransactions.length})
     let promises = listOfFailedTransactions.map((obj) =>
       updateWithdrawalByTransactionID({
         transactionID: obj._id.toString(),
@@ -571,7 +570,8 @@ let attemptUpdateWithdrawal = async () => {
   try {
     let getTransactionsByFiltersRes = await getTransactionsByFilters({
       status: "completed",
-      transfer_code_exists: true,
+      type:"withdrawal",
+      //transfer_code_exists: true,
     });
     let { transactions: listOfCompletedTransactions } =
       getTransactionsByFiltersRes;
