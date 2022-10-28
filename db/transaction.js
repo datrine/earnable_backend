@@ -54,11 +54,6 @@ let getTransactionsByFilters = async ({
               ],
             },
           },
-          {
-            transfer_code: {
-              $exists: transfer_code_exists,
-            },
-          },
         ],
       },
     },
