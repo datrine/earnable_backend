@@ -28,9 +28,9 @@ router.use("/", async (req, res, next) => {
     if (retrieveAccountInfoByAccountIDRes.err) {
       return res.json(retrieveAccountInfoByAccountIDRes);
     }
-    req.session.queried.account = retrieveAccountInfoByAccountIDRes.account;
+    req.session.queried.account = retrieveAccountInfoByAccountIDRes?.account;
     req.session.queried.accountID =
-      retrieveAccountInfoByAccountIDRes.account.accountID;
+      retrieveAccountInfoByAccountIDRes?.account?.accountID;
     next();
   } catch (error) {
     console.log(error);

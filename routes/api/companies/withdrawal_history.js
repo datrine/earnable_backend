@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { getWithdrawalHistory } = require("../../../db/withdrawal");
 
 //user id, email or username
 
@@ -12,8 +13,11 @@ router.post("/", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
     try {
-        let { withdrawal_history } = req.session;
-        res.json({ withdrawal_history });
+        let { filters } = req.session.queried;
+        let withdrawalHistoryRes = await getWithdrawalHistory({
+          filters,
+        });
+        res.json(withdrawalHistoryRes);
     } catch (error) {
         console.log(error)
     }

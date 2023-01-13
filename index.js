@@ -21,6 +21,7 @@ if (app.get('env') === 'production') {
 
 app.use(session({ ...sess, saveUninitialized: true }));
 const fileUpload = require('express-fileupload');
+const {startSocket} = require("./notification_system");
 
 //app.use(formData.parse());
 app.use(express.json());
@@ -50,4 +51,6 @@ let server = http.createServer(app);
 let port=process.env.MY_PORT||7000
 server.listen(port, () => {
     console.log("Server running on " + server.address().port)
-})
+});
+
+startSocket(server);

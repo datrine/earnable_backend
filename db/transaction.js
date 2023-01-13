@@ -167,6 +167,9 @@ let getTransactionByID = async ({ transactionID }) => {
     const transaction = await transactionsCol.findOne({
       _id: ObjectID(transactionID),
     });
+    if (!transaction) {
+      return {err:{msg:"Transaction does not exist."}}
+    }
     return { transaction };
   } catch (error) {
     console.log(error);

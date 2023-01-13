@@ -284,7 +284,7 @@ let attemptReInitiateWithdrawalTransferCronJob = async () => {
     const result = await cursor.toArray();
     let toGoArray = result.map((obj) => ({
       reason: "Earnable payment",
-      amount: obj.amountToWithdraw * 100,
+      amount: Math.round( obj.amountToWithdraw * 100),
       recipient: obj.recipient_code,
       transactionID: obj._id.toString(),
       accountID: obj.status.updatedBy,
@@ -325,7 +325,7 @@ let attemptReInitiateWithdrawalTransferCronJob = async () => {
         },
       });
       if (transactionUpdateRes.err) {
-        console.log(transactionUpdateRes);
+        console.log({transactionUpdateRes});
         return;
       }
     }
@@ -692,7 +692,7 @@ let attemptProcessPayrollTransactionsCronJob = async () => {
         },
       });
       if (transactionUpdateRes.err) {
-        console.log(transactionUpdateRes);
+        console.log({transactionUpdateRes});
         return;
       }
     }

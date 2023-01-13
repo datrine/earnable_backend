@@ -12,7 +12,9 @@ let resolveTransactionMW = async (req, res, next) => {
   try {
     let {
       employee_details,
-      amount: amountRequestedToWithdraw,bank_details,company:{salaryMonthID,salaryYearID}
+      amount: amountRequestedToWithdraw,
+      bank_details,
+      company: { salaryMonthID, salaryYearID },
     } = req.session.queried;
     let { flexible_access, err: flexibleAccessErr } =
       await getEmployeeFlexibleAccess({
@@ -29,7 +31,8 @@ let resolveTransactionMW = async (req, res, next) => {
     let resWiHx = await getEmployeeWithdrawalHistory({
       employeeID,
       filters: {
-        salaryMonthID,salaryYearID,
+        salaryMonthID,
+        salaryYearID,
         states: ["initiated", "processing", "completed"],
       },
     });
@@ -64,29 +67,35 @@ let resolveTransactionMW = async (req, res, next) => {
       netMaxAmountWithdrawable,
       amountRequestedToWithdraw
     );
-    let withdrawal_fee = grossAmountToWithdraw * 0.015;
+    let withdrawal_fee = Number(
+      Number(grossAmountToWithdraw * 0.015).toFixed(2)
+    );
     let netAmountToWithdraw = 0;
     let withdrawal_fee_by_employee = 0;
     let withdrawal_fee_by_employer = 0;
     //withdrawal_charge_mode="shared"
     if (withdrawal_charge_mode === "employee") {
-      netAmountToWithdraw = grossAmountToWithdraw - withdrawal_fee;
+      netAmountToWithdraw = Number(
+        Number(grossAmountToWithdraw - withdrawal_fee)
+      );
       withdrawal_fee_by_employee = withdrawal_fee;
     }
     if (withdrawal_charge_mode === "shared") {
-      netAmountToWithdraw = grossAmountToWithdraw - withdrawal_fee / 2;
+      netAmountToWithdraw = Number(
+        Number(grossAmountToWithdraw - withdrawal_fee / 2).toFixed(2)
+      );
       withdrawal_fee_by_employee = withdrawal_fee / 2;
       withdrawal_fee_by_employer = withdrawal_fee / 2;
     }
     if (withdrawal_charge_mode === "employer") {
-      netAmountToWithdraw = grossAmountToWithdraw;
+      netAmountToWithdraw = Number(Number(grossAmountToWithdraw).toFixed(2));
       withdrawal_fee_by_employer = withdrawal_fee;
     }
     let amountDeductible = grossAmountToWithdraw - netAmountToWithdraw;
     if (netMaxAmountWithdrawable <= 0) {
       return res.json({ err: { msg: "Flexible salary limits reached" } });
     }
-    
+
     let transactionInfo = {
       amountRequestedToWithdraw,
       resolvedWithdrawAccess,
@@ -100,9 +109,9 @@ let resolveTransactionMW = async (req, res, next) => {
       netMaxAmountWithdrawable,
       grossAmountToWithdraw,
       netAmountToWithdraw,
-      ...bank_details
+      ...bank_details,
     };
-    console.log({bank_details})
+    console.log({ bank_details });
     req.session.queried = { ...req.session.queried, transactionInfo };
     next();
   } catch (error) {

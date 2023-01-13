@@ -22,30 +22,31 @@ let canWithdrawVerMW = async (req, res, next) => {
     if (!amount) {
       return res.json({ err: { msg: "Amount to withdraw must be included." } });
     }
-    amount=Number(amount)&&Number(amount)
+    amount = Number(amount) && Number(amount);
     if (Number.isNaN(amount)) {
-      return res.json({ err: { msg: "Amount to withdraw must be a valid amount in naira.kobo." } });
+      return res.json({
+        err: {
+          msg: "Amount to withdraw must be a valid amount in naira.kobo.",
+        },
+      });
     }
-    req.session.queried.amount=amount
-    /**
-     * @type {{account:accTemplate}}
-     */
-    let { account: selfAccount } = req.session || req.session?.self;
+    req.session.queried.amount = amount;
 
     /**
      * @type {{account:accTemplate}}
      */
-    let { account: queriedAccount,accountID: queriedAccountID } = req.session.queried;
+    let { account: queriedAccount, accountID: queriedAccountID } =
+      req.session.queried;
     if (!queriedAccount && !queriedAccountID) {
-      return res.json({err:{msg:"No accountID supplied."}})
+      return res.json({ err: { msg: "No accountID supplied." } });
     }
     if (!queriedAccount) {
       let retrieveRes = await retrieveAccountInfoByAccountID(queriedAccountID);
       if (retrieveRes.err) {
-       return res.json(retrieveRes);
+        return res.json(retrieveRes);
       }
-      queriedAccount=retrieveRes.account;
-    queriedAccountID = queriedAccount.accountID;
+      queriedAccount = retrieveRes.account;
+      queriedAccountID = queriedAccount.accountID;
     }
     if (!queriedAccount?.activity?.current?.name === "active") {
       return res.json({ err: { msg: "Account yet active." } });
@@ -54,7 +55,7 @@ let canWithdrawVerMW = async (req, res, next) => {
       accountID: queriedAccountID,
     });
     if (getEmployeeRes.err) {
-     return res.json(getEmployeeRes);
+      return res.json(getEmployeeRes);
     }
     let employee = getEmployeeRes.employee;
 
@@ -73,7 +74,7 @@ let canWithdrawVerMW = async (req, res, next) => {
       getBankDetailsByAccountID({ accountID: queriedAccountID }),
       getDepartmentByDepartmentID({ departmentID: employee.deptID }),
     ]);
-    let [companyResult, bankDetailsResult, departmentResult] =await promises;
+    let [companyResult, bankDetailsResult, departmentResult] = await promises;
     for await (const promise of [
       companyResult,
       bankDetailsResult,
@@ -97,10 +98,10 @@ let canWithdrawVerMW = async (req, res, next) => {
     }
 
     if (!bank_details?.recipient_code) {
-     return res.json({ err: { msg: "Account not yet linked up" } });
+      return res.json({ err: { msg: "Account not yet linked up" } });
     }
     let queried = {};
-    queried.account=queriedAccount;
+    queried.account = queriedAccount;
     queried.employee_details = employee;
     queried.company = company;
     queried.department = department;
@@ -112,7 +113,7 @@ let canWithdrawVerMW = async (req, res, next) => {
       recipient_code: bank_details.recipient_code,
       bankDetailID: bank_details._id.toString(),
     };
-    req.session.queried = { ...req.session.queried,... queried };
+    req.session.queried = { ...req.session.queried, ...queried };
     next();
   } catch (error) {
     console.log(error);

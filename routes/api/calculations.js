@@ -159,7 +159,7 @@ router.get("/amount_to_refund", async (req, res, next) => {
   let { filters, companyID } = req.session.queried;
   filters.companyID = companyID;
   filters ={...req.query,...filters} ;
-  let getAmountToRefundRes = await getCalculatedRefund({ companyID, filters });
+  let getAmountToRefundRes = await getCalculatedRefund(filters);
   return res.json(getAmountToRefundRes);
 });
 

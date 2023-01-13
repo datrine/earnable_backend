@@ -145,7 +145,7 @@ router.post(
       res.json({ info: transRes.info });
 
       let recipient_code = queriedBankDetails.recipient_code;
-
+      console.log({recipient_code})
       if (!recipient_code) {
         let createRes = await createRecipientCode({ ...queriedBankDetails });
         if (!createRes.recipient_code) {
@@ -179,7 +179,7 @@ router.post(
       }
 
       let transferCode = transferInitiationRes.transfer_code;
-
+      console.log({transferCode})
       if (!transferCode) {
         console.log("No transfer code");
         return;

@@ -119,13 +119,14 @@ let createRecipientCode = async ({ acc_name, acc_number, bank_code, bankDetailID
             throw data;
         }
     } catch (error) {
-        console.log(error)
+        console.log({error})
         return { err: error }
     }
 };
 
 let initiateTransfer = async ({ source = "balance", reason, amount, recipient }) => {
     try {
+        console.log({source,amount,recipient,reason})
         let response = await fetch("https://api.paystack.co/transfer", {
             method: "post",
             mode: "cors",
@@ -135,6 +136,9 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
             },
             body: JSON.stringify({ source, reason, amount, recipient })
         });
+        if (!response.ok) {
+            throw await response.json()
+        }
         /**
          * @type {initiateTransferResonseObj}
          */
@@ -145,7 +149,7 @@ let initiateTransfer = async ({ source = "balance", reason, amount, recipient })
         return { ...jsonObj.data }
 
     } catch (error) {
-        console.log(error);
+        console.log({error});
         return { err: error }
     }
 };

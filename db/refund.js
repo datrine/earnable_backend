@@ -268,10 +268,10 @@ let getRefundHistory = async ({ filters }) => {
   }
 };
 
-let getCalculatedRefund = async ({ companyID }) => {
+let getCalculatedRefund = async (filters) => {
   try {
     
-    let cursor = refundsCol.aggregate(calculateRefundAgg({companyID}));
+    let cursor = refundsCol.aggregate(calculateRefundAgg(filters));
     let results=await cursor.toArray();
     let amountToRefundObj = results[0]
     return {  ...amountToRefundObj};

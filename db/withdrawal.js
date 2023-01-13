@@ -9,16 +9,20 @@ let createWithdrawal = async ({
   employeeID,
   companyID,
   transactionInfo,
-  transactionID,salaryMonthID,salaryYearID ,
+  transactionID,
+  salaryMonthID,
+  salaryYearID,
   purpose = "employee_payment",
-  status ={name: "processing",updatedAt:new Date()},
+  status = { name: "processing", updatedAt: new Date() },
 }) => {
   let result = await withdrawalsCol.insertOne({
     accountID,
     employeeID,
     companyID,
     transactionID,
-    status,salaryMonthID,salaryYearID ,
+    status,
+    salaryMonthID,
+    salaryYearID,
     transactionInfo,
     type: purpose,
     lastModified: new Date(),
@@ -111,9 +115,11 @@ function dateIsValid(date) {
   return date instanceof Date && !isNaN(date);
 }
 
-let getEmployeeWithdrawalHistory = async ({ employeeID, filters}) => {
+let getEmployeeWithdrawalHistory = async ({ employeeID, filters }) => {
   try {
-   let {withdrawal_history}=await getWithdrawalHistory({filters:{...filters,employeeID}})
+    let { withdrawal_history } = await getWithdrawalHistory({
+      filters: { ...filters, employeeID },
+    });
     return { withdrawal_history };
   } catch (error) {
     console.log(error);
@@ -129,8 +135,9 @@ let getWithdrawalHistory = async ({ filters }) => {
       year,
       weekNumber,
       monthNumber,
-      salaryMonthID,salaryYearID,
-      states=["completed"],
+      salaryMonthID,
+      salaryYearID,
+      states = ["completed"],
       accountID,
       companyID,
       deptID,
@@ -151,9 +158,17 @@ let getWithdrawalHistory = async ({ filters }) => {
                 $eq: [
                   "$salaryMonthID",
                   {
-                    $ifNull: [salaryMonthID,
-                      "$salaryMonthID",
-                    ],
+                    $ifNull: [salaryMonthID, "$salaryMonthID"],
+                  },
+                ],
+              },
+            },
+            {
+              $expr: {
+                $eq: [
+                  "$salaryYearID",
+                  {
+                    $ifNull: [salaryYearID, "$salaryYearID"],
                   },
                 ],
               },
@@ -188,9 +203,7 @@ let getWithdrawalHistory = async ({ filters }) => {
                 $eq: [
                   "$employeeID",
                   {
-                    $ifNull: [employeeID,
-                      "$employeeID",
-                    ],
+                    $ifNull: [employeeID, "$employeeID"],
                   },
                 ],
               },
@@ -217,34 +230,58 @@ let getWithdrawalHistory = async ({ filters }) => {
             },
             {
               $expr: {
-                   $and: [{
-                    $in: ['$status.name',states]
-                  }, {
-                    $eq: [{
-                      $week: '$status.updatedAt'
-                    }, {
-                      $ifNull: [weekNumber, {
-                        $week: '$status.updatedAt'
-                      }]
-                    }]
-                  }, {
-                    $eq: [{
-                      $year: '$status.updatedAt'
-                    }, {
-                      $ifNull: [year, {
-                        $year: '$status.updatedAt'
-                      }]
-                    }]
-                  }, {
-                    $eq: [{
-                      $month: '$status.updatedAt'
-                    }, {
-                      $ifNull: [monthNumber, {
-                        $month: '$status.updatedAt'
-                      }]
-                    }]
-                  }]
-              }}
+                $and: [
+                  {
+                    $in: ["$status.name", states],
+                  },
+                  {
+                    $eq: [
+                      {
+                        $week: "$status.updatedAt",
+                      },
+                      {
+                        $ifNull: [
+                          weekNumber,
+                          {
+                            $week: "$status.updatedAt",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: [
+                      {
+                        $year: "$status.updatedAt",
+                      },
+                      {
+                        $ifNull: [
+                          year,
+                          {
+                            $year: "$status.updatedAt",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: [
+                      {
+                        $month: "$status.updatedAt",
+                      },
+                      {
+                        $ifNull: [
+                          monthNumber,
+                          {
+                            $month: "$status.updatedAt",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
           ],
         },
       },
@@ -263,5 +300,6 @@ let getWithdrawalHistory = async ({ filters }) => {
 module.exports = {
   createWithdrawal,
   updateWithdrawalByTransactionID,
-  getEmployeeWithdrawalHistory,getWithdrawalHistory
+  getEmployeeWithdrawalHistory,
+  getWithdrawalHistory,
 };
