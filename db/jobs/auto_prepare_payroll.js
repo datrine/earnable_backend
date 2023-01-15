@@ -3,7 +3,8 @@ const {
   persistPayrollAgg,
 } = require("../pipelines/employer");
 const { mongoClient } = require("../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME=process.env.DB_NAME
+const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");
 //const payrollsCol = waleprjDB.collection("payrolls");
 

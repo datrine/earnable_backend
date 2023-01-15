@@ -1,7 +1,8 @@
 const { ObjectID } = require("bson");
 const { DateTime } = require("luxon");
-const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
-const db = clientConn.db("waleprj");
+const { mongoClient } = require("../utils/conn/mongoConn");
+const DB_NAME=process.env.DB_NAME
+const db = mongoClient.db(DB_NAME);
 const withdrawalsCol = db.collection("withdrawals");
 
 let createWithdrawal = async ({

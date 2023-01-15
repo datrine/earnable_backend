@@ -10,29 +10,32 @@ const addEmployeeRouter = require("./addEmployee");
 const changePhonepinEmployeeRouter = require("./changePhone");
 const employeeIDRouter = require("./[employeeID]");
 const loginProductRouter = require("./login");
-const { getBiodataFunc, retrieveAccountInfoBasic } = require("../../../db/account");
+const {
+  getBiodataFunc,
+  retrieveAccountInfoBasic,
+} = require("../../../db/account");
 
-
-router.get("/flexible_access_info",async(req,res,next)=>{
+router.get("/flexible_access_info", async (req, res, next) => {
   try {
-  let filters={...req.session.filters,...req.query}
-  console.log(filters)
-let getEmployeesFlexibleAccessTableInfoRes=await  getEmployeesFlexibleAccessTableInfo({filters});
-res.json(getEmployeesFlexibleAccessTableInfoRes)
+    let filters = { ...req.session.filters, ...req.query };
+    console.log(filters);
+    let getEmployeesFlexibleAccessTableInfoRes =
+      await getEmployeesFlexibleAccessTableInfo({ filters });
+    res.json(getEmployeesFlexibleAccessTableInfoRes);
   } catch (error) {
-      console.log(error)
-      res.json({err:error})
+    console.log(error);
+    res.json({ err: error });
   }
 });
 
-router.get("/employees_table_info",async (req, res, next) => {
+router.get("/employees_table_info", async (req, res, next) => {
   try {
-    let query=req.query;
-   let filters= {...req.session.queried?.filters,...query};
-   console.log(filters)
-   let getEmployeesInfoTableRes=await getEmployeesTableInfo({filters});
-   console.log(getEmployeesInfoTableRes)
-   res.json(getEmployeesInfoTableRes)
+    let query = req.query;
+    let filters = { ...req.session.queried?.filters, ...query };
+    console.log(filters);
+    let getEmployeesInfoTableRes = await getEmployeesTableInfo({ filters });
+    console.log(getEmployeesInfoTableRes);
+    res.json(getEmployeesInfoTableRes);
   } catch (error) {
     res.json({ err: error });
   }
@@ -40,56 +43,68 @@ router.get("/employees_table_info",async (req, res, next) => {
 
 router.get("/count", async (req, res, next) => {
   try {
-      let { employees } = req.session.queried
-      return res.json({ employeeCount:employees.length })
+    let { employees } = req.session.queried;
+    return res.json({ employeeCount: employees.length });
   } catch (error) {
-      console.log(error)
+    console.log(error);
   }
 });
 
 router.get("/list", async (req, res, next) => {
   try {
-      let { employees } = req.session.queried
-      return res.json({ employees })
+    let { employees } = req.session.queried;
+    return res.json({ employees });
   } catch (error) {
-      console.log(error)
+    console.log(error);
   }
 });
 
 router.get("/info", async (req, res, next) => {
   try {
-      let { employees } = req.session.queried;
-      let employeesInfo=[]
-      for (const employee of employees) {
-          let {account,}=await retrieveAccountInfoBasic({identifier:employee. accountID})
-          if (!account) {
-              continue
-          }
-          let {accountID,email}=account
-          let {user}=await getBiodataFunc({accountID,email});
-          if (!user) {
-              continue
-          }
-          let employeeInfo={...employee,...account,...user};
-          employeesInfo.push(employeeInfo)
+    let { employees } = req.session.queried;
+    let employeesInfo = [];
+    for (const employee of employees) {
+      let { account } = await retrieveAccountInfoBasic({
+        identifier: employee.accountID,
+      });
+      if (!account) {
+        continue;
       }
-      return res.json({ employeesInfo })
+      let { accountID, email } = account;
+      let { user } = await getBiodataFunc({ accountID, email });
+      if (!user) {
+        continue;
+      }
+      let employeeInfo = { ...employee, ...account, ...user };
+      employeesInfo.push(employeeInfo);
+    }
+    return res.json({ employeesInfo });
   } catch (error) {
-      console.log(error)
+    console.log(error);
   }
 });
 
 router.get("/", async (req, res, next) => {
   try {
-      let { employees } = req.session.queried
-      return res.json({ employees })
+    let { employees } = req.session.queried;
+    return res.json({ employees });
   } catch (error) {
-      console.log(error)
+    console.log(error);
   }
 });
 
-
-router.use("/add", addEmployeeRouter);
+router.use(
+  "/add",
+  (req, res, next) => {
+    let { status } = req.session.queried.company;
+    if (!(status && status.name === "verified")) {
+      console.log("Company no yet verified");
+      return res.json({ err: {msg:"Company no yet verified"} });
+    }
+    next();
+  },
+  addEmployeeRouter
+);
 
 router.use("/login", loginProductRouter);
 
@@ -116,7 +131,7 @@ router.use(
         return res.json(getEmployeeByEmployeeIDRes);
       }
       req.session.queried.employee = getEmployeeByEmployeeIDRes.employee;
-      
+
       next();
     } catch (error) {
       res.json({ err: error });
@@ -124,28 +139,5 @@ router.use(
   },
   employeeIDRouter
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = router;

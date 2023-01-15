@@ -1,14 +1,15 @@
 const { MongoClient, ObjectID, ObjectId } = require("mongodb");
 
 // Connection URI
-const uri = process.env.MONGODB_URL //|| "mongodb://localhost:27017";
+const uri = process.env.MONGODB_URL; //|| "mongodb://localhost:27017";
 
 // Create a new MongoClient
 const mongoClient = new MongoClient(
-  uri ,/**/{
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}
+  uri,
+  /**/ {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }
 );
 
 async function startConn() {
@@ -26,4 +27,4 @@ async function startConn() {
 }
 //startConn();
 
-module.exports = { mongoClient, ObjectID, startConn };
+module.exports = { mongoClient, ObjectID, startConn, };

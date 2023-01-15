@@ -9,9 +9,15 @@ const settingsRouter = require("./settings");
 const companyWithdrawalHistoryRouter = require("./withdrawal_history");
 const companyWalletRouter = require("../wallets");
 const { getEmployeesByCompanyID } = require("../../../db/employee");
-const { setCompanySalaryDate } = require("../../../db/company");
+const { setCompanySalaryDate, checkCompanyStatus } = require("../../../db/company");
 
-router.use("/roles", companyRolesRouter);
+router.use("/roles", companyRolesRouter, async (req, res, next) => {
+    try {
+        next()
+    } catch (error) {
+        console.log(error)
+    }
+  },);
 
 router.use("/employees", async (req, res, next) => {
     try {

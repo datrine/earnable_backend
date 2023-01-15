@@ -1,5 +1,6 @@
-const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
-const db = clientConn.db("waleprj");
+const { mongoClient } = require("../utils/conn/mongoConn");
+const DB_NAME=process.env.DB_NAME
+const db = mongoClient.db(DB_NAME);
 const otpTokensCol = db.collection("otps");
 
 async function saveOTPToken({ otp, platforms, accountID, ttl }) {

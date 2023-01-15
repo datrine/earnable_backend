@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const { mongoClient } = require("../utils/conn/mongoConn");
 const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");
 const { ObjectId } = require("bson");
 const { cleanAndValidateNewCompany } = require("../utils/validators/companies");
@@ -166,8 +167,8 @@ let setCompanySalaryDate = async ({ companyID, salary_date }) => {
     if (DateTime.now() > dateOf) {
       next_salary_date = next_salary_date.plus({ month: 1 });
     }
-    let salaryMonthID=next_salary_date.month;
-    let salaryYearID=next_salary_date.year;
+    let salaryMonthID = next_salary_date.month;
+    let salaryYearID = next_salary_date.year;
     let companyDoc = await companiesCol.findOneAndUpdate(
       { _id: ObjectId(companyID) },
       [
@@ -188,13 +189,46 @@ let setCompanySalaryDate = async ({ companyID, salary_date }) => {
     }
 
     return {
-      info: "Salary date changed. Changes would reflect next salary cycle...",next_salary_date
+      info: "Salary date changed. Changes would reflect next salary cycle...",
+      next_salary_date,
     };
   } catch (error) {
     console.log(error);
   }
 };
 
+let checkCompanyStatus = async ({ companyID }) => {
+  try {
+    let companyDoc = await companiesCol.findOne({ _id: ObjectId(companyID) });
+    if (!companyDoc) {
+      return { err: { msg: "Company not found" } };
+    }
+    let status = companyDoc.status;
+    return {
+      status,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+let verifyCompanyRCNumber = async ({ companyID, rc_number, company_name }) => {
+  try {
+    if (1 !== 2) {
+      return;
+    }
+    let companyDoc = await companiesCol.findOne({ _id: ObjectId(companyID) });
+    if (!companyDoc) {
+      return { err: { msg: "Company not found" } };
+    }
+    let status = companyDoc.status;
+    return {
+      status,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   createCompany,
   getCompaniesByIDs,
@@ -202,4 +236,5 @@ module.exports = {
   getCompanySettings,
   createCompanySettings,
   setCompanySalaryDate,
+  checkCompanyStatus,
 };

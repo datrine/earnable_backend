@@ -7,48 +7,44 @@ const {
   editDepartment,
   getDeptsTableInfo,
 } = require("../../../../db/department");
-const { getEmployeesByCompanyID } = require("../../../../db/employee");
-const { composeGetDeptInfoTableAgg } = require("../../../../db/pipelines/employer");
 const departmentEmployeesRouter = require("./employees");
 const departmentPoliciesRouter = require("./policies");
 
-router.post("/", async (req, res, next) => {
-  try {
-    let { companyID } = req.session;
-    let deptCreationObj = req.body;
-    let rolesRes = await createDepartment({ companyID, ...deptCreationObj });
-    if (rolesRes.err) {
-      return res.json(rolesRes);
+router.post(
+  "/",
+  (req, res, next) => {
+    let { status } = req.session.queried.company;
+    if (!(status && status.name === "verified")) {
+      console.log("Company no yet verified");
+      return res.json({ err:{msg: "Company no yet verified"} });
     }
-    res.json(rolesRes);
+    next();
+  },
+  async (req, res, next) => {
+    try {
+      let { companyID } = req.session.queried;
+      let deptCreationObj = req.body;
+      let rolesRes = await createDepartment({ companyID, ...deptCreationObj });
+      if (rolesRes.err) {
+        return res.json(rolesRes);
+      }
+      res.json(rolesRes);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+router.get("/depts_table_info", async (req, res, next) => {
+  try {
+    let companyID = req.session.queried.companyID;
+    let getDeptsTableInfoRes = await getDeptsTableInfo({ companyID });
+    res.json(getDeptsTableInfoRes);
   } catch (error) {
     console.log(error);
+    res.json({ err: error });
   }
 });
-
-router.get("/depts_table_info",async(req,res,next)=>{
-  try {
-    let companyID=req.session.queried.companyID
-   let getDeptsTableInfoRes=await getDeptsTableInfo({companyID});
-   res.json(getDeptsTableInfoRes)
-  } catch (error) {
-    console.log(error);
-    res.json({err:error})
-  }
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 router.put("/:departmentID", async (req, res, next) => {
   try {
@@ -77,7 +73,7 @@ router.put("/:departmentID", async (req, res, next) => {
 router.use("/:departmentID", async (req, res, next) => {
   try {
     let { departmentID } = req.params;
-    req.session.departmentID=departmentID;
+    req.session.departmentID = departmentID;
     let rolesRes = await getDepartmentByDepartmentID({ departmentID });
     if (rolesRes.err) {
       return res.json(rolesRes);
@@ -89,7 +85,8 @@ router.use("/:departmentID", async (req, res, next) => {
   }
 });
 
-router.use( "/:departmentID/policies",
+router.use(
+  "/:departmentID/policies",
   async (req, res, next) => {
     req.session.departmentID = req.params.departmentID;
     next();

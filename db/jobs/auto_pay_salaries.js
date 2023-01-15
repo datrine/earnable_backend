@@ -1,9 +1,10 @@
 const { mongoClient } = require("../../utils/conn/mongoConn");
+const DB_NAME=process.env.DB_NAME
+const waleprjDB = mongoClient.db(DB_NAME);
 const { payrollTemplate } = require("../templates");
 const { initiateTransfer } = require("../bank_detail");
 const { createWalletTransaction } = require("../wallet");
 const { updateEmployeePayrollTransactionID } = require("../payroll");
-const waleprjDB = mongoClient.db("waleprj");
 const payrollsCol = waleprjDB.collection("payrolls");
 
 let autoPrepareSalaryTransactions = async () => {

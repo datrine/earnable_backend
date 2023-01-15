@@ -27,6 +27,7 @@ router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     if (!preCompanyData.company_name) {
       return res.json({ err: { msg: "No company name supplied" } });
     }
+
     if (!preCompanyData?.flexible_access?.access_mode) {
       return res.json({
         err: { msg: "No company flexible access mode supplied" },
@@ -42,19 +43,20 @@ router.post("/", sessIDVerifyMW, canCreateCompanyMW, async (req, res, next) => {
     if (!preCompanyData.rc_number) {
       return res.json({ err: { msg: "No company rc number supplied" } });
     }
-    let salary_date=preCompanyData.salary_date
+
+    let salary_date = preCompanyData.salary_date;
     let dateOf = DateTime.fromObject({ day: salary_date });
     let next_salary_date = DateTime.fromObject({ day: salary_date });
     if (DateTime.now() > dateOf) {
       next_salary_date = next_salary_date.plus({ month: 1 });
     }
-    let salaryMonthID=next_salary_date.month;
-    let salaryYearID=next_salary_date.year;
-preCompanyData.next_salary_date=next_salary_date
-preCompanyData.salaryMonthID=salaryMonthID;
-preCompanyData.salaryYearID=salaryYearID;
-
-preCompanyData.creatorMeta = {
+    let salaryMonthID = next_salary_date.month;
+    let salaryYearID = next_salary_date.year;
+    preCompanyData.next_salary_date = next_salary_date;
+    preCompanyData.salaryMonthID = salaryMonthID;
+    preCompanyData.salaryYearID = salaryYearID;
+    preCompanyData.status = { name: "unverified", createdOn: new Date() };
+    preCompanyData.creatorMeta = {
       _id: ObjectId(account._id),
       accountID: account.accountID,
     };

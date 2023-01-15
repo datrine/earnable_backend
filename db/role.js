@@ -1,8 +1,9 @@
 const router = require("express").Router();
 const { mongoClient } = require("../utils/conn/mongoConn");
+const DB_NAME=process.env.DB_NAME
+const waleprjDB = mongoClient.db(DB_NAME);
 const { createRole } = require("../utils/misc/company_roles");
 const { accTemplate } = require("./templates");
-const waleprjDB = mongoClient.db("waleprj");
 const companyRolesCol = waleprjDB.collection("companyRoles");
 
 let createInitialCompanyRoles = async (rolesData) => {

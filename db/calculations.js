@@ -1,6 +1,4 @@
-const { ObjectID } = require("bson");
-const { DateTime } = require("luxon");
-const { mongoClient: clientConn } = require("../utils/conn/mongoConn");
+const { mongoClient } = require("../utils/conn/mongoConn");
 const {
   dashboardInfoAgg,
   employeeEarningsWithdrawalsAgg,
@@ -17,7 +15,8 @@ const {
   accumulationsTemplate,
 } = require("./templates");
 const { debtListTemplate } = require("./templates/calculations");
-const db = clientConn.db("waleprj");
+const DB_NAME=process.env.DB_NAME
+const db = mongoClient.db(DB_NAME);
 const employeesCol = db.collection("employees");
 const accountsCol = db.collection("accounts");
 const companiesCol = db.collection("companies");
