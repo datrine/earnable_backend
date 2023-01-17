@@ -96,25 +96,6 @@ router.get("/", async (req, res, next) => {
 
 router.use(
   "/add",
-  async (req, res, next) => {
-    let { companyID } = req.body;
-    console.log({companyID})
-    let companyRes = await getCompanyByID({ id: companyID });
-    if (companyRes?.err) {
-      return res.json(companyRes);
-    }
-    req.session.queried={...req.session.queried}
-    req.session.queried.company=companyRes.company;
-    next();
-  },
-  (req, res, next) => {
-    let { status } = req?.session?.queried?.company;
-    if (!(status && status.name === "verified")) {
-      console.log("Company no yet verified");
-      return res.json({ err: { msg: "Company no yet verified" } });
-    }
-    next();
-  },
   addEmployeeRouter
 );
 
