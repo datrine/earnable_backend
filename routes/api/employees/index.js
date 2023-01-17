@@ -98,6 +98,7 @@ router.use(
   "/add",
   async (req, res, next) => {
     let { companyID } = req.body;
+    console.log({companyID})
     let companyRes = await getCompanyByID({ id: companyID });
     if (companyRes?.err) {
       return res.json(companyRes);
