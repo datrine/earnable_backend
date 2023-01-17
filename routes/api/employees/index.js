@@ -14,6 +14,7 @@ const {
   getBiodataFunc,
   retrieveAccountInfoBasic,
 } = require("../../../db/account");
+const { getCompanyByID } = require("../../../db/company");
 
 router.get("/flexible_access_info", async (req, res, next) => {
   try {
@@ -95,11 +96,21 @@ router.get("/", async (req, res, next) => {
 
 router.use(
   "/add",
+  async (req, res, next) => {
+    let { employeeToSave } = req.session.queried;
+    let companyID = employeeToSave.companyID;
+    let companyRes = await getCompanyByID({ id: companyID });
+    if (companyRes?.err) {
+      return res.json(companyRes);
+    }
+    req.session.queried.company=companyRes.company;
+    next();
+  },
   (req, res, next) => {
-    let { status } = req.session.queried.company;
+    let { status } = req?.session?.queried?.company;
     if (!(status && status.name === "verified")) {
       console.log("Company no yet verified");
-      return res.json({ err: {msg:"Company no yet verified"} });
+      return res.json({ err: { msg: "Company no yet verified" } });
     }
     next();
   },
