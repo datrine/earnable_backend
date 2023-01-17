@@ -103,6 +103,7 @@ router.use(
     if (companyRes?.err) {
       return res.json(companyRes);
     }
+    req.session.queried={...req.session.queried}
     req.session.queried.company=companyRes.company;
     next();
   },
