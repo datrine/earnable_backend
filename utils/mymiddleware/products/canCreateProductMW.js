@@ -4,7 +4,8 @@ const {
 } = require("../../../db/resource");
 const { hasRole } = require("../../../db/role");
 const { mongoClient } = require("../../conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME=process.env.DB_NAME
+const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");
 const subscriptionCol = waleprjDB.collection("subscriptions");
 const { cleanAndValidateNewProduct } = require("../../validators/products");
