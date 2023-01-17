@@ -1,7 +1,5 @@
 const { ObjectId } = require("bson");
 const {
-  getResourcesByAccID,
-  getResourcesByResourceID,
   getResourceByResourceID,
 } = require("../../../db/resource");
 const { hasRole } = require("../../../db/role");
@@ -34,9 +32,9 @@ let canAddEmployeeMW = async (req, res, next) => {
     }
 
     let refinedData = cleanAndValidateNewProduct(data);
-    console.log({refinedData})
+    console.log({ refinedData });
     if (!ObjectId.isValid(refinedData.companyID)) {
-      console.log("CompanyId not valid");
+      console.log(`CompanyId ${refinedData?.companyID} not valid`);
       return res.json({ err: "CompanyId not valid" });
     }
 
