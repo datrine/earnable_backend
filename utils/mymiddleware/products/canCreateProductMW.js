@@ -34,7 +34,7 @@ let canAddEmployeeMW = async (req, res, next) => {
     }
 
     let refinedData = cleanAndValidateNewProduct(data);
-
+    console.log({refinedData})
     if (!ObjectId.isValid(refinedData.companyID)) {
       console.log("CompanyId not valid");
       return res.json({ err: "CompanyId not valid" });
