@@ -97,8 +97,7 @@ router.get("/", async (req, res, next) => {
 router.use(
   "/add",
   async (req, res, next) => {
-    let { employeeToSave } = req.session.queried;
-    let companyID = employeeToSave.companyID;
+    let { companyID } = req.body;
     let companyRes = await getCompanyByID({ id: companyID });
     if (companyRes?.err) {
       return res.json(companyRes);
