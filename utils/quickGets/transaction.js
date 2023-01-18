@@ -1,6 +1,7 @@
 const { ObjectId } = require("bson");
 const { mongoClient, startConn } = require("../conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const paymentsCol = waleprjDB.collection("payments");
 async function getTransactionStateOfOrder({ orderId }) {
     try {

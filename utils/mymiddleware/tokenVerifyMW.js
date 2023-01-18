@@ -1,6 +1,7 @@
 const { mongoClient } = require("../conn/mongoConn");
 const { verifyToken } = require("../encdec");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const usersCol = waleprjDB.collection("users");
 
 /**

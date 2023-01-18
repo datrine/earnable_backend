@@ -1,7 +1,5 @@
 const router = require("express").Router();
-const { mongoClient } = require("../../../utils/conn/mongoConn");
 const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
 
 router.get("/me",sessIDVerifyMW, (req, res, next) => {
     try {

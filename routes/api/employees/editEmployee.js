@@ -1,8 +1,4 @@
 const router = require("express").Router();
-const { mongoClient, ObjectID } = require("../../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
-const employeesCol = waleprjDB.collection("employees");
-const { ObjectId } = require("bson");
 const { hasRole } = require("../../../db/role");
 const {
   getAuthAccount,

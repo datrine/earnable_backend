@@ -1,7 +1,4 @@
 const router = require("express").Router();
-const { getAuthAccount } = require("../../../../../from/utils/middlewares/getAuthAccount");
-const { accountLogOut, getUserInfo,updateAccInfo } = require("../../../../../db/account");
-const { getEmployeeByAccountID } = require("../../../../../db/employee");
 const { getBankDetailsByAccountID, updateBankDetailsByAccountID } = require("../../../../../db/bank_detail");
 
 router.put("/upsert", async (req, res, next) => {

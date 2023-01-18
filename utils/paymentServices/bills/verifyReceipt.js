@@ -1,6 +1,7 @@
 const { mongoClient } = require("../../conn/mongoConn");
-const waleprj = mongoClient.db("waleprj");
-const ordersCol = waleprj.collection("orders");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
+const ordersCol = waleprjDB.collection("orders");
 
 async function verifyReceipt({ orderId, amountPaid, transaction }) {
     try {

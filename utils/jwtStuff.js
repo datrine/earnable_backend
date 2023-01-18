@@ -1,7 +1,6 @@
-const { SignJWT } = require('jose/dist/node/cjs/jwt/sign')
 //const {EncryptJWT  } = require('jose/dist/node/cjs/jwt/encrypt.js')
 var fs = require('fs');
-var {createPrivateKey,createSecretKey} = require("crypto");
+var {createSecretKey} = require("crypto");
 const { EncryptJWT } = require('jose/dist/node/cjs/jwt/encrypt');
 //let privateKey=createSecretKey(fs.readFileSync( "../key.pem"))
 let privateKey=createSecretKey(Buffer.from( "datrine","utf8"))

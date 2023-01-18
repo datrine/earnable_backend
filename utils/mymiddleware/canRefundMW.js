@@ -1,13 +1,9 @@
-const { getBankDetailsByAccountID } = require("../../db/bank_detail");
-const { getEmployeeByAccountID } = require("../../db/employee");
-const { findAndVerifyToken } = require("../../db/token");
+
 /**
  * @type {import("ng-banks").default}
  */
-const ngBank = require("ng-banks");
 const { getCompanyByID } = require("../../db/company");
-const { getDepartmentByDepartmentID } = require("../../db/department");
-const { bankDetailsTemplate, accTemplate } = require("../../db/templates");
+const {  accTemplate } = require("../../db/templates");
 const { retrieveAccountInfoByAccountID } = require("../../db/account");
 
 /**

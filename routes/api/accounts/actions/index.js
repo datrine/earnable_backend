@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const tokenVerifyMW = require("../../../../utils/mymiddleware/tokenVerifyMW");
 const subscriptionsRouter = require("../subscriptions");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
 const { accountLogOut, activateEmployeeAccount, updateAccInfo } = require("../../../../db/account");

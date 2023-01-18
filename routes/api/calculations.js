@@ -10,7 +10,6 @@ const {
   getDebtList,
   getTotalWithdrawalCount,
   getPaymentListForCompany,
-  getEmployeeEarningsAndWithdrawals,
 } = require("../../db/calculations");
 const { getTotalSalaries, getAmountToRefund } = require("../../db/employee");
 const { getCalculatedRefund } = require("../../db/refund");

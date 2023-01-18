@@ -1,12 +1,9 @@
 const router = require("express").Router()
 const { mongoClient, ObjectID } = require("../../../utils/conn/mongoConn");
-const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const productOrderRouter = require("./product");
-const shopsCol = waleprjDB.collection("shops");
 const ordersCol = waleprjDB.collection("orders");
-const $ = require("mongo-dot-notation");
-const { nanoid } = require("nanoid");
 const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
 
 router.use(sessIDVerifyMW, productOrderRouter)

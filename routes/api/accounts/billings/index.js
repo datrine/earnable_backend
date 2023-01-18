@@ -2,7 +2,9 @@ const router = require("express").Router();
 const { mongoClient } = require("../../../utils/conn/mongoConn");
 const { verifySubscriptionMW } = require("../../../utils/mymiddleware/accounts/verifySubscriptionMW");
 const {getSubscriptionsFromOrder } = require("../../../utils/quickGets/order");
-const waleprjDB = mongoClient.db("waleprj");
+
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const subscriptionsCol = waleprjDB.collection("subscriptions");
 
 

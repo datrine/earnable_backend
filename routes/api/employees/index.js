@@ -4,7 +4,6 @@ const {
   getEmployeeByEmployeeID,
   getEmployeesTableInfo,
   getEmployeesFlexibleAccessTableInfo,
-  getEmployeesByCompanyID,
 } = require("../../../db/employee");
 const addEmployeeRouter = require("./addEmployee");
 const changePhonepinEmployeeRouter = require("./changePhone");

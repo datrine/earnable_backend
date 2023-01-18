@@ -1,6 +1,7 @@
 const router = require("express").Router()
 const { mongoClient } = require("../../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const paymentsCol = waleprjDB.collection("payments")
 var crypto = require('crypto');
 let secret=process.env.PAYSTACK_SECRET_KEY

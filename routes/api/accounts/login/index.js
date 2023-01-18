@@ -1,10 +1,4 @@
 const router = require("express").Router();
-const { mongoClient } = require("../../../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
-const usersCol = waleprjDB.collection("users")
-const { cleanAndValidateUser } = require("../../../../utils/validators/user");
-const { getToken } = require("../../../../utils/encdec");
-const bcrypt = require("bcrypt")
 const { directLoginFunc, emailLoginFunc, mobileSMSLoginFunc,directMobilePinLoginFunc } = require("../../../../db/login");
 const { activateNext, retrieveAccountInfoBySessID, getUnAuthenticatedFactors } = require("../../../../db/account");
 

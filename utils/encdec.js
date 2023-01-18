@@ -3,7 +3,8 @@ const base64url = require('base64-url')
 var jwt = require('jsonwebtoken');
 let secretKey = process.env.TOKEN_SECRET_KEY;
 const { mongoClient } = require("../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const sessionsCol = waleprjDB.collection("sessions")
 
 async function getToken(payload = { email, _id }) {

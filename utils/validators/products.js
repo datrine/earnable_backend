@@ -1,4 +1,3 @@
-const { isNumber } = require('lodash');
 const inspector = require('schema-inspector');
 
 function cleanAndValidateNewProduct(company) {

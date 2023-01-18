@@ -1,4 +1,3 @@
-let nodemailer = require("nodemailer");
 const { sendEmail } = require("../../from/utils/email_mgt");
 let router = require("express").Router()
 

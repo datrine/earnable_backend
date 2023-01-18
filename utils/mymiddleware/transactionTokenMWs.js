@@ -1,5 +1,4 @@
 const { findAndVerifyOTPToken } = require("../../db/otp_token");
-const { findAndVerifyToken } = require("../../db/token");
 
 /**
  * 

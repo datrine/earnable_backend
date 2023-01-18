@@ -1,13 +1,7 @@
 const router = require("express").Router();
-const { json } = require("body-parser");
 const loginRouter = require("./login");
 const registerRouter = require("./register");
-const { mongoClient } = require("../../../utils/conn/mongoConn");
-const { verifyToken } = require("../../../utils/encdec");
-const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
-const usersCol = waleprjDB.collection("users")
-const { cleanAndValidateUser, cleanUserDataUpdate } = require("../../../utils/validators/user");
+const { cleanAndValidateUser, } = require("../../../utils/validators/user");
 const { checkIfAccountPropExists, accountLogOut } = require("../../../db/account");
 const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 

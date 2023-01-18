@@ -1,11 +1,9 @@
-const { getAccountMW } = require(".");
 const { mongoClient } = require("../../conn/mongoConn");
-const { verifyToken } = require("../../encdec");
-const { defaultCompanyActionRoles, defaultCompanyAdminRoles } = require("../../misc/company_roles");
 const {  getNumberOfAvailableCompanylimit } = require("../../paymentServices/tiering/tiershop");
-const waleprjDB = mongoClient.db("waleprj");
+
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");
-const accountsCol = waleprjDB.collection("accounts");
 const subscriptionCol = waleprjDB.collection("subscriptions");
 
 /**

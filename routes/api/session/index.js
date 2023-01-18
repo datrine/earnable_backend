@@ -1,6 +1,4 @@
-const { accountAccIDResetSet, getBiodataFunc, retrieveAccountInfoBySessID } = require("../../../db/account");
-const { accTemplate } = require("../../../db/templates");
-const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
+const {retrieveAccountInfoBySessID } = require("../../../db/account");
 
 const router = require("express").Router();
 

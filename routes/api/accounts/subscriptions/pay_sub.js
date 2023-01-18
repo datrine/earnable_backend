@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const { nanoid } = require("nanoid");
 const { mongoClient } = require("../../../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const subscriptionsCol = waleprjDB.collection("subscriptions");
 const { validateSubscriptionMW } = require("../../../../utils/mymiddleware/accounts/validateSubscriptionMW");
 const { tierCompany } = require("../../../../utils/paymentServices/tiering/tiershop");

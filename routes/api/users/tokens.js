@@ -1,11 +1,5 @@
 const router = require("express").Router();
-const { json } = require("body-parser");
-const { mongoClient } = require("../../../utils/conn/mongoConn");
-const { verifyToken } = require("../../../utils/encdec");
 const sessIDVerifyMW = require("../../../utils/mymiddleware/sessIDVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
-const usersCol = waleprjDB.collection("users")
-const { cleanAndValidateUser } = require("../../../utils/validators/user");
 
 router.get("/me",sessIDVerifyMW, (req, res, next) => {
     try {

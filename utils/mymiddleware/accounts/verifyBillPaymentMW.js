@@ -1,14 +1,8 @@
-const { response } = require("express");
-const { getAccountMW } = require(".");
-const { mongoClient } = require("../../conn/mongoConn");
-const { verifyToken } = require("../../encdec");
-const { defaultCompanyAdminRoles, defaultCompanyActionRoles } = require("../../misc/shop_roles");
+
 const { verifyReceipt } = require("../../paymentServices/bills/verifyReceipt");
-const waleprjDB = mongoClient.db("waleprj");
-const shopsCol = waleprjDB.collection("shops");
-const accountsCol = waleprjDB.collection("accounts");
+
 const { verifyPaymentInterface } = require("../../paymentServices/bills/verify/index.js");
-const { payFn } = require("../../paymentServices/bills/pay");
+
 
 /**
  * 

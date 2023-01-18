@@ -1,6 +1,5 @@
-const router = require("express").Router();
+
 const { mongoClient } = require("../utils/conn/mongoConn");
-const tokenVerifyMW = require("../utils/mymiddleware/tokenVerifyMW");
 const DB_NAME = process.env.DB_NAME;
 const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");

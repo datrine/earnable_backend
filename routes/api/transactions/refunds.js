@@ -18,19 +18,7 @@ const {
   updateRecieptCodeEmployeeID,
   initiateTransfer,
 } = require("../../../db/bank_detail");
-const { sendOTPMW } = require("../../../utils/mymiddleware/sendOTPMW");
-const {
-  generateOTPToken,
-} = require("../../../from/utils/middlewares/generateTokenMW");
-const {
-  canContinueWithdrawMW,
-} = require("../../../utils/mymiddleware/canContinueWithdrawMW");
 getTransactionByID;
-const { createWithdrawal } = require("../../../db/withdrawal");
-const { DateTime } = require("luxon");
-const {
-  resolveTransactionMW,
-} = require("../../../utils/mymiddleware/transactionMWs");
 const { canRefundMW } = require("../../../utils/mymiddleware/canRefundMW"); // Require the library
 const { nanoid } = require("nanoid");
 const { paystackInitiate } = require("../../../utils/payments/paystack");
@@ -46,7 +34,7 @@ router.post(
       amount: req.body.amount,
       salaryMonthID: req.body.salaryMonthID,
       salaryYearID: req.body.salaryYearID,
-      payment_mode:"resolve_all"
+      payment_mode: "resolve_all",
     };
     req.session.queried = { ...req.session.queried, ...queried };
     next();

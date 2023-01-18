@@ -1,9 +1,10 @@
 const { retrieveAccountInfoBasic } = require("../../db/account");
 const { hasRole, hasScope } = require("../../db/role");
 const { mongoClient } = require("../conn/mongoConn");
-const { verifyToken } = require("../encdec");
 const { defaultCompanyAdminRoles, defaultCompanyActionRoles } = require("../misc/company_roles");
-const waleprjDB = mongoClient.db("waleprj");
+
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");
 
 /**

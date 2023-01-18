@@ -1,5 +1,6 @@
-const { mongoClient,startConn } = require("../conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
+const { mongoClient, } = require("../conn/mongoConn");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const usersCol=waleprjDB.collection("users");
 async function getUserFromDB({email}) {
     try {

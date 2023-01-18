@@ -1,9 +1,10 @@
 const router = require("express").Router();
 const { mongoClient } = require("../../../utils/conn/mongoConn");
 const tokenVerifyMW = require("../../../utils/mymiddleware/tokenVerifyMW");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const usersCol = waleprjDB.collection("users")
-const { cleanAndValidateUser, cleanUserDataUpdate } = require("../../../utils/validators/user");
+const {  cleanUserDataUpdate } = require("../../../utils/validators/user");
 const _ = require("lodash")
 const $ = require("mongo-dot-notation")
 

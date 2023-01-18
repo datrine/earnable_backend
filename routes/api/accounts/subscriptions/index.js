@@ -3,7 +3,8 @@ const { mongoClient } = require("../../../../utils/conn/mongoConn");
 const { validateSubscriptionMW } = require("../../../../utils/mymiddleware/accounts/validateSubscriptionMW");
 const { createOrder, createSubsOrderItems } = require("../../../../utils/paymentServices/orders/create_orders");
 const { separateFreeFromPaid } = require("../../../../utils/paymentServices/tiering/tiershop");
-const waleprjDB = mongoClient.db("waleprj");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const subscriptionsCol = waleprjDB.collection("subscriptions");
 
 const subscriptionsPaymentRouter = require("./pay_sub");

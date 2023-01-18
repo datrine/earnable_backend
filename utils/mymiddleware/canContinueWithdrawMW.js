@@ -1,6 +1,5 @@
 const { getBankDetailsByAccountID } = require("../../db/bank_detail");
 const { getEmployeeByAccountID } = require("../../db/employee");
-const { findAndVerifyToken } = require("../../db/token");
 /**
  * @type {import("ng-banks").default}
  */

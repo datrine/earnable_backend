@@ -1,10 +1,7 @@
-const router = require("express").Router()
 const { mongoClient, ObjectID } = require("../../conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
-const companiesCol = waleprjDB.collection("companies");
+const DB_NAME = process.env.DB_NAME;
+const waleprjDB = mongoClient.db(DB_NAME);
 const ordersCol = waleprjDB.collection("orders");
-const $ = require("mongo-dot-notation");
-const { nanoid } = require("nanoid");
 const { validateProductOrders } = require("../../dbValidate/order");
 
 let validateOrders = async (req, res, next) => {

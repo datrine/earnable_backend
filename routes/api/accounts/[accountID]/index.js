@@ -4,7 +4,7 @@ const withdrawalHistoryRouter = require("./withdrawal_history");
 const bankDetailsHistoryRouter = require("./bank_details");
 const pageViewsRouter = require("../../page_views");
 const { getAuthAccount } = require("../../../../from/utils/middlewares/getAuthAccount");
-const { accountLogOut, getUserInfo,updateAccInfo } = require("../../../../db/account");
+const { getUserInfo } = require("../../../../db/account");
 const { getEmployeeByAccountID } = require("../../../../db/employee");
 const { getEmployeeEarningsAndWithdrawals } = require("../../../../db/calculations");
 

@@ -1,6 +1,4 @@
 const router = require("express").Router();
-const { mongoClient } = require("../../../../utils/conn/mongoConn");
-const waleprjDB = mongoClient.db("waleprj");
 const {
   getWalletByCompanyID,
   getOrCreateCompanyWallet,

@@ -1,8 +1,6 @@
 const { accountAccIDResetSet, getBiodataFunc } = require("../../../db/account");
 const { getMyResources, getResourcesByID } = require("../../../db/resource");
 const { getCompanyRoles } = require("../../../db/role");
-const { accTemplate } = require("../../../db/templates");
-const { getAuthAccount } = require("../../../from/utils/middlewares/getAuthAccount");
 let resourcesRouter=require("./resources")
 
 const router = require("express").Router();
