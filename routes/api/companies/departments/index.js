@@ -24,7 +24,7 @@ router.post(
     try {
       let { companyID } = req.session.queried;
       "".toLowerCase();
-      req.body.dept_name = req.body.dept_name.toLowercase();
+      req.body.dept_name = req.body?.dept_name?.toLowercase();
       let deptCreationObj = req.body;
       let rolesRes = await createDepartment({ companyID, ...deptCreationObj });
       if (rolesRes.err) {
