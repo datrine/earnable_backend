@@ -16,13 +16,15 @@ router.post(
     let { status } = req.session.queried.company;
     if (!(status && status.name === "verified")) {
       console.log("Company no yet verified");
-      return res.json({ err:{msg: "Company no yet verified"} });
+      return res.json({ err: { msg: "Company no yet verified" } });
     }
     next();
   },
   async (req, res, next) => {
     try {
       let { companyID } = req.session.queried;
+      "".toLowerCase();
+      req.body.dept_name = req.body.dept_name.toLowercase();
       let deptCreationObj = req.body;
       let rolesRes = await createDepartment({ companyID, ...deptCreationObj });
       if (rolesRes.err) {
