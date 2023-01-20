@@ -1,10 +1,8 @@
 const { ObjectId } = require("bson");
-const {
-  getResourceByResourceID,
-} = require("../../../db/resource");
+const { getResourceByResourceID } = require("../../../db/resource");
 const { hasRole } = require("../../../db/role");
 const { mongoClient } = require("../../conn/mongoConn");
-const DB_NAME=process.env.DB_NAME
+const DB_NAME = process.env.DB_NAME;
 const waleprjDB = mongoClient.db(DB_NAME);
 const companiesCol = waleprjDB.collection("companies");
 const subscriptionCol = waleprjDB.collection("subscriptions");
@@ -91,10 +89,15 @@ let canAddEmployeeMW = async (req, res, next) => {
       console.log("subscription has expired.");
       return res.json({ err: `subscription has expired.` });
     }
+
     req.session.employeeToSave = refinedData;
     req.session.company = company;
 
-    req.session.queried = { ...req.session.queried };
+    req.session.queried = {
+      ...req.session.queried,
+      monthly_salary: Number(req.session.queried.monthly_salary),
+    };
+    
     req.session.queried.employeeToSave = refinedData;
     req.session.queried.company = company;
     res.status(200);
