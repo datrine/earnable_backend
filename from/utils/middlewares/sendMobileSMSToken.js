@@ -61,13 +61,14 @@ let sendPhonePinSMSToken = async (req, res, next) => {
         req.session.queried.ttl = DateTime.now().plus({ minute: 10 }).toJSDate()
         await saveToken({ ...req.session.queried });
         let msg = `Thanks for registering at Earnable. Please verify Your phone number. Token to input: ${req.session.queried.token}.`;
-        let emailRes = await sendPhoneText({
+        let smsRes = await sendPhoneText({
             to: phonenumToSendToken,
             text: msg
         });
-        if (!emailRes) {
+        if (!smsRes) {
             throw "Error sending..."
         }
+        console.log(smsRes)
         next()
     } catch (error) {
         console.log(error);

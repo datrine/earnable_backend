@@ -1,5 +1,5 @@
 const { mongoClient } = require("../utils/conn/mongoConn");
-const DB_NAME=process.env.DB_NAME
+const DB_NAME = process.env.DB_NAME;
 const db = mongoClient.db(DB_NAME);
 const transactionsCol = db.collection("transactions");
 const { ObjectID } = require("bson");
@@ -169,7 +169,7 @@ let getTransactionByID = async ({ transactionID }) => {
       _id: ObjectID(transactionID),
     });
     if (!transaction) {
-      return {err:{msg:"Transaction does not exist."}}
+      return { err: { msg: "Transaction does not exist." } };
     }
     return { transaction };
   } catch (error) {
@@ -282,6 +282,123 @@ let updateTransactionByID = async ({
   }
 };
 
+let getTransactionsByAccountID = async ({
+  salaryMonthID,
+  salaryYearID,
+  status_name,
+  accountID,
+}) => {
+  try {
+    let agg = [
+      {
+        $set: {
+          transactionID: {
+            $toString: "$_id",
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "accounts",
+          localField: "accountID",
+          foreignField: "accountID",
+          as: "account",
+        },
+      },
+      {
+        $set: {
+          accountObject: {
+            $first: "$account",
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "withdrawals",
+          localField: "transactionID",
+          foreignField: "transactionID",
+          as: "withdrawals",
+        },
+      },
+      {
+        $set: {
+          withdrawalObject: {
+            $first: "$withdrawals",
+          },
+        },
+      },
+      {
+        $set: {
+          companyIDAsObjectID: {
+            $toObjectId: "$withdrawalObject.companyID",
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "companies",
+          localField: "companyIDAsObjectID",
+          foreignField: "_id",
+          as: "companyObject",
+        },
+      },
+      {
+        $set: {
+          companyObject: {
+            $first: "$companyObject",
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $and: [
+              {
+                $eq: [
+                  {
+                    $ifNull: [accountID, "$accountObject.accountID"],
+                  },
+                  "$accountObject.accountID",
+                ],
+              },
+              {
+                $eq: [
+                  {
+                    $ifNull: [status_name, "$status.name"],
+                  },
+                  "$status.name",
+                ],
+              },
+              {
+                $eq: [
+                  {
+                    $ifNull: [salaryMonthID, "$withdrawalObject.salaryMonthID"],
+                  },
+                  "$withdrawalObject.salaryMonthID",
+                ],
+              },
+              {
+                $eq: [
+                  {
+                    $ifNull: [salaryYearID, "$withdrawalObject.salaryYearID"],
+                  },
+                  "$withdrawalObject.salaryYearID",
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ];
+    const result = await transactionsCol.find({ accountID });
+    const transactions = await result.toArray();
+    return { info: result.ok, transactions };
+  } catch (error) {
+    console.log(error);
+    return { err: error };
+  }
+};
+
 let updateTransactionByTransactionReference = async ({
   transaction_reference,
   updates: { status, accountIDofUpdater },
@@ -385,4 +502,5 @@ module.exports = {
   getTransactionsByFilters,
   updateTransactionByTransactionReference,
   createPayrollTransactionFromWallet,
+  getTransactionsByAccountID,
 };

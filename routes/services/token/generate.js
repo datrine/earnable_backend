@@ -261,6 +261,7 @@ router.get(
       req.session.queried.account = retrieveAccByVerSessIDRes.account;
       req.session.queried.phonenum = retrieveAccByVerSessIDRes.account.phonenum;
       req.session.queried.verSessID = verSessID;
+      console.log("Attempting to generate...")
       next();
     } catch (error) {
       console.log(error);

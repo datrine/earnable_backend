@@ -69,6 +69,8 @@ let dashboardInfoAgg = ({accountID}) => {
        companyID: {
         $toString: '$company._id'
        },
+       salaryMonthID:'$company.salaryMonthID',
+       salaryYearID:'$company.salaryYearID',
        f_name: '$user.f_name',
        l_name: '$user.l_name',
        monthly_salary: {

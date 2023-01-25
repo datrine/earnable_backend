@@ -97,15 +97,7 @@ router.post("/phone_pin/verification/", async (req, res, next) => {
             factor: "phone_pin", tokenSent: true,
             isVerified: true, mode: "update"
         });
-        let phonePin = getRandomToken({ minLength: 4 });
-        let defaultRes = await setDefaultPhonePin({ phonenum: req.session.queried.phonenum, phonePin });
-        //getCurrentAccountActivity({})
-        //activateEmployeeAccount()
-        sendPhoneText({ to: req.session.queried.phonenum, text: `Your default password: ${phonePin}` }).
-        then(res => {
-            console.log(res.info)
-        });
-        res.json({ ...updateAccVerRes, ...defaultRes })
+        res.json({ ...updateAccVerRes, })
 
     } catch (error) {
         console.log(error);
